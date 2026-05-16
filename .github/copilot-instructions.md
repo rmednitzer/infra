@@ -49,13 +49,15 @@ scripts/              — Operational helper scripts
 
 ## Provider Pinning
 
-Always pin both major and minor version using pessimistic constraint:
+Pin providers with a pessimistic constraint. For pre-1.0 providers (such as
+`dmacvicar/libvirt`), a minor-version bump can introduce breaking changes, so
+pin to the patch level (`~> 0.8.0`, i.e. `>= 0.8.0, < 0.9.0`):
 
 ```hcl
 required_providers {
   libvirt = {
     source  = "dmacvicar/libvirt"
-    version = "~> 0.8"
+    version = "~> 0.8.0"
   }
 }
 ```

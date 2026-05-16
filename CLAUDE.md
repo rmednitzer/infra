@@ -37,14 +37,18 @@ infra-ops/
 │   │   ├── main.tf              # Module calls
 │   │   ├── variables.tf         # Environment-level variables
 │   │   ├── outputs.tf           # Environment outputs
+│   │   ├── versions.tf          # Provider and OpenTofu version constraints
 │   │   ├── terraform.tfvars     # Non-secret defaults (tracked in git)
-│   │   └── backend.tf           # State backend configuration
-│   └── production/              # Production: remote state, locked
+│   │   ├── backend.tf           # State backend configuration
+│   │   └── .terraform.lock.hcl  # Provider dependency lock (tracked in git)
+│   └── production/              # Production: remote backend required (currently a local placeholder, no resources)
 │       ├── main.tf
 │       ├── variables.tf
 │       ├── outputs.tf
+│       ├── versions.tf
 │       ├── terraform.tfvars
-│       └── backend.tf
+│       ├── backend.tf
+│       └── .terraform.lock.hcl
 └── scripts/
     └── init-backend.sh          # Backend initialization helper
 ```

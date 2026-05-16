@@ -75,18 +75,22 @@ Key inputs:
 
 ## Environments
 
-| Environment | Backend | Description |
-|-------------|---------|-------------|
-| [lab](environments/lab/) | Local | Development and testing on a local KVM host |
-| [production](environments/production/) | Remote (S3-compatible) | Production workloads with state locking and encryption |
+| Environment | Backend | Status | Description |
+|-------------|---------|--------|-------------|
+| [lab](environments/lab/) | Local | Active | Development and testing on a local KVM host |
+| [production](environments/production/) | Remote (S3-compatible) — *required, not yet configured* | Placeholder | Defines no resources yet; `backend.tf` ships a local placeholder and must be switched to a locked, encrypted remote backend before any production resources are added |
 
-Each environment has its own `backend.tf`, `variables.tf`, `terraform.tfvars` (non-secret defaults only), and `versions.tf`. Use the helper script to initialize:
+Each environment has its own `backend.tf`, `variables.tf`, `terraform.tfvars` (non-secret defaults only), `versions.tf`, and a committed `.terraform.lock.hcl`. Use the helper script to initialize:
 
 ```bash
 ./scripts/init-backend.sh lab
 ```
 
-For production, set backend credentials before initializing:
+Production currently ships a **local placeholder backend** and declares no
+infrastructure. Before provisioning production, edit
+`environments/production/backend.tf` to configure the remote S3-compatible
+backend (with locking and encryption at rest — see the commented example in
+that file), then set backend credentials and initialize:
 
 ```bash
 export AWS_ACCESS_KEY_ID="..."
@@ -96,8 +100,12 @@ export AWS_SECRET_ACCESS_KEY="..."
 
 ## Compliance and State Safety
 
-- State files are encrypted at rest on remote backends
-- Remote backends use locking to prevent concurrent modifications
+These are the project's required practices. The lab environment uses a local
+backend by design; any non-lab environment must satisfy the remote-backend
+requirements below before it provisions resources.
+
+- Remote backends **must** have encryption at rest enabled
+- Remote backends **must** have state locking enabled to prevent concurrent modifications
 - Sensitive variables are marked `sensitive = true` and never committed
 - Secrets are injected via `TF_VAR_*` environment variables
 - All changes flow through CI-gated pull requests

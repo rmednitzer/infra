@@ -30,8 +30,10 @@ jobs:
     name: Validate
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         environment:
+          - modules/libvirt-vm
           - environments/lab
           - environments/production
     steps:

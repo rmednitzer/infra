@@ -16,6 +16,11 @@
 
 set -euo pipefail
 
+if ! command -v tofu >/dev/null 2>&1; then
+  echo "Error: 'tofu' not found in PATH. Install OpenTofu: https://opentofu.org/docs/intro/install/" >&2
+  exit 1
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "${SCRIPT_DIR}")"
 
