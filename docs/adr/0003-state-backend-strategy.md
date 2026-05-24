@@ -45,8 +45,9 @@ OpenTofu reads and writes the same `backend "s3"` syntax.
     or default encryption settings).
   - **Versioning** enabled on the bucket so accidental state deletion is
     recoverable.
-  - The modern `endpoints { s3 = "…" }` block when targeting a non-AWS S3
-    implementation. `endpoint = "…"` (top-level) is deprecated.
+  - The modern `endpoints = { s3 = "…" }` map attribute when targeting a
+    non-AWS S3 implementation. The top-level `endpoint = "…"` attribute is
+    deprecated.
   - `use_path_style = true` for implementations that don't support virtual-host
     bucket URLs. The legacy `force_path_style` is deprecated.
 - **Production** ships a **local placeholder backend** in `backend.tf` until

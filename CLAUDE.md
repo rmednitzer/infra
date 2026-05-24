@@ -226,4 +226,4 @@ CI enforces all three on every push and pull request.
 - **Every variable needs `description` and `type`** — no exceptions
 - **Every output needs `description`** — no exceptions
 - When adding a new module, create all five required files: `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`, `README.md`
-- For the production S3 backend, prefer `use_lockfile = true` over `dynamodb_table`, and the `endpoints { s3 = "…" }` block over the top-level `endpoint = "…"` — see ADR-0003 and ADR-0006
+- For the production S3 backend, prefer `use_lockfile = true` over `dynamodb_table`, and the `endpoints = { s3 = "…" }` map attribute over the top-level `endpoint = "…"` — see ADR-0003 and ADR-0006

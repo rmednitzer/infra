@@ -73,7 +73,7 @@ required_providers {
 - Never edit state files manually
 - Remote backends must have locking enabled and encryption at rest
 - Lab environments may use local backend
-- For S3-compatible backends, prefer `use_lockfile = true` (OpenTofu 1.10+) over `dynamodb_table`, and the `endpoints { s3 = "…" }` block over the deprecated top-level `endpoint = "…"`. See ADR-0003.
+- For S3-compatible backends, prefer `use_lockfile = true` (OpenTofu 1.10+) over `dynamodb_table`, and the `endpoints = { s3 = "…" }` map attribute over the deprecated top-level `endpoint = "…"`. See ADR-0003.
 
 ---
 

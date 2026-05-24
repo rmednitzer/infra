@@ -11,7 +11,7 @@
 #     key    = "production/terraform.tfstate"
 #     region = "us-east-1"
 #
-#     # For non-AWS S3 implementations, use the endpoints block
+#     # For non-AWS S3 implementations, set the endpoints map
 #     # (the top-level `endpoint = "..."` attribute is deprecated):
 #     # endpoints = {
 #     #   s3 = "https://s3.example.com"
