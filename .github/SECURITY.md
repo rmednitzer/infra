@@ -32,5 +32,6 @@ We aim to acknowledge reports within 5 business days and provide a remediation t
 - Never commit secrets, credentials, or private keys to this repository
 - Mark sensitive OpenTofu variables with `sensitive = true`
 - Use `TF_VAR_*` environment variables for secrets in CI pipelines
-- Ensure state backends have encryption at rest and access logging enabled
+- Ensure state backends have encryption at rest and access logging enabled; the project's full state-safety standard is captured in [ADR-0003](../docs/adr/0003-state-backend-strategy.md)
+- The cloud-init bootstrap hardens every VM at provisioning time (no password auth, no root SSH, locked default user); changes to that baseline require updating [ADR-0004](../docs/adr/0004-cloud-init-bootstrap-conventions.md)
 - Review `tofu plan` output carefully before applying changes to production

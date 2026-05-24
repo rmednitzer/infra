@@ -13,6 +13,7 @@
 ## Checklist
 
 - [ ] I have followed the [naming conventions](CLAUDE.md) for this project
+- [ ] I have read the relevant [ADR(s)](docs/adr/) if this PR changes a standing convention (provider pin, backend strategy, module layout, cloud-init defaults), and either follows the existing ADR or proposes a new ADR that supersedes it
 - [ ] I have run `tofu fmt` with no changes needed
 - [ ] I have run `tofu validate` with no errors
 - [ ] I have run `tofu plan` and reviewed the output
@@ -20,7 +21,7 @@
 - [ ] All outputs have `description` defined
 - [ ] No secrets or sensitive values are hardcoded
 - [ ] No state files are included in this PR
-- [ ] I have updated relevant documentation (module READMEs, etc.)
+- [ ] I have updated relevant documentation (module READMEs, ADRs, etc.)
 
 ## Plan Output
 

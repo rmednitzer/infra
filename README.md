@@ -4,11 +4,13 @@
 
 Infrastructure provisioning repository for KVM/libvirt virtual machines, networks, and storage, managed with [OpenTofu](https://opentofu.org/). Designed for production-grade operations with compliance-aligned practices, CI-gated changes, and documented module interfaces.
 
+The rationale behind the standing architectural choices — OpenTofu over Terraform, the `dmacvicar/libvirt` `~> 0.8.0` pin, the state-backend strategy, the cloud-init baseline, and the module/environment layout — is recorded in [`docs/adr/`](docs/adr/).
+
 ## Scope
 
 This repository defines the **infrastructure layer**: what gets created and destroyed. It is decoupled from configuration management concerns (e.g., Ansible, Salt). Current providers:
 
-- **KVM/libvirt** (`dmacvicar/libvirt`) — VM provisioning on bare-metal hosts
+- **KVM/libvirt** (`dmacvicar/libvirt`, pinned `~> 0.8.0` — see [ADR-0002](docs/adr/0002-pin-libvirt-provider-to-0.8.md)) — VM provisioning on bare-metal hosts
 
 Planned future expansion:
 
@@ -17,8 +19,8 @@ Planned future expansion:
 
 ## Prerequisites
 
-- [OpenTofu](https://opentofu.org/docs/intro/install/) >= 1.6
-- A KVM/libvirt host with `qemu-system` and `libvirtd` running
+- [OpenTofu](https://opentofu.org/docs/intro/install/) >= 1.6 (1.12 is current; production will require >= 1.10 once the S3 backend is wired up — see [ADR-0003](docs/adr/0003-state-backend-strategy.md))
+- A KVM/libvirt host with `qemu-system` and `libvirtd` running, with `default` storage pool and network defined (the module does not create them — see [ADR-0006 Finding 7](docs/adr/0006-code-audit-2026-05.md))
 - A cloud-init compatible base image (e.g., [Ubuntu 24.04 cloud image](https://cloud-images.ubuntu.com/noble/current/))
 - An SSH key pair for VM access
 - [TFLint](https://github.com/terraform-linters/tflint) (for local linting, optional)
@@ -51,6 +53,8 @@ infra-ops/
 │   └── production/              # Production environment (remote backend required; local placeholder, no resources yet)
 ├── scripts/
 │   └── init-backend.sh          # Backend initialization helper
+├── docs/
+│   └── adr/                     # Architecture Decision Records
 └── .github/
     └── workflows/
         └── ci.yml               # CI: tofu fmt, tofu validate, tflint
@@ -90,7 +94,8 @@ Production currently ships a **local placeholder backend** and declares no
 infrastructure. Before provisioning production, edit
 `environments/production/backend.tf` to configure the remote S3-compatible
 backend (with locking and encryption at rest — see the commented example in
-that file), then set backend credentials and initialize:
+that file and [ADR-0003](docs/adr/0003-state-backend-strategy.md) for the
+full rationale), then set backend credentials and initialize:
 
 ```bash
 export AWS_ACCESS_KEY_ID="..."
@@ -98,16 +103,37 @@ export AWS_SECRET_ACCESS_KEY="..."
 ./scripts/init-backend.sh production
 ```
 
+## Architecture Decisions
+
+Standing decisions live in [`docs/adr/`](docs/adr/). Each ADR captures the
+context, the decision, and the consequences of a single significant choice.
+Current set:
+
+| ID | Title |
+|----|-------|
+| [0001](docs/adr/0001-use-opentofu-not-terraform.md) | Use OpenTofu, not Terraform |
+| [0002](docs/adr/0002-pin-libvirt-provider-to-0.8.md) | Pin `dmacvicar/libvirt` to `~> 0.8.0` |
+| [0003](docs/adr/0003-state-backend-strategy.md) | State backend strategy (local lab, S3-compatible production) |
+| [0004](docs/adr/0004-cloud-init-bootstrap-conventions.md) | Cloud-init bootstrap conventions |
+| [0005](docs/adr/0005-module-and-environment-layout.md) | Module and environment layout |
+| [0006](docs/adr/0006-code-audit-2026-05.md) | Code audit 2026-05 findings |
+
+New significant decisions are recorded as additional ADRs rather than as
+ad-hoc README sections; the README links out, the ADR owns the explanation.
+
 ## Compliance and State Safety
 
 These are the project's required practices. The lab environment uses a local
 backend by design; any non-lab environment must satisfy the remote-backend
-requirements below before it provisions resources.
+requirements below before it provisions resources. The full rationale is in
+[ADR-0003](docs/adr/0003-state-backend-strategy.md) (state) and
+[ADR-0004](docs/adr/0004-cloud-init-bootstrap-conventions.md) (VM bootstrap).
 
 - Remote backends **must** have encryption at rest enabled
-- Remote backends **must** have state locking enabled to prevent concurrent modifications
+- Remote backends **must** have state locking enabled — prefer `use_lockfile = true` (OpenTofu 1.10+ native S3 locking) over `dynamodb_table`
 - Sensitive variables are marked `sensitive = true` and never committed
 - Secrets are injected via `TF_VAR_*` environment variables
+- Cloud-init bootstraps every VM into a hardened state: no password auth, no root SSH, locked default user, key-only access
 - All changes flow through CI-gated pull requests
 
 ## Common Commands

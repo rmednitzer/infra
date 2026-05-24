@@ -16,6 +16,7 @@ infra-ops/
 ├── README.md                    # Project documentation
 ├── LICENSE                      # Apache 2.0
 ├── .gitignore                   # OpenTofu-specific ignores
+├── .tflint.hcl                  # TFLint configuration (recommended preset)
 ├── .github/
 │   ├── copilot-instructions.md  # Copilot coding guidelines
 │   ├── PULL_REQUEST_TEMPLATE.md # PR checklist
@@ -49,9 +50,29 @@ infra-ops/
 │       ├── terraform.tfvars
 │       ├── backend.tf
 │       └── .terraform.lock.hcl
+├── docs/
+│   └── adr/                     # Architecture Decision Records (read first when changing a convention)
+│       ├── README.md            # ADR index and authoring guide
+│       ├── 0001-use-opentofu-not-terraform.md
+│       ├── 0002-pin-libvirt-provider-to-0.8.md
+│       ├── 0003-state-backend-strategy.md
+│       ├── 0004-cloud-init-bootstrap-conventions.md
+│       ├── 0005-module-and-environment-layout.md
+│       └── 0006-code-audit-2026-05.md
 └── scripts/
     └── init-backend.sh          # Backend initialization helper
 ```
+
+---
+
+## Architecture Decision Records
+
+Standing decisions — provider version pin, state backend strategy, module
+layout, cloud-init defaults — live in `docs/adr/`. When asked to change a
+convention, **read the relevant ADR first** to understand the existing
+rationale. Changing a decision means writing a new ADR that supersedes the
+old one, not silently editing the underlying code. The current set is
+indexed in `docs/adr/README.md`.
 
 ---
 
@@ -196,11 +217,13 @@ CI enforces all three on every push and pull request.
 ## Important Notes for AI Assistants
 
 - **Always read existing files** before modifying them to understand current state
+- **Read the relevant ADR** in `docs/adr/` before changing a standing convention; if the decision should change, write a new ADR rather than silently editing code
 - **Never commit secrets or state files** — check `.gitignore` and variable sensitivity
 - **Use `tofu plan` before `tofu apply`** — never apply without reviewing the plan
 - **Use OpenTofu terminology consistently** — commands are `tofu`, tool is "OpenTofu"
 - **Do not reference Terraform** as the active tool in any documentation or comments
-- **Pin provider versions** with `~>` pessimistic constraints in every `versions.tf`
+- **Pin provider versions** with `~>` pessimistic constraints in every `versions.tf`. For pre-1.0 providers, pin at the **patch** level (`~> 0.8.0`, not `~> 0.8`) — see ADR-0002
 - **Every variable needs `description` and `type`** — no exceptions
 - **Every output needs `description`** — no exceptions
 - When adding a new module, create all five required files: `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`, `README.md`
+- For the production S3 backend, prefer `use_lockfile = true` over `dynamodb_table`, and the `endpoints { s3 = "…" }` block over the top-level `endpoint = "…"` — see ADR-0003 and ADR-0006
