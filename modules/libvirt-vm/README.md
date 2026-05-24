@@ -2,11 +2,14 @@
 
 Provisions a KVM/libvirt virtual machine using the [`dmacvicar/libvirt`](https://registry.terraform.io/providers/dmacvicar/libvirt/latest/docs) provider. Supports cloud-init user-data injection, optional additional data disks, and configurable CPU, memory, and disk resources.
 
+The provider version is pinned to `~> 0.8.0` (see [ADR-0002](../../docs/adr/0002-pin-libvirt-provider-to-0.8.md)); the cloud-init defaults shipped by this module are documented in [ADR-0004](../../docs/adr/0004-cloud-init-bootstrap-conventions.md).
+
 ## Requirements
 
 - A running libvirt/KVM host accessible via the provider's `uri`
 - A cloud-init compatible base image (e.g., Ubuntu 24.04 cloud image)
-- An existing libvirt network
+- An existing libvirt **network** named by `var.network_name` (default: `default`) — the module does not create the network
+- An existing libvirt **storage pool** named by `var.storage_pool` (default: `default`) — the module does not create the pool
 
 ## Usage
 
@@ -76,3 +79,13 @@ The module injects a `cloud_init.cfg` template that:
   networks. On bridged or macvtap networks the libvirt host cannot observe the
   guest's DHCP lease, so apply would hang — set `wait_for_lease = false` there
   and obtain the address out of band (e.g., via the guest agent).
+- `var.storage_pool` and `var.network_name` must point at libvirt resources
+  that already exist on the host. Creating them is outside the module's
+  scope; on a fresh libvirtd install, `virsh pool-list --all` and
+  `virsh net-list --all` should show the defaults.
+- The module sets `user_data` on `libvirt_cloudinit_disk` but does **not**
+  currently set `meta_data`. Modern Ubuntu cloud images tolerate the empty
+  metadata file via first-boot heuristics, but the cloud-init NoCloud
+  contract specifies that `instance-id` should be set explicitly. This is
+  tracked as Finding 2 in [ADR-0006](../../docs/adr/0006-code-audit-2026-05.md)
+  and is a planned follow-up.

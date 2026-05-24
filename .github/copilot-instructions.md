@@ -4,6 +4,8 @@
 
 `infra-ops` is an OpenTofu infrastructure provisioning repository. It manages KVM/libvirt VMs, networks, and storage. All tooling uses `tofu` commands. Never reference Terraform as the active tool.
 
+The rationale behind each standing convention below lives in `docs/adr/`. Before changing one, read the relevant ADR; if the convention itself should change, propose a new ADR that supersedes the existing one rather than silently editing the code.
+
 ---
 
 ## Repository Layout
@@ -13,6 +15,7 @@ modules/libvirt-vm/   — Reusable VM provisioning module (dmacvicar/libvirt)
 environments/lab/     — Lab environment, local state backend
 environments/production/ — Production environment, remote state backend
 scripts/              — Operational helper scripts
+docs/adr/             — Architecture Decision Records
 ```
 
 ---
@@ -70,6 +73,7 @@ required_providers {
 - Never edit state files manually
 - Remote backends must have locking enabled and encryption at rest
 - Lab environments may use local backend
+- For S3-compatible backends, prefer `use_lockfile = true` (OpenTofu 1.10+) over `dynamodb_table`, and the `endpoints = { s3 = "…" }` map attribute over the deprecated top-level `endpoint = "…"`. See ADR-0003.
 
 ---
 
@@ -88,3 +92,16 @@ required_providers {
 - Binary: **`tofu`**
 - Commands: `tofu init`, `tofu plan`, `tofu apply`, `tofu destroy`, `tofu fmt`, `tofu validate`
 - Do not write "terraform" as an active command or tool name anywhere
+
+---
+
+## Architecture Decision Records
+
+| ID | Title | Location |
+|----|-------|----------|
+| 0001 | Use OpenTofu, not Terraform | `docs/adr/0001-use-opentofu-not-terraform.md` |
+| 0002 | Pin `dmacvicar/libvirt` to `~> 0.8.0` | `docs/adr/0002-pin-libvirt-provider-to-0.8.md` |
+| 0003 | State backend strategy | `docs/adr/0003-state-backend-strategy.md` |
+| 0004 | Cloud-init bootstrap conventions | `docs/adr/0004-cloud-init-bootstrap-conventions.md` |
+| 0005 | Module and environment layout | `docs/adr/0005-module-and-environment-layout.md` |
+| 0006 | Code audit 2026-05 findings | `docs/adr/0006-code-audit-2026-05.md` |
