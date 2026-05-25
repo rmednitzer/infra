@@ -2,8 +2,8 @@
 
 This repository defines the **infrastructure layer** — what gets created
 and destroyed — via [OpenTofu](https://opentofu.org/). HCL style and
-OpenTofu policy live in [`CLAUDE.md`](./CLAUDE.md); standing decisions in
-[`docs/adr/`](./docs/adr/). This file covers workflow only.
+OpenTofu policy live in [`CLAUDE.md`](./CLAUDE.md); standing decisions
+in [`docs/adr/`](./docs/adr/). This file covers workflow only.
 
 ## Branch naming
 
@@ -11,7 +11,7 @@ OpenTofu policy live in [`CLAUDE.md`](./CLAUDE.md); standing decisions in
 |--------|-----|
 | `feature/` | New modules, environments, providers |
 | `fix/` | Bug fixes |
-| `chore/` | CI / tooling / docs |
+| `chore/` | CI / tooling / lint updates |
 | `adr/` | ADR-only changes |
 
 ## Local loop
@@ -32,9 +32,11 @@ IaC, hygiene). PRs cannot merge with failing CI.
 3. For architecturally significant changes, add an ADR using the
    Michael Nygard template and link it from the README's ADR table.
 
-PR template: [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md).
-Suspected vulnerabilities: [`.github/SECURITY.md`](.github/SECURITY.md) —
-never open a public issue.
+PR template:
+[`.github/PULL_REQUEST_TEMPLATE.md`](./.github/PULL_REQUEST_TEMPLATE.md).
+Suspected vulnerabilities: see
+[`.github/SECURITY.md`](./.github/SECURITY.md) — never open a public
+issue.
 
 By contributing, you agree your contribution is licensed under
 [Apache License 2.0](./LICENSE).

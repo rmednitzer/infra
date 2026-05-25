@@ -4,7 +4,7 @@
 
 Infrastructure provisioning repository for KVM/libvirt virtual machines, networks, and storage, managed with [OpenTofu](https://opentofu.org/). Designed for production-grade operations with compliance-aligned practices, CI-gated changes, and documented module interfaces.
 
-This repository was previously named `infra-ops`. Companion repositories: `automation` (Ansible configuration and hardening) and `runbooks` (ad-hoc operator scripts).
+Companion repositories: [`automation`](https://github.com/rmednitzer/automation) (Ansible configuration and hardening) and [`runbooks`](https://github.com/rmednitzer/runbooks) (ad-hoc operator scripts).
 
 The rationale behind the standing architectural choices — OpenTofu over Terraform, the `dmacvicar/libvirt` `~> 0.8.0` pin, the state-backend strategy, the cloud-init baseline, and the module/environment layout — is recorded in [`docs/adr/`](docs/adr/).
 
@@ -182,6 +182,7 @@ version pinned via [`.opentofu-version`](.opentofu-version) (`1.12.0`).
 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Workflow, ADR expectations |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Keep a Changelog 1.1.0 |
 | [`docs/adr/`](./docs/adr/) | Architecture Decision Records |
-| [`.github/SECURITY.md`](.github/SECURITY.md) | Vulnerability reporting |
-| [`.github/CODEOWNERS`](.github/CODEOWNERS) | Review assignment |
-| [`LICENSE`](LICENSE) / [`NOTICE`](NOTICE) | Apache 2.0 |
+| [`.github/SECURITY.md`](./.github/SECURITY.md) | Vulnerability reporting |
+| [`.github/PULL_REQUEST_TEMPLATE.md`](./.github/PULL_REQUEST_TEMPLATE.md) | PR checklist |
+| [`.github/CODEOWNERS`](./.github/CODEOWNERS) | Review assignment |
+| [`LICENSE`](./LICENSE) / [`NOTICE`](./NOTICE) | Apache 2.0 |
