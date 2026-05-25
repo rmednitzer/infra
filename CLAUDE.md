@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-`infra` (formerly `infra-ops`) is an OpenTofu infrastructure provisioning repository managing VM lifecycle, networking, and storage allocation via the `dmacvicar/libvirt` provider (KVM/libvirt). It defines the infrastructure layer — what gets created and destroyed — and is intentionally decoupled from configuration management concerns. Companion repositories: `automation` (Ansible) and `runbooks` (ad-hoc operator scripts).
+`infra` is an OpenTofu infrastructure provisioning repository managing VM lifecycle, networking, and storage allocation via the `dmacvicar/libvirt` provider (KVM/libvirt). It defines the infrastructure layer — what gets created and destroyed — and is intentionally decoupled from configuration management concerns. Companion repositories: `automation` (Ansible) and `runbooks` (ad-hoc operator scripts).
 
 This repository uses **OpenTofu** exclusively. All commands use `tofu`. Never reference Terraform as the active tool. The HCL language, `.tf` extensions, `terraform.tfvars` filename, and `.terraform/` directory are shared ecosystem conventions — not Terraform references.
 

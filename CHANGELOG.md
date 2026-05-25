@@ -5,12 +5,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-- Slim `CONTRIBUTING.md`, `CHANGELOG.md`, env READMEs, and the README
-  Governance section. No behavior change to modules, environments, or CI.
-
 ## [0.0.0]
 
 ### Scaffolding (PR #12)
+
 - Governance: `NOTICE`, `CHANGELOG.md`, `CONTRIBUTING.md`,
   `.github/CODEOWNERS`, `.editorconfig`, `.opentofu-version` (`1.12.0`).
 - Per-environment READMEs for `lab/` and `production/`.
@@ -19,8 +17,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - CI: Trivy IaC misconfiguration scan (fails on HIGH / CRITICAL) and
   pre-commit hygiene job.
 
-### Initial OpenTofu structure (post-rename)
-- Renamed from `infra-ops`.
+### Initial OpenTofu structure
+
 - `libvirt-vm` module with cloud-init, validated inputs, committed lock
   files.
 - `lab/` and `production/` environments scaffolded (production: local
