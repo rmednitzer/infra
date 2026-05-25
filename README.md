@@ -153,29 +153,46 @@ requirements below before it provisions resources. The full rationale is in
 
 ## CI / Quality
 
-Every push and pull request runs three checks:
+Every push and pull request runs five checks:
 
 | Check | Tool | Command |
 |-------|------|---------|
 | Format | `tofu fmt` | `tofu fmt -check -recursive` |
 | Validate | `tofu validate` | Per-environment `tofu init -backend=false && tofu validate` |
 | Lint | [TFLint](https://github.com/terraform-linters/tflint) | `tflint --recursive` |
+| Security | [Trivy](https://aquasecurity.github.io/trivy/) | `trivy config . --severity HIGH,CRITICAL` |
+| Hygiene | [pre-commit](https://pre-commit.com/) | `pre-commit run --all-files` |
 
 All checks must pass before a pull request can be merged.
 
-## Contributing
+## Local development loop
 
-1. Branch from `main` with a descriptive name (e.g., `feature/add-hcloud-provider`, `fix/libvirt-network`)
-2. Run `tofu fmt -recursive` and `tofu validate` locally before committing
-3. Open a pull request — CI must pass before merge
-4. Use clear, imperative commit messages (e.g., *Add libvirt-vm module*, *Fix cloud-init hostname injection*)
+```bash
+pip install pre-commit
+pre-commit install
+# pre-commit-terraform calls `terraform` by default; point it at OpenTofu.
+export TFTOOL=tofu
+pre-commit run --all-files
+```
 
-See the [PR template](.github/PULL_REQUEST_TEMPLATE.md) for the full checklist.
+The hook set is in [`.pre-commit-config.yaml`](.pre-commit-config.yaml) and
+covers `terraform_fmt`, `terraform_validate`, `terraform_tflint`,
+`terraform_trivy`, EditorConfig conformance, and the standard hygiene hooks.
+The OpenTofu binary version is pinned via
+[`.opentofu-version`](.opentofu-version) (`1.12.0`) for `asdf` / `tenv` /
+`mise` users.
 
-## Security
+## Governance
 
-To report a vulnerability, see [SECURITY.md](.github/SECURITY.md).
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — contribution workflow, ADR
+  expectations, branch naming.
+- [`CHANGELOG.md`](./CHANGELOG.md) — Keep-a-Changelog 1.1.0 format.
+- [`.github/SECURITY.md`](.github/SECURITY.md) — vulnerability reporting.
+- [`.github/CODEOWNERS`](.github/CODEOWNERS) — review assignment for ADRs,
+  modules, production environment, and workflows.
+- [`CLAUDE.md`](./CLAUDE.md) — AI-authoring contract; OpenTofu-only
+  policy; HCL style.
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE).
+Apache 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).

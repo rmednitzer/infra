@@ -1,0 +1,46 @@
+# Pre-commit hooks for infra (OpenTofu).
+#
+# Install once:    pip install pre-commit && pre-commit install
+# Run on all files: pre-commit run --all-files
+#
+# pre-commit-terraform supports OpenTofu when `tofu` is on PATH and the
+# `TFTOOL=tofu` environment variable is exported. CONTRIBUTING.md documents
+# this. The hooks call `tofu fmt`, `tofu validate`, `tflint`, and `trivy`
+# under the hood. CI mirrors these checks plus a dedicated Trivy job.
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: detect-private-key
+
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.105.0
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+        args:
+          - --hook-config=--retry-once-with-cleanup=true
+          - --tf-init-args=-backend=false
+      - id: terraform_tflint
+        args:
+          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
+      - id: terraform_trivy
+        args:
+          - --args=--severity=HIGH,CRITICAL
+          - --args=--skip-dirs=**/.terraform
+
+  - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
+    rev: 3.6.1
+    hooks:
+      - id: editorconfig-checker
+        alias: ec
+        exclude: ^(LICENSE|.*\.tfvars)$
