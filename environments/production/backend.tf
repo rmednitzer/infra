@@ -7,7 +7,7 @@
 #
 # terraform {
 #   backend "s3" {
-#     bucket = "infra-ops-tfstate"
+#     bucket = "infra-tfstate"
 #     key    = "production/terraform.tfstate"
 #     region = "us-east-1"
 #

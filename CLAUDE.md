@@ -1,8 +1,8 @@
-# CLAUDE.md — AI Assistant Guide for infra-ops
+# CLAUDE.md — AI Assistant Guide for infra
 
 ## Project Overview
 
-`infra-ops` is an OpenTofu infrastructure provisioning repository managing VM lifecycle, networking, and storage allocation via the `dmacvicar/libvirt` provider (KVM/libvirt). It defines the infrastructure layer — what gets created and destroyed — and is intentionally decoupled from configuration management concerns (Ansible, Salt, etc.).
+`infra` (formerly `infra-ops`) is an OpenTofu infrastructure provisioning repository managing VM lifecycle, networking, and storage allocation via the `dmacvicar/libvirt` provider (KVM/libvirt). It defines the infrastructure layer — what gets created and destroyed — and is intentionally decoupled from configuration management concerns. Companion repositories: `automation` (Ansible) and `runbooks` (ad-hoc operator scripts).
 
 This repository uses **OpenTofu** exclusively. All commands use `tofu`. Never reference Terraform as the active tool. The HCL language, `.tf` extensions, `terraform.tfvars` filename, and `.terraform/` directory are shared ecosystem conventions — not Terraform references.
 
@@ -11,7 +11,7 @@ This repository uses **OpenTofu** exclusively. All commands use `tofu`. Never re
 ## Repository Structure
 
 ```
-infra-ops/
+infra/
 ├── CLAUDE.md                    # This file: AI assistant guide
 ├── README.md                    # Project documentation
 ├── LICENSE                      # Apache 2.0

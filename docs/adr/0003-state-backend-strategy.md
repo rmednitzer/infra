@@ -10,7 +10,7 @@ and, in places, sensitive values (e.g., generated passwords, cloud-init
 material). The backend determines where state lives, who can read it, whether
 it is locked during writes, and whether it is encrypted at rest.
 
-`infra-ops` has two environments with different operational needs:
+`infra` has two environments with different operational needs:
 
 - **Lab** — single operator, fast iteration, transient infrastructure, no
   shared-modification risk. Losing the state file means destroying and

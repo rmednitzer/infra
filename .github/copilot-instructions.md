@@ -1,8 +1,8 @@
-# Copilot Coding Instructions for infra-ops
+# Copilot Coding Instructions for infra
 
 ## Repository Purpose
 
-`infra-ops` is an OpenTofu infrastructure provisioning repository. It manages KVM/libvirt VMs, networks, and storage. All tooling uses `tofu` commands. Never reference Terraform as the active tool.
+`infra` (formerly `infra-ops`) is an OpenTofu infrastructure provisioning repository. It manages KVM/libvirt VMs, networks, and storage. All tooling uses `tofu` commands. Never reference Terraform as the active tool.
 
 The rationale behind each standing convention below lives in `docs/adr/`. Before changing one, read the relevant ADR; if the convention itself should change, propose a new ADR that supersedes the existing one rather than silently editing the code.
 

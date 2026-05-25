@@ -12,7 +12,7 @@ OSI-approved open-source license. In response, the Linux Foundation forked the
 last MPL-licensed Terraform release into [OpenTofu](https://opentofu.org/),
 which has continued under the original MPL 2.0 license.
 
-For `infra-ops` we need a permissively-licensed infrastructure tool that:
+For `infra` we need a permissively-licensed infrastructure tool that:
 
 - Supports the HashiCorp Configuration Language (HCL) and the existing provider
   ecosystem we depend on (notably `dmacvicar/libvirt`).

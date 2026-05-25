@@ -17,7 +17,7 @@ The following are considered in-scope security concerns for this repository:
 
 ## Reporting a Vulnerability
 
-Please use [GitHub's private vulnerability reporting](https://github.com/rmednitzer/infra-ops/security/advisories/new) to report security issues. This keeps the disclosure private until a fix is available.
+Please use [GitHub's private vulnerability reporting](https://github.com/rmednitzer/infra/security/advisories/new) to report security issues. This keeps the disclosure private until a fix is available.
 
 Include in your report:
 - A description of the vulnerability
