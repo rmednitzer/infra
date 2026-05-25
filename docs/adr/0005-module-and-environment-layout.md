@@ -26,7 +26,7 @@ We need a layout that:
 ### Top-level layout
 
 ```
-infra-ops/
+infra/
 ├── modules/<module-name>/      # Reusable building blocks
 ├── environments/<env-name>/    # Root configurations that compose modules
 ├── scripts/                    # Operational helpers (init-backend.sh, etc.)

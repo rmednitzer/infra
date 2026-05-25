@@ -1,8 +1,10 @@
-# infra-ops
+# infra
 
-[![CI](https://github.com/rmednitzer/infra-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/rmednitzer/infra-ops/actions/workflows/ci.yml)
+[![CI](https://github.com/rmednitzer/infra/actions/workflows/ci.yml/badge.svg)](https://github.com/rmednitzer/infra/actions/workflows/ci.yml)
 
 Infrastructure provisioning repository for KVM/libvirt virtual machines, networks, and storage, managed with [OpenTofu](https://opentofu.org/). Designed for production-grade operations with compliance-aligned practices, CI-gated changes, and documented module interfaces.
+
+This repository was previously named `infra-ops`. Companion repositories: `automation` (Ansible configuration and hardening) and `runbooks` (ad-hoc operator scripts).
 
 The rationale behind the standing architectural choices — OpenTofu over Terraform, the `dmacvicar/libvirt` `~> 0.8.0` pin, the state-backend strategy, the cloud-init baseline, and the module/environment layout — is recorded in [`docs/adr/`](docs/adr/).
 
@@ -45,7 +47,7 @@ tofu apply
 ## Repository Structure
 
 ```
-infra-ops/
+infra/
 ├── modules/
 │   └── libvirt-vm/              # KVM/libvirt VM provisioning module
 ├── environments/

@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-This directory contains the Architecture Decision Records (ADRs) for `infra-ops`.
+This directory contains the Architecture Decision Records (ADRs) for `infra`.
 Each ADR captures a single significant architectural or operational decision —
 the context that motivated it, the decision itself, and the consequences (good
 and bad) of choosing it.
