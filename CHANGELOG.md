@@ -5,6 +5,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Sync governance docs (SECURITY policy shape, PR template structure,
+  copilot instructions, README Governance table) with the companion
+  `runbooks` and `automation` repos. No module, environment, or CI
+  behavior change.
+
 ## [0.0.0]
 
 ### Scaffolding (PR #12)

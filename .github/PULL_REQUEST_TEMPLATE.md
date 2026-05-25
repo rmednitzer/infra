@@ -5,6 +5,7 @@
 ## Type of Change
 
 - [ ] New module
+- [ ] Bug fix
 - [ ] Module improvement or refactor
 - [ ] Environment configuration change
 - [ ] Documentation update
@@ -12,8 +13,8 @@
 
 ## Checklist
 
-- [ ] I have followed the [HCL conventions](../CLAUDE.md) for this project
-- [ ] I have read the relevant [ADR(s)](../docs/adr/) if this PR changes
+- [ ] I have followed the [HCL conventions](/rmednitzer/infra/blob/main/CLAUDE.md) for this project
+- [ ] I have read the relevant [ADR(s)](/rmednitzer/infra/tree/main/docs/adr) if this PR changes
       a standing convention (provider pin, backend strategy, module
       layout, cloud-init defaults), and either follows the existing ADR
       or proposes a new ADR that supersedes it
@@ -24,7 +25,7 @@
 - [ ] All outputs have `description` defined
 - [ ] Sensitive values are marked `sensitive = true` and not hardcoded
 - [ ] No state files are included in this PR
-- [ ] `[Unreleased]` entry added to [`CHANGELOG.md`](../CHANGELOG.md)
+- [ ] `[Unreleased]` entry added to [`CHANGELOG.md`](/rmednitzer/infra/blob/main/CHANGELOG.md)
 - [ ] Relevant documentation updated (module READMEs, ADRs, etc.)
 
 ## Plan Output
