@@ -66,3 +66,38 @@ jobs:
 
       - name: Run TFLint
         run: tflint --recursive
+
+  security:
+    name: Security Scan (Trivy)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Run Trivy IaC misconfiguration scan
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+          skip-dirs: "**/.terraform"
+
+  pre-commit:
+    name: Pre-commit (hygiene + EditorConfig)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # terraform_* hooks already run as dedicated jobs above; skip them
+      # here so this job stays fast and doesn't double-report.
+      - name: Run hygiene hooks
+        uses: pre-commit/action@v3.0.1
+        env:
+          SKIP: terraform_fmt,terraform_validate,terraform_tflint,terraform_trivy
