@@ -153,8 +153,6 @@ requirements below before it provisions resources. The full rationale is in
 
 ## CI / Quality
 
-Every push and pull request runs five checks:
-
 | Check | Tool | Command |
 |-------|------|---------|
 | Format | `tofu fmt` | `tofu fmt -check -recursive` |
@@ -165,34 +163,25 @@ Every push and pull request runs five checks:
 
 All checks must pass before a pull request can be merged.
 
-## Local development loop
+## Development
 
 ```bash
-pip install pre-commit
-pre-commit install
-# pre-commit-terraform calls `terraform` by default; point it at OpenTofu.
-export TFTOOL=tofu
+pip install pre-commit && pre-commit install
+export TFTOOL=tofu        # point pre-commit-terraform at OpenTofu
 pre-commit run --all-files
 ```
 
-The hook set is in [`.pre-commit-config.yaml`](.pre-commit-config.yaml) and
-covers `terraform_fmt`, `terraform_validate`, `terraform_tflint`,
-`terraform_trivy`, EditorConfig conformance, and the standard hygiene hooks.
-The OpenTofu binary version is pinned via
-[`.opentofu-version`](.opentofu-version) (`1.12.0`) for `asdf` / `tenv` /
-`mise` users.
+Hook set: [`.pre-commit-config.yaml`](.pre-commit-config.yaml). OpenTofu
+version pinned via [`.opentofu-version`](.opentofu-version) (`1.12.0`).
 
 ## Governance
 
-- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — contribution workflow, ADR
-  expectations, branch naming.
-- [`CHANGELOG.md`](./CHANGELOG.md) — Keep-a-Changelog 1.1.0 format.
-- [`.github/SECURITY.md`](.github/SECURITY.md) — vulnerability reporting.
-- [`.github/CODEOWNERS`](.github/CODEOWNERS) — review assignment for ADRs,
-  modules, production environment, and workflows.
-- [`CLAUDE.md`](./CLAUDE.md) — AI-authoring contract; OpenTofu-only
-  policy; HCL style.
-
-## License
-
-Apache 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+| File | Purpose |
+|------|---------|
+| [`CLAUDE.md`](./CLAUDE.md) | HCL style, OpenTofu policy, conventions |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Workflow, ADR expectations |
+| [`CHANGELOG.md`](./CHANGELOG.md) | Keep a Changelog 1.1.0 |
+| [`docs/adr/`](./docs/adr/) | Architecture Decision Records |
+| [`.github/SECURITY.md`](.github/SECURITY.md) | Vulnerability reporting |
+| [`.github/CODEOWNERS`](.github/CODEOWNERS) | Review assignment |
+| [`LICENSE`](LICENSE) / [`NOTICE`](NOTICE) | Apache 2.0 |
