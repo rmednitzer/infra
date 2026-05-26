@@ -5,6 +5,20 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Optimise and rewrite every `.md` file end-to-end for tighter prose,
+  consistent voice, and uniform structure across the three companion
+  repos: `README.md`, `CLAUDE.md`, `CONTRIBUTING.md`,
+  `.github/SECURITY.md`, `.github/PULL_REQUEST_TEMPLATE.md`,
+  `.github/copilot-instructions.md`, `docs/adr/README.md`, all six
+  ADRs (`0001`–`0006`), `environments/lab/README.md`,
+  `environments/production/README.md`, and
+  `modules/libvirt-vm/README.md`. ADR Status / Date / Decisions /
+  Consequences shape preserved per the Michael Nygard template;
+  all factual content — decisions, dates, deprecations, version
+  numbers, finding states (FIXED / DEFERRED / NO CHANGE / DOCUMENTED) —
+  preserved verbatim. No module, environment, or CI behaviour change.
+  `tofu fmt -check -recursive`, `tofu validate` per environment, and
+  `tflint --recursive` all pass.
 - Trim placeholder boilerplate in `environments/production/`: removed the
   example-module comment block in `main.tf`, the three commented-out
   variable stubs in `variables.tf`, the placeholder comment in
