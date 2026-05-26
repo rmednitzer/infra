@@ -5,6 +5,16 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Trim placeholder boilerplate in `environments/production/`: removed the
+  example-module comment block in `main.tf`, the three commented-out
+  variable stubs in `variables.tf`, the placeholder comment in
+  `outputs.tf`, the commented-out tfvars examples, and the long inline
+  S3-backend example in `backend.tf` (the backend example, native S3
+  locking with `use_lockfile = true`, and the `endpoints = { s3 = "…" }`
+  guidance live in ADR-0003 and the production env README — single source
+  of truth). The working local placeholder backend stays in place so
+  `tofu init -backend=false && tofu validate` still works in CI;
+  `tofu fmt -check`, `tofu validate`, and `tflint --recursive` all pass.
 - Sync governance docs (SECURITY policy shape, PR template structure,
   copilot instructions, README Governance table) with the companion
   `runbooks` and `automation` repos. No module, environment, or CI
