@@ -5,21 +5,19 @@
 
 ## Context
 
-OpenTofu does not enforce a project layout. Without a convention, contributors
-will reach for different patterns — variables in `main.tf`, outputs scattered,
-provider blocks duplicated, README files inconsistent or absent — and the
-codebase will fragment.
+OpenTofu does not enforce a project layout. Without a convention,
+contributors reach for different patterns — variables in `main.tf`,
+outputs scattered, provider blocks duplicated, READMEs inconsistent or
+absent — and the codebase fragments.
 
-We need a layout that:
-
-- Is predictable: a contributor can open any module and find its inputs,
-  outputs, and version pins without searching.
-- Separates **reusable infrastructure logic** (modules) from
-  **environment-specific composition** (roots).
-- Plays well with tooling: `tofu fmt -recursive`, `tofu validate`,
-  `tflint --recursive`, CI matrices, and dependency lock files.
-- Is small. Five files per module is plenty for most cases; we prefer adding
-  files when needed rather than splitting prematurely.
+We need a layout that is predictable (a contributor can open any module
+and find its inputs, outputs, and version pins without searching),
+separates **reusable infrastructure logic** (modules) from
+**environment-specific composition** (roots), plays well with tooling
+(`tofu fmt -recursive`, `tofu validate`, `tflint --recursive`, CI
+matrices, dependency lock files), and stays small (five files per
+module is plenty; prefer adding files when needed over splitting
+prematurely).
 
 ## Decision
 
@@ -37,22 +35,22 @@ infra/
 
 ### Module layout (every module)
 
-Every module **must** contain exactly these five files:
+Every module **must** contain exactly:
 
 | File | Purpose |
 |------|---------|
 | `main.tf` | Resource and data-source definitions |
-| `variables.tf` | Input variables, with `type`, `description`, and validation where reasonable |
-| `outputs.tf` | Output values, with `description` |
+| `variables.tf` | Input variables — `type`, `description`, and validation where reasonable |
+| `outputs.tf` | Output values — `description` |
 | `versions.tf` | `required_version` + `required_providers` |
 | `README.md` | Usage example, inputs/outputs table, notes |
 
 Modules **must not**:
 
-- Configure providers (`provider "x" { … }`) — that belongs in the calling root.
-- Hardcode environment-specific values (paths, hostnames, IPs).
-- Depend on file paths outside the module directory (template files live
-  inside the module, e.g. `cloud_init.cfg`).
+- Configure providers (`provider "x" { … }`) — that belongs in the calling root
+- Hardcode environment-specific values (paths, hostnames, IPs)
+- Depend on file paths outside the module directory (template files
+  live inside the module — e.g. `cloud_init.cfg`)
 
 ### Environment root layout (every environment)
 
@@ -74,35 +72,36 @@ Secrets (`ssh_public_key`, credentials, API tokens) are injected via
 ### Naming
 
 - Module directory names: lowercase, hyphenated by provider/concern
-  (`libvirt-vm`, future: `hcloud-server`, `dns-zone`).
-- Environment directory names: lowercase, single word (`lab`, `production`).
-- Variables, resources, outputs, locals: `snake_case`.
-- Resource labels: the role within the module (`libvirt_volume.root`,
-  `libvirt_domain.vm`), not the type.
+  (`libvirt-vm`; future: `hcloud-server`, `dns-zone`)
+- Environment directory names: lowercase, single word
+  (`lab`, `production`)
+- Variables, resources, outputs, locals: `snake_case`
+- Resource labels: the role within the module
+  (`libvirt_volume.root`, `libvirt_domain.vm`), not the type
 
 ## Consequences
 
 **Positive**
 
-- A new contributor can find any input or output of any module in 30 seconds.
+- A new contributor finds any input or output of any module in 30
+  seconds.
 - CI's validate matrix is trivial: iterate over `environments/*` and
   `modules/*` and run `tofu init -backend=false && tofu validate`.
 - `tofu fmt -check -recursive` and `tflint --recursive` work without
   per-directory configuration.
-- Modules stay reusable: the same `libvirt-vm` module serves the lab today
-  and could serve a hypothetical `staging/` environment tomorrow with no
-  change.
+- Modules stay reusable: the same `libvirt-vm` module serves lab today
+  and could serve a hypothetical `staging/` environment tomorrow with
+  no change.
 
 **Negative**
 
-- Five files per module is overhead for trivial modules (e.g. a module with
-  one resource and no inputs). We accept this for uniformity — the
-  alternative is a "is this module conventional or not?" question on every
-  PR.
+- Five files per module is overhead for trivial modules (one resource,
+  no inputs). We accept this for uniformity — the alternative is an
+  "is this module conventional or not?" question on every PR.
 - Environment roots duplicate the `terraform { required_providers { … } }`
-  block from each module they call. This is necessary — OpenTofu's
-  provider-resolution rules require it — but it is a place where version
-  drift can hide. CI catches mismatches via `tofu init` failures.
+  block from each module they call. OpenTofu's provider-resolution
+  rules require this, but it is a place where version drift can hide.
+  CI catches mismatches via `tofu init` failures.
 
 ## References
 
@@ -110,4 +109,5 @@ Secrets (`ssh_public_key`, credentials, API tokens) are injected via
 - [HashiCorp's standard module structure](https://developer.hashicorp.com/terraform/language/modules/develop/structure)
   (the underlying convention, predating the fork)
 - `CLAUDE.md` — AI-assistant guide; restates the convention
-- `.github/copilot-instructions.md` — Copilot guide; restates the convention
+- `.github/copilot-instructions.md` — Copilot guide; restates the
+  convention

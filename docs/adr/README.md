@@ -1,11 +1,8 @@
 # Architecture Decision Records
 
-This directory contains the Architecture Decision Records (ADRs) for `infra`.
-Each ADR captures a single significant architectural or operational decision —
-the context that motivated it, the decision itself, and the consequences (good
-and bad) of choosing it.
-
-The format follows [Michael Nygard's template](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions.html).
+Each ADR captures one significant architectural or operational decision:
+context, decision, consequences. Format follows
+[Michael Nygard's template](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions.html).
 
 ## Index
 
@@ -22,18 +19,20 @@ The format follows [Michael Nygard's template](https://cognitect.com/blog/2011/1
 
 - **Proposed** — Under discussion; not yet adopted.
 - **Accepted** — Adopted; the codebase reflects this decision.
-- **Superseded by ADR-NNNN** — Replaced by a later decision; kept for history.
+- **Superseded by ADR-NNNN** — Replaced by a later decision; kept for
+  history.
 - **Deprecated** — No longer applies, but not yet replaced.
 
 ## Authoring a new ADR
 
-1. Copy the most recent ADR file as a starting template.
+1. Copy the most recent ADR file as a template.
 2. Increment the four-digit ID; use the next unused number.
-3. Use a short, imperative title (`Adopt X`, `Pin Y to Z`, `Use A over B`).
-4. Fill in **Context**, **Decision**, **Consequences**, and a dated **Status**.
-5. Add an entry to the index table above.
-6. Open a pull request — ADRs go through the same review path as code.
+3. Short imperative title (`Adopt X`, `Pin Y to Z`, `Use A over B`).
+4. Fill in **Context**, **Decision**, **Consequences**, and a dated
+   **Status**.
+5. Add an entry to the index above.
+6. Open a PR — ADRs go through the same review path as code.
 
-ADRs are immutable once accepted. To change a decision, write a new ADR that
-supersedes the old one and update the old ADR's status to
+ADRs are immutable once accepted. To change a decision, write a new ADR
+that supersedes the old one and update the old ADR's status to
 `Superseded by ADR-NNNN`.

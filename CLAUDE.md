@@ -1,108 +1,68 @@
-# CLAUDE.md — AI Assistant Guide for infra
+# CLAUDE.md — `infra`
 
-## Project Overview
+OpenTofu infrastructure provisioning: VM lifecycle, networking, storage
+allocation via [`dmacvicar/libvirt`](https://github.com/dmacvicar/terraform-provider-libvirt)
+(KVM/libvirt). Defines what gets created and destroyed; intentionally
+decoupled from configuration management.
 
-`infra` is an OpenTofu infrastructure provisioning repository managing VM lifecycle, networking, and storage allocation via the `dmacvicar/libvirt` provider (KVM/libvirt). It defines the infrastructure layer — what gets created and destroyed — and is intentionally decoupled from configuration management concerns. Companion repositories: `automation` (Ansible) and `runbooks` (ad-hoc operator scripts).
+Companions: `automation` (Ansible), `runbooks` (ad-hoc operator scripts).
 
-This repository uses **OpenTofu** exclusively. All commands use `tofu`. Never reference Terraform as the active tool. The HCL language, `.tf` extensions, `terraform.tfvars` filename, and `.terraform/` directory are shared ecosystem conventions — not Terraform references.
+**OpenTofu only.** All commands are `tofu`. Never write "terraform" as
+the active tool. HCL, the `.tf` extension, `terraform.tfvars`, the
+`.terraform/` directory, and the `terraform { }` block are shared
+ecosystem artifacts — not Terraform references.
 
----
-
-## Repository Structure
+## Repository layout
 
 ```
 infra/
-├── CLAUDE.md                    # This file: AI assistant guide
-├── README.md                    # Project documentation
-├── LICENSE                      # Apache 2.0
-├── .gitignore                   # OpenTofu-specific ignores
-├── .tflint.hcl                  # TFLint configuration (recommended preset)
-├── .github/
-│   ├── copilot-instructions.md  # Copilot coding guidelines
-│   ├── PULL_REQUEST_TEMPLATE.md # PR checklist
-│   ├── SECURITY.md              # Vulnerability reporting policy
-│   ├── dependabot.yml           # GitHub Actions dependency updates
-│   ├── ISSUE_TEMPLATE/          # Issue forms
-│   └── workflows/
-│       └── ci.yml               # CI: fmt, validate, lint
-├── modules/                     # Reusable, self-contained OpenTofu modules
-│   └── libvirt-vm/              # KVM/libvirt VM provisioning
-│       ├── main.tf              # Resource definitions
-│       ├── variables.tf         # Input variables with types and descriptions
-│       ├── outputs.tf           # Output values with descriptions
-│       ├── versions.tf          # Provider and OpenTofu version constraints
-│       ├── cloud_init.cfg       # Cloud-init user-data template
-│       └── README.md            # Module documentation
-├── environments/                # Per-environment root configurations
-│   ├── lab/                     # Lab: local state, libvirt on bare metal
-│   │   ├── main.tf              # Module calls
-│   │   ├── variables.tf         # Environment-level variables
-│   │   ├── outputs.tf           # Environment outputs
-│   │   ├── versions.tf          # Provider and OpenTofu version constraints
-│   │   ├── terraform.tfvars     # Non-secret defaults (tracked in git)
-│   │   ├── backend.tf           # State backend configuration
-│   │   └── .terraform.lock.hcl  # Provider dependency lock (tracked in git)
-│   └── production/              # Production: remote backend required (currently a local placeholder, no resources)
-│       ├── main.tf
-│       ├── variables.tf
-│       ├── outputs.tf
-│       ├── versions.tf
-│       ├── terraform.tfvars
-│       ├── backend.tf
-│       └── .terraform.lock.hcl
-├── docs/
-│   └── adr/                     # Architecture Decision Records (read first when changing a convention)
-│       ├── README.md            # ADR index and authoring guide
-│       ├── 0001-use-opentofu-not-terraform.md
-│       ├── 0002-pin-libvirt-provider-to-0.8.md
-│       ├── 0003-state-backend-strategy.md
-│       ├── 0004-cloud-init-bootstrap-conventions.md
-│       ├── 0005-module-and-environment-layout.md
-│       └── 0006-code-audit-2026-05.md
-└── scripts/
-    └── init-backend.sh          # Backend initialization helper
+├── modules/libvirt-vm/         # KVM/libvirt VM provisioning module
+├── environments/{lab,production}/
+├── scripts/init-backend.sh
+├── docs/adr/                   # Architecture Decision Records (read first)
+└── .github/                    # CI, PR/issue templates, dependabot, copilot
 ```
-
----
 
 ## Architecture Decision Records
 
-Standing decisions — provider version pin, state backend strategy, module
-layout, cloud-init defaults — live in `docs/adr/`. When asked to change a
-convention, **read the relevant ADR first** to understand the existing
-rationale. Changing a decision means writing a new ADR that supersedes the
-old one, not silently editing the underlying code. The current set is
-indexed in `docs/adr/README.md`.
+Standing decisions — provider pin, backend strategy, module layout,
+cloud-init defaults — live in [`docs/adr/`](docs/adr/). **Read the
+relevant ADR before changing a convention.** Changing a decision means
+writing a new ADR that supersedes the old one, not silently editing the
+underlying code.
 
----
+| ID | Title |
+|----|-------|
+| [0001](docs/adr/0001-use-opentofu-not-terraform.md) | Use OpenTofu, not Terraform |
+| [0002](docs/adr/0002-pin-libvirt-provider-to-0.8.md) | Pin `dmacvicar/libvirt` to `~> 0.8.0` |
+| [0003](docs/adr/0003-state-backend-strategy.md) | State backend strategy |
+| [0004](docs/adr/0004-cloud-init-bootstrap-conventions.md) | Cloud-init bootstrap conventions |
+| [0005](docs/adr/0005-module-and-environment-layout.md) | Module and environment layout |
+| [0006](docs/adr/0006-code-audit-2026-05.md) | Code audit 2026-05 findings |
 
-## Naming Conventions
+## Naming
 
 | Element | Convention | Example |
 |---------|-----------|---------|
-| Module directories | `snake_case` | `libvirt-vm` (hyphen for readability) |
-| Environment directories | lowercase | `lab`, `production` |
-| Variables | `snake_case`, prefixed by module context | `libvirt_vm_vcpus` |
-| Resources | `snake_case` | `libvirt_domain.vm` |
-| Data sources | `snake_case` | `data.libvirt_network.default` |
-| Outputs | `snake_case` | `vm_id`, `ip_address` |
-| Locals | `snake_case` | `locals { disk_size_bytes = ... }` |
+| Module directories | lowercase, hyphenated by provider/concern | `libvirt-vm` |
+| Environment directories | lowercase, single word | `lab`, `production` |
+| Variables, resources, outputs, locals | `snake_case` | `libvirt_vm_vcpus`, `libvirt_domain.vm` |
+| Resource labels | The role within the module, not the type | `libvirt_volume.root` |
 
----
+## HCL style
 
-## HCL Style Guide
+- 2-space indentation, no tabs
+- One blank line between top-level blocks; no trailing blank line at EOF
+- Every variable: `description` + `type`. `default` only when a sensible
+  default exists
+- Every output: `description`
+- Mark sensitive values with `sensitive = true`; never hardcode
+  credentials
+- Use `locals {}` for computed/derived values; do not inline complex
+  expressions in resource arguments
+- No hardcoded values in resource blocks — reference variables or locals
 
-- **Indentation**: 2 spaces, no tabs
-- **Provider versions**: explicit pins in `required_providers` using pessimistic constraint (`~>`)
-- **versions.tf**: every module and every environment root must have a `versions.tf` with `required_providers` and `required_version`
-- **Variables**: every variable must have `description` and `type`; use `default` only when a sensible default exists
-- **Outputs**: every output must have `description`
-- **Sensitive values**: mark with `sensitive = true`; never hardcode credentials
-- **Locals**: use `locals {}` for computed or derived values; do not inline complex expressions in resource arguments
-- **No hardcoded values** in resource blocks — reference variables or locals
-- **Blank lines**: one blank line between top-level blocks; no trailing blank lines at EOF
-
-Example variable block:
+Example variable:
 
 ```hcl
 variable "memory_mib" {
@@ -112,7 +72,7 @@ variable "memory_mib" {
 }
 ```
 
-Example output block:
+Example output:
 
 ```hcl
 output "ip_address" {
@@ -121,109 +81,121 @@ output "ip_address" {
 }
 ```
 
----
+## Module structure
 
-## Module Structure
-
-Every module **must** contain:
+Every module **must** contain exactly:
 
 | File | Purpose |
 |------|---------|
-| `main.tf` | Resource and data source definitions |
-| `variables.tf` | Input variable declarations |
-| `outputs.tf` | Output value declarations |
-| `versions.tf` | Provider constraints (`required_providers`) |
-| `README.md` | Usage documentation, inputs/outputs table |
+| `main.tf` | Resource + data-source definitions |
+| `variables.tf` | Input variables (typed, described, validated) |
+| `outputs.tf` | Output values (described) |
+| `versions.tf` | `required_version` + `required_providers` |
+| `README.md` | Usage example, inputs/outputs table, notes |
 
-Modules must be self-contained and reusable. They must not reference environment-specific paths or assume a particular backend.
+Modules must be self-contained and reusable. They must not configure
+providers, hardcode environment-specific values, or depend on paths
+outside the module directory.
 
----
+## Environment root structure
 
-## State Management
+Every environment under `environments/` **must** contain:
 
-- **Lab**: local backend is acceptable for iteration
-- **Non-lab environments**: remote backend required (e.g., S3-compatible, Consul)
-- **Encryption at rest**: mandatory for all remote backends
-- **State locking**: enabled on all remote backends to prevent concurrent modifications
-- **No secrets in state**: avoid storing credentials as resource arguments where possible; use data sources
-- **Never manually edit state** — use `tofu state mv`, `tofu state rm`, or `tofu import` as appropriate
+| File | Purpose |
+|------|---------|
+| `main.tf` | Provider configuration + module calls |
+| `variables.tf` | Variable declarations (typed, described) |
+| `outputs.tf` | Output declarations (described) |
+| `versions.tf` | `required_version` + `required_providers` |
+| `backend.tf` | State backend configuration |
+| `terraform.tfvars` | Non-secret defaults (tracked in git) |
+| `.terraform.lock.hcl` | Provider dependency lock (tracked in git) |
 
----
+## State management
 
-## Secrets Management
+- **Lab** uses a local backend. Acceptable for single-operator iteration.
+- **Non-lab** environments require a remote backend with encryption at
+  rest and state locking.
+- For S3-compatible backends: prefer `use_lockfile = true` (OpenTofu
+  1.10+ native locking) over `dynamodb_table`; prefer the
+  `endpoints = { s3 = "…" }` map over the deprecated top-level
+  `endpoint = "…"`. See [ADR-0003](docs/adr/0003-state-backend-strategy.md).
+- Never manually edit state — use `tofu state mv`, `tofu state rm`, or
+  `tofu import`.
 
+## Secrets
+
+- Mark sensitive variables `sensitive = true`
 - Never commit `.tfvars` files containing secrets
-- Use `TF_VAR_<name>` environment variables for sensitive inputs in CI and production
-- Mark sensitive variables with `sensitive = true`
-- Use external secret stores (Vault, AWS Secrets Manager) for production credentials
-- `terraform.tfvars` per environment contains only non-secret defaults and is tracked in git
+- Inject secrets via `TF_VAR_<name>` environment variables in CI and
+  production
+- Use external secret stores (Vault, AWS Secrets Manager) for production
+  credentials; `terraform.tfvars` carries non-secret defaults only
 
----
+## Provider pinning
 
-## Common Commands
+Pessimistic constraint in every `versions.tf`. For pre-1.0 providers,
+pin at the **patch** level — a minor-version bump is the provider
+author's signal that breaking changes have shipped
+([ADR-0002](docs/adr/0002-pin-libvirt-provider-to-0.8.md)):
 
-```bash
-# Initialize working directory (download providers)
-tofu init
-
-# Preview changes
-tofu plan
-
-# Apply changes
-tofu apply
-
-# Destroy all managed resources
-tofu destroy
-
-# Format HCL files
-tofu fmt -recursive
-
-# Validate configuration syntax
-tofu validate
-
-# List resources in state
-tofu state list
-
-# Show output values
-tofu output
+```hcl
+required_providers {
+  libvirt = {
+    source  = "dmacvicar/libvirt"
+    version = "~> 0.8.0"
+  }
+}
 ```
 
----
+## Common commands
 
-## Quality Tools
+```bash
+tofu init                  # Initialize working directory; download providers
+tofu plan                  # Preview changes
+tofu apply                 # Apply planned changes
+tofu destroy               # Destroy all managed resources
+tofu fmt -recursive        # Format HCL
+tofu validate              # Validate configuration
+tofu state list            # List resources in state
+tofu output                # Show output values
+```
+
+## Quality
 
 | Tool | Purpose | Command |
 |------|---------|---------|
 | `tofu fmt` | HCL formatting | `tofu fmt -check -recursive` |
-| `tofu validate` | Syntax and type checking | `tofu validate` |
-| `tflint` | Lint rules for providers/practices | `tflint` |
+| `tofu validate` | Syntax + type | Per-env `tofu init -backend=false && tofu validate` |
+| `tflint` | Lint | `tflint --recursive` |
+| Trivy | IaC misconfiguration scan | `trivy config . --severity HIGH,CRITICAL` |
+| pre-commit | Hygiene | `pre-commit run --all-files` |
 
-CI enforces all three on every push and pull request.
+CI enforces all five on every push and pull request.
 
----
+## Workflow
 
-## Git Workflow
+1. Branch from `main` with a descriptive name (`feature/add-hcloud-provider`,
+   `fix/libvirt-network`, `adr/0007-…`).
+2. Make changes; run `tofu fmt` + `tofu validate` locally.
+3. Open a pull request — CI must pass before merge.
+4. Imperative commit subjects (`Add libvirt-vm module`, `Fix cloud-init
+   hostname injection`).
 
-1. Branch from `main` with a descriptive name:
-   - `feature/add-hcloud-provider`
-   - `fix/libvirt-network`
-   - `docs/update-module-readme`
-2. Make changes, run `tofu fmt` and `tofu validate` locally
-3. Open a pull request — CI must pass before merge
-4. Use clear, imperative commit messages: `Add libvirt-vm module`, `Fix cloud-init hostname injection`
+## Notes for AI assistants
 
----
-
-## Important Notes for AI Assistants
-
-- **Always read existing files** before modifying them to understand current state
-- **Read the relevant ADR** in `docs/adr/` before changing a standing convention; if the decision should change, write a new ADR rather than silently editing code
-- **Never commit secrets or state files** — check `.gitignore` and variable sensitivity
-- **Use `tofu plan` before `tofu apply`** — never apply without reviewing the plan
-- **Use OpenTofu terminology consistently** — commands are `tofu`, tool is "OpenTofu"
-- **Do not reference Terraform** as the active tool in any documentation or comments
-- **Pin provider versions** with `~>` pessimistic constraints in every `versions.tf`. For pre-1.0 providers, pin at the **patch** level (`~> 0.8.0`, not `~> 0.8`) — see ADR-0002
-- **Every variable needs `description` and `type`** — no exceptions
-- **Every output needs `description`** — no exceptions
-- When adding a new module, create all five required files: `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`, `README.md`
-- For the production S3 backend, prefer `use_lockfile = true` over `dynamodb_table`, and the `endpoints = { s3 = "…" }` map attribute over the top-level `endpoint = "…"` — see ADR-0003 and ADR-0006
+- Read existing files before modifying them.
+- Read the relevant ADR before changing a standing convention; if the
+  decision should change, write a new ADR that supersedes it rather than
+  silently editing code.
+- Never commit secrets or state files — check `.gitignore` and variable
+  sensitivity.
+- Never `tofu apply` without first reviewing `tofu plan`.
+- Use OpenTofu terminology consistently (`tofu`, "OpenTofu"); never
+  reference Terraform as the active tool in docs or comments.
+- Pin providers with `~>`. For pre-1.0 providers, pin at the patch level
+  (see ADR-0002).
+- Every variable needs `description` and `type`; every output needs
+  `description`. No exceptions.
+- For the production S3 backend, prefer `use_lockfile = true` and the
+  `endpoints = { s3 = "…" }` map (ADR-0003 and ADR-0006 Finding 1).
