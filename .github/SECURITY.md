@@ -30,9 +30,8 @@ days.
 - Never commit secrets, credentials, or private keys.
 - Mark sensitive OpenTofu variables `sensitive = true`.
 - Inject secrets via `TF_VAR_*` environment variables in CI.
-- Remote state backends must have encryption at rest, state locking,
-  and access logging — see
-  [ADR-0003](../docs/adr/0003-state-backend-strategy.md).
+- Remote state backends must have encryption at rest and state locking —
+  see [ADR-0003](../docs/adr/0003-state-backend-strategy.md).
 - The cloud-init bootstrap hardens every VM at provisioning time (no
   password auth, no root SSH, locked default user). Changes to that
   baseline require updating

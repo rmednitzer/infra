@@ -3,8 +3,8 @@
 [![CI](https://github.com/rmednitzer/infra/actions/workflows/ci.yml/badge.svg)](https://github.com/rmednitzer/infra/actions/workflows/ci.yml)
 
 Infrastructure provisioning for KVM/libvirt VMs, networks, and storage,
-managed with [OpenTofu](https://opentofu.org/). Compliance-aligned
-practice, CI-gated changes, documented module interfaces.
+managed with [OpenTofu](https://opentofu.org/). The setup is
+compliance-aligned, CI-gated, and ships documented module interfaces.
 
 Companions:
 [`automation`](https://github.com/rmednitzer/automation) (Ansible
@@ -89,7 +89,7 @@ optional additional data disks. Full inputs and outputs:
 | Environment | Backend | Status | Notes |
 |-------------|---------|--------|-------|
 | [`lab`](environments/lab/) | Local | Active | Single-operator iteration on a local KVM host |
-| [`production`](environments/production/) | Remote S3-compatible — *required, not yet configured* | Placeholder | No resources yet; `backend.tf` ships a local placeholder and must be switched before any production resource is added |
+| [`production`](environments/production/) | Remote S3-compatible — *required, not yet configured* | Placeholder | No resources yet; `backend.tf` ships a local placeholder and must be switched before any production resources are added |
 
 Each environment ships its own `backend.tf`, `variables.tf`,
 `terraform.tfvars` (non-secret defaults only), `versions.tf`, and a
