@@ -31,6 +31,14 @@ Thumbs.db
 # Secrets
 *.pem
 *.key
+*.crt
+*.cer
+*.p12
+*.pfx
+.env
+.env.local
+.envrc
+.envrc.*
 
 # Temporary
 *.tmp

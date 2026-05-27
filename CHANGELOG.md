@@ -5,6 +5,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Extend `.gitignore` secret coverage: add `*.crt`, `*.cer`, `*.p12`,
+  `*.pfx`, `.env`, `.env.local`, `.envrc`, and `.envrc.*`. The repo
+  currently has none of these files; the additions are defensive so
+  operator-side direnv files, local env files, and certificate
+  bundles cannot accidentally be staged.
 - Align `.claude/settings.json` permission allowlist with the
   OpenTofu-only policy from CLAUDE.md and ADR-0001. Drop the eight
   `Bash(terraform …)` entries (the active-tool policy says never use
