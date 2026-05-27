@@ -5,6 +5,18 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- SHA-pin every `uses:` in `.github/workflows/ci.yml`. Major-version
+  refs (`@v6`, `@v3`, etc.) re-resolve on every run; SHA pins are
+  immutable. Each line carries a `# vX.Y.Z` (or equivalent) trailing
+  comment so reviewers can see what version the SHA represents,
+  matching the format Dependabot expects when bumping. Affects
+  `actions/checkout`, `opentofu/setup-opentofu`,
+  `terraform-linters/setup-tflint`, `aquasecurity/trivy-action`,
+  `github/codeql-action/upload-sarif`, `actions/setup-python`, and
+  `pre-commit/action`. Dependabot's `github-actions` ecosystem
+  continues to track each line weekly. Aligns with NIST SSDF
+  SP 800-218 PW.4 and SLSA Source Track guidance on third-party
+  dependency pinning.
 - Track Python tooling via Dependabot. Add `requirements-dev.txt`
   pinning `pre-commit==4.6.0` -- the only direct Python dependency
   the repo cares about -- and extend `.github/dependabot.yml` with a
