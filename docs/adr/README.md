@@ -16,6 +16,7 @@ context, decision, consequences. Format follows
 | [0006](0006-code-audit-2026-05.md) | Code audit 2026-05 findings | Accepted | 2026-05 |
 | [0007](0007-set-meta-data-on-libvirt-cloudinit-disk.md) | Set `meta_data` on `libvirt_cloudinit_disk` | Accepted | 2026-05 |
 | [0008](0008-omit-graphics-from-libvirt-domain-by-default.md) | Omit `graphics` from `libvirt_domain` by default | Accepted | 2026-05 |
+| [0009](0009-begin-libvirt-0.9-migration-evaluation.md) | Begin `dmacvicar/libvirt` 0.9.x migration evaluation | Accepted | 2026-05 |
 
 ## Status values
 

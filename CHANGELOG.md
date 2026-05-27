@@ -5,6 +5,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Open the structured evaluation of the `dmacvicar/libvirt` 0.8.x to
+  0.9.x migration as
+  [ADR-0009](docs/adr/0009-begin-libvirt-0.9-migration-evaluation.md).
+  No pin change. The ADR captures gating criteria (schema-diff
+  inventory, lab apply-cycle test, state-migration walk-through,
+  functional smoke test, maintenance-horizon check); the actual bump
+  lands in ADR-0010 when those gates close.
 - Remove the SPICE `graphics` block from `libvirt_domain.vm` in the
   `libvirt-vm` module. The default-shaped VM no longer creates a
   SPICE (or any) graphics listener. Serial console
