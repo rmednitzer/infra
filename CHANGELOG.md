@@ -5,6 +5,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Pin CI's OpenTofu version via `tofu_version_file: .opentofu-version`
+  on both `Setup OpenTofu` steps in `.github/workflows/ci.yml`. The
+  `opentofu/setup-opentofu` action defaults to `latest` when no version
+  input is supplied, so the `.opentofu-version` pin (`1.12.0`) was
+  previously informational only. CI now installs the same version
+  declared in the file. No behaviour change on this push; protects
+  against silent drift on the next OpenTofu release.
 - Optimise and rewrite every `.md` file end-to-end for tighter prose,
   consistent voice, and uniform structure across the three companion
   repos: `README.md`, `CLAUDE.md`, `CONTRIBUTING.md`,
