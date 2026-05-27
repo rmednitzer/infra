@@ -98,3 +98,4 @@ See [ADR-0002](../docs/adr/0002-pin-libvirt-provider-to-0.8.md).
 | [0004](../docs/adr/0004-cloud-init-bootstrap-conventions.md) | Cloud-init bootstrap conventions |
 | [0005](../docs/adr/0005-module-and-environment-layout.md) | Module and environment layout |
 | [0006](../docs/adr/0006-code-audit-2026-05.md) | Code audit 2026-05 findings |
+| [0007](../docs/adr/0007-set-meta-data-on-libvirt-cloudinit-disk.md) | Set `meta_data` on `libvirt_cloudinit_disk` |

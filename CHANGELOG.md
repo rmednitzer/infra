@@ -5,6 +5,15 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Set `meta_data` on `libvirt_cloudinit_disk.init` to
+  `instance-id: ${vm_name}\nlocal-hostname: ${vm_name}\n`. Honours
+  the cloud-init NoCloud contract for `instance-id` explicitly rather
+  than relying on the provider's empty-file fallback. Closes
+  [ADR-0006 Finding 2](docs/adr/0006-code-audit-2026-05.md) (status
+  was DEFERRED); rationale and operator migration note in new
+  [ADR-0007](docs/adr/0007-set-meta-data-on-libvirt-cloudinit-disk.md).
+  Operators with existing VMs see a one-time cloudinit-disk re-create
+  + domain restart on the first apply after upgrading.
 - SHA-pin every `uses:` in `.github/workflows/ci.yml`. Major-version
   refs (`@v6`, `@v3`, etc.) re-resolve on every run; SHA pins are
   immutable. Each line carries a `# vX.Y.Z` (or equivalent) trailing
