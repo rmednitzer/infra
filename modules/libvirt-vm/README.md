@@ -61,6 +61,16 @@ module "k3s_server" {
 | `ip_address` | VM IP address from DHCP lease, or `null` if no lease is available |
 | `mac_address` | VM MAC address, or `null` if unavailable |
 
+## Console and graphics
+
+The domain ships with a `console { type = "pty" target_type = "serial" }`
+block (so `virsh console <vm>` works) and **no** `graphics` block.
+SPICE and VNC listeners are intentionally omitted. Rationale, threat
+model, and operator note in
+[ADR-0008](../../docs/adr/0008-omit-graphics-from-libvirt-domain-by-default.md).
+Operators who need graphical access for a specific VM should fork
+the module or thread a `graphics` input through.
+
 ## Cloud-init
 
 The shipped `cloud_init.cfg`:

@@ -5,6 +5,15 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Remove the SPICE `graphics` block from `libvirt_domain.vm` in the
+  `libvirt-vm` module. The default-shaped VM no longer creates a
+  SPICE (or any) graphics listener. Serial console
+  (`virsh console <vm>`) remains as the out-of-band recovery path.
+  Rationale in new
+  [ADR-0008](docs/adr/0008-omit-graphics-from-libvirt-domain-by-default.md).
+  Operators on existing infra see an in-place domain update; the
+  graphics element is removed from the XML on the next domain
+  restart.
 - Set `meta_data` on `libvirt_cloudinit_disk.init` to
   `instance-id: ${vm_name}\nlocal-hostname: ${vm_name}\n`. Honours
   the cloud-init NoCloud contract for `instance-id` explicitly rather

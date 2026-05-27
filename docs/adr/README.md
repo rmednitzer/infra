@@ -15,6 +15,7 @@ context, decision, consequences. Format follows
 | [0005](0005-module-and-environment-layout.md) | Module and environment layout | Accepted | 2026-05 |
 | [0006](0006-code-audit-2026-05.md) | Code audit 2026-05 findings | Accepted | 2026-05 |
 | [0007](0007-set-meta-data-on-libvirt-cloudinit-disk.md) | Set `meta_data` on `libvirt_cloudinit_disk` | Accepted | 2026-05 |
+| [0008](0008-omit-graphics-from-libvirt-domain-by-default.md) | Omit `graphics` from `libvirt_domain` by default | Accepted | 2026-05 |
 
 ## Status values
 

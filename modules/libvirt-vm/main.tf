@@ -70,10 +70,4 @@ resource "libvirt_domain" "vm" {
     target_type = "serial"
     target_port = "0"
   }
-
-  graphics {
-    type        = "spice"
-    listen_type = "address"
-    autoport    = true
-  }
 }
