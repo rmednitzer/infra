@@ -5,6 +5,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Track Python tooling via Dependabot. Add `requirements-dev.txt`
+  pinning `pre-commit==4.6.0` -- the only direct Python dependency
+  the repo cares about -- and extend `.github/dependabot.yml` with a
+  `pip` ecosystem entry that watches it weekly (label: `python`).
+  `README.md` and `CONTRIBUTING.md` switched from
+  `pip install pre-commit` to `pip install -r requirements-dev.txt`.
+  No CI change.
 - Extend `.gitignore` secret coverage: add `*.crt`, `*.cer`, `*.p12`,
   `*.pfx`, `.env`, `.env.local`, `.envrc`, and `.envrc.*`. The repo
   currently has none of these files; the additions are defensive so

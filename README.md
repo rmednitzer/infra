@@ -163,13 +163,16 @@ All checks must pass before a PR can merge.
 ## Development
 
 ```bash
-pip install pre-commit && pre-commit install
+pip install -r requirements-dev.txt && pre-commit install
 export TFTOOL=tofu        # point pre-commit-terraform at OpenTofu
 pre-commit run --all-files
 ```
 
 Hook set: [`.pre-commit-config.yaml`](.pre-commit-config.yaml). OpenTofu
 version pinned via [`.opentofu-version`](.opentofu-version) (`1.12.0`).
+Pre-commit version pinned via
+[`requirements-dev.txt`](requirements-dev.txt); Dependabot watches both
+this file and the GitHub Actions workflow weekly.
 
 ## Governance
 
