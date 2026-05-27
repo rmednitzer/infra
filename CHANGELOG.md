@@ -5,6 +5,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Validate `var.libvirt_uri` in `environments/production/variables.tf`
+  against the libvirt QEMU URI grammar. Accepts `qemu:///system`,
+  `qemu:///session`, and the remote transports
+  (`qemu+ssh`, `qemu+tls`, `qemu+tcp`, `qemu+unix`, others). A
+  malformed URI now fails at plan time with a clear error rather than
+  surfacing as a provider connection error at apply.
 - Emit Trivy results as SARIF and upload them to the GitHub Security
   tab. The `security` job in `.github/workflows/ci.yml` now writes
   `trivy.sarif` and a follow-up step calls
