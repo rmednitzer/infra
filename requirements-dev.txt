@@ -1,0 +1,15 @@
+# Python tooling for local development.
+#
+# pre-commit is the only direct dependency: it bootstraps and runs the
+# hooks declared in .pre-commit-config.yaml (terraform_fmt,
+# terraform_validate, terraform_tflint, terraform_trivy, plus hygiene
+# checks). Pinning a single version here keeps every contributor on
+# the same hook runner and lets Dependabot (.github/dependabot.yml,
+# pip ecosystem) propose upgrades on a weekly cycle.
+#
+# Install:
+#
+#     pip install -r requirements-dev.txt
+#     pre-commit install
+#
+pre-commit==4.6.0

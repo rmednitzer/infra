@@ -123,6 +123,9 @@ README section.
 | [0004](docs/adr/0004-cloud-init-bootstrap-conventions.md) | Cloud-init bootstrap conventions |
 | [0005](docs/adr/0005-module-and-environment-layout.md) | Module and environment layout |
 | [0006](docs/adr/0006-code-audit-2026-05.md) | Code audit 2026-05 findings |
+| [0007](docs/adr/0007-set-meta-data-on-libvirt-cloudinit-disk.md) | Set `meta_data` on `libvirt_cloudinit_disk` |
+| [0008](docs/adr/0008-omit-graphics-from-libvirt-domain-by-default.md) | Omit `graphics` from `libvirt_domain` by default |
+| [0009](docs/adr/0009-begin-libvirt-0.9-migration-evaluation.md) | Begin `dmacvicar/libvirt` 0.9.x migration evaluation |
 
 ## State safety
 
@@ -163,13 +166,16 @@ All checks must pass before a PR can merge.
 ## Development
 
 ```bash
-pip install pre-commit && pre-commit install
+pip install -r requirements-dev.txt && pre-commit install
 export TFTOOL=tofu        # point pre-commit-terraform at OpenTofu
 pre-commit run --all-files
 ```
 
 Hook set: [`.pre-commit-config.yaml`](.pre-commit-config.yaml). OpenTofu
 version pinned via [`.opentofu-version`](.opentofu-version) (`1.12.0`).
+Pre-commit version pinned via
+[`requirements-dev.txt`](requirements-dev.txt); Dependabot watches both
+this file and the GitHub Actions workflow weekly.
 
 ## Governance
 

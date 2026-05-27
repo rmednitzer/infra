@@ -5,6 +5,8 @@ locals {
     hostname       = var.vm_name
     ssh_public_key = var.ssh_public_key
   })
+
+  cloud_init_meta_data = "instance-id: ${var.vm_name}\nlocal-hostname: ${var.vm_name}\n"
 }
 
 resource "libvirt_volume" "base" {
@@ -35,6 +37,7 @@ resource "libvirt_cloudinit_disk" "init" {
   name      = "${var.vm_name}-cloudinit.iso"
   pool      = var.storage_pool
   user_data = local.cloud_init_config
+  meta_data = local.cloud_init_meta_data
 }
 
 resource "libvirt_domain" "vm" {
@@ -66,11 +69,5 @@ resource "libvirt_domain" "vm" {
     type        = "pty"
     target_type = "serial"
     target_port = "0"
-  }
-
-  graphics {
-    type        = "spice"
-    listen_type = "address"
-    autoport    = true
   }
 }

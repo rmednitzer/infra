@@ -61,6 +61,16 @@ module "k3s_server" {
 | `ip_address` | VM IP address from DHCP lease, or `null` if no lease is available |
 | `mac_address` | VM MAC address, or `null` if unavailable |
 
+## Console and graphics
+
+The domain ships with a `console { type = "pty" target_type = "serial" }`
+block (so `virsh console <vm>` works) and **no** `graphics` block.
+SPICE and VNC listeners are intentionally omitted. Rationale, threat
+model, and operator note in
+[ADR-0008](../../docs/adr/0008-omit-graphics-from-libvirt-domain-by-default.md).
+Operators who need graphical access for a specific VM should fork
+the module or thread a `graphics` input through.
+
 ## Cloud-init
 
 The shipped `cloud_init.cfg`:
@@ -97,10 +107,11 @@ The shipped `cloud_init.cfg`:
   resources that already exist on the host. Creating them is outside
   the module's scope; on a fresh libvirtd install, `virsh pool-list
   --all` and `virsh net-list --all` should show the defaults.
-- The module sets `user_data` on `libvirt_cloudinit_disk` but does not
-  currently set `meta_data`. Modern Ubuntu cloud images tolerate the
-  empty metadata file via first-boot heuristics, but the cloud-init
-  NoCloud contract specifies that `instance-id` should be set
-  explicitly. Tracked as Finding 2 in
-  [ADR-0006](../../docs/adr/0006-code-audit-2026-05.md); planned
-  follow-up.
+- The module sets `meta_data` on `libvirt_cloudinit_disk` to
+  `instance-id: ${vm_name}\nlocal-hostname: ${vm_name}\n`, satisfying
+  the cloud-init NoCloud contract for `instance-id` deterministically
+  from `var.vm_name`. See
+  [ADR-0007](../../docs/adr/0007-set-meta-data-on-libvirt-cloudinit-disk.md)
+  for the rationale and migration note. Operators on existing infra
+  see a one-time `libvirt_cloudinit_disk` re-create + domain restart
+  on the first apply after upgrading past this change.

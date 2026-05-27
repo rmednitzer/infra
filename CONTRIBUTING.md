@@ -16,7 +16,7 @@ decisions in [`docs/adr/`](./docs/adr/). This file is workflow only.
 ## Local loop
 
 ```bash
-pip install pre-commit && pre-commit install
+pip install -r requirements-dev.txt && pre-commit install
 export TFTOOL=tofu        # point pre-commit-terraform at OpenTofu
 pre-commit run --all-files
 ```
