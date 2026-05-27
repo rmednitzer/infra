@@ -5,6 +5,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Add workflow-level `concurrency:` block to `.github/workflows/ci.yml`.
+  Concurrent runs for the same `github.ref` cancel any in-progress run,
+  so rapid pushes to a PR branch no longer pile up runners. Pushes to
+  `main` after merge are infrequent (branch is protected; merges happen
+  one PR at a time) so the same policy is safe there.
 - Pin CI's OpenTofu version via `tofu_version_file: .opentofu-version`
   on both `Setup OpenTofu` steps in `.github/workflows/ci.yml`. The
   `opentofu/setup-opentofu` action defaults to `latest` when no version
