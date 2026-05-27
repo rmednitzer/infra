@@ -5,6 +5,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Align `.claude/settings.json` permission allowlist with the
+  OpenTofu-only policy from CLAUDE.md and ADR-0001. Drop the eight
+  `Bash(terraform …)` entries (the active-tool policy says never use
+  the `terraform` binary). Add read-only `tofu state list`, `tofu
+  state show`, `tofu version`, the safe `tofu init -backend=false`
+  prefix (so CI-equivalent validation runs without a permission
+  prompt), and `trivy config` (the security gate from CI). No new
+  state-mutating commands granted.
 - Validate `var.libvirt_uri` in `environments/production/variables.tf`
   against the libvirt QEMU URI grammar. Accepts `qemu:///system`,
   `qemu:///session`, and the remote transports
