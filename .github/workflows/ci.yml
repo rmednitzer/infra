@@ -78,6 +78,9 @@ jobs:
   security:
     name: Security Scan (Trivy)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -91,6 +94,15 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
           skip-dirs: "**/.terraform"
+          format: sarif
+          output: trivy.sarif
+
+      - name: Upload Trivy SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy.sarif
+          category: trivy-config
 
   pre-commit:
     name: Pre-commit (hygiene + EditorConfig)

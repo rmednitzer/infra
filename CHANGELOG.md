@@ -5,6 +5,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Emit Trivy results as SARIF and upload them to the GitHub Security
+  tab. The `security` job in `.github/workflows/ci.yml` now writes
+  `trivy.sarif` and a follow-up step calls
+  `github/codeql-action/upload-sarif@v3` with `if: always()` so
+  findings surface even when Trivy's `exit-code: "1"` blocks the job.
+  Job-level `permissions: security-events: write` granted; the
+  workflow-level `contents: read` stays in place. No change to which
+  severities block CI (still HIGH and CRITICAL).
 - Add workflow-level `concurrency:` block to `.github/workflows/ci.yml`.
   Concurrent runs for the same `github.ref` cancel any in-progress run,
   so rapid pushes to a PR branch no longer pile up runners. Pushes to
