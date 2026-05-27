@@ -5,6 +5,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Add `audit/2026-05-27-engagement.md` -- senior-assurance-engineer
+  pass over the repo, captured per the engagement contract's Phase 6
+  format. Documents the 12-commit engagement (Tier 1 items #1, #2,
+  #3, #4, #6, #9, #10, #11 plus deferred-then-authorised D1 / D5 /
+  D3), the four audit findings that remain deferred (F12 branch
+  protection, F13 production `required_version` bump, F14 production
+  S3 backend wiring, F11 libvirt 0.9.x migration), and the
+  cross-checked rationale for every change.
 - Open the structured evaluation of the `dmacvicar/libvirt` 0.8.x to
   0.9.x migration as
   [ADR-0009](docs/adr/0009-begin-libvirt-0.9-migration-evaluation.md).
