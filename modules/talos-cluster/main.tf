@@ -96,6 +96,13 @@ locals {
     [local.common_patch],
     var.extra_worker_config_patches,
   )
+
+  # XSLT that injects a libvirt-native <dhcp><host> reservation per node into
+  # the network XML (the provider has no native HCL block for this on 0.8.x).
+  # Kept as a local (not inlined in the resource) per the HCL style guide.
+  network_dhcp_hosts_xslt = templatefile("${path.module}/network-dhcp-hosts.xslt.tftpl", {
+    nodes = local.all_nodes
+  })
 }
 
 # ---------------------------------------------------------------------------
@@ -141,9 +148,13 @@ resource "terraform_data" "node_invariants" {
 # and domains. Talos boots directly from its disk image; no cloud-init.
 # ---------------------------------------------------------------------------
 
-# Dedicated NAT network with a static MAC->IP reservation per node, so every
-# Talos API endpoint is known before any configuration is applied. (0.8.x
-# binds reservations via ips.dhcp.hosts; the domain side sets addresses+mac.)
+# Dedicated NAT network with a static MAC->IP DHCP reservation per node, so
+# every Talos API endpoint is known and stable before any configuration is
+# applied. dmacvicar/libvirt 0.8.x has no native HCL block for DHCP host
+# reservations (the dhcp{} block only carries `enabled`), so the reservations
+# are injected as libvirt-native <dhcp><host> elements via an XSLT transform on
+# the network XML (xml.xslt below). The dns{} hosts add matching DNS A records
+# (name resolution); they do NOT, on their own, pin the lease.
 resource "libvirt_network" "talos" {
   name      = "${var.cluster_name}-net"
   mode      = "nat"
@@ -165,6 +176,14 @@ resource "libvirt_network" "talos" {
         ip       = hosts.value.ip
       }
     }
+  }
+
+  # Inject one libvirt-native <host mac= name= ip=/> DHCP reservation per node
+  # into the auto-generated <dhcp> element (see network-dhcp-hosts.xslt.tftpl).
+  # This is what guarantees each node receives its declared IP, which the talos
+  # provider then targets. 0.8.x exposes no native reservation block, so XSLT.
+  xml {
+    xslt = local.network_dhcp_hosts_xslt
   }
 }
 
@@ -275,6 +294,29 @@ resource "talos_machine_configuration_apply" "node" {
   node                        = each.value.ip
   endpoint                    = each.value.ip
   apply_mode                  = var.apply_mode
+
+  # On destroy (a node removed from the maps, or `tofu destroy`), whether to
+  # reset the node so it leaves etcd/Kubernetes cleanly instead of just
+  # deleting the VM and leaving stale etcd membership / a stale Kubernetes
+  # node.
+  #
+  # Default OFF (reset=false is a provider no-op). To enable clean scale-down
+  # of a HEALTHY cluster, flip reset=true here (a one-line, reviewed change).
+  # Caveat: with graceful=true an enabled reset performs an etcd leave, which
+  # BLOCKS `tofu destroy` waiting on the node -- so to remove an already-dead
+  # node, keep reset=false (or `tofu state rm` it) and clean etcd membership
+  # out of band (see runbooks/talos/reset-node.sh, `talosctl etcd remove-member`).
+  #
+  # Why a literal and not a variable: the talos provider types on_destroy.reset
+  # as a plain bool that cannot accept an UNKNOWN value, and `tofu validate`
+  # (run in CI) evaluates input variables as unknown -- so wiring a `var` here
+  # fails validate ("the target type cannot handle unknown values"). All three
+  # fields are set explicitly because an unset (computed) field is also unknown.
+  on_destroy = {
+    reset    = false
+    graceful = true
+    reboot   = false
+  }
 
   depends_on = [libvirt_domain.node]
 }

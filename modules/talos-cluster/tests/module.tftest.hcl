@@ -49,6 +49,42 @@ run "node_counts_and_resource_fanout" {
   }
 }
 
+run "network_xslt_injects_a_dhcp_reservation_per_node" {
+  command = plan
+
+  # The network XSLT must carry a libvirt-native <host> DHCP reservation for
+  # every node (MAC + IP), so each VM is guaranteed its declared static IP --
+  # the dns{} hosts only add DNS records, they do not pin the lease.
+  assert {
+    condition     = strcontains(local.network_dhcp_hosts_xslt, "<host mac=\"52:54:00:00:00:10\" name=\"cp-01\" ip=\"10.5.0.10\"/>")
+    error_message = "the network XSLT must inject a DHCP host reservation for the control-plane node."
+  }
+
+  assert {
+    condition     = strcontains(local.network_dhcp_hosts_xslt, "<host mac=\"52:54:00:00:00:20\" name=\"work-01\" ip=\"10.5.0.20\"/>")
+    error_message = "the network XSLT must inject a DHCP host reservation for each worker node."
+  }
+
+  # The transform overrides <dhcp> (so the reservations land inside it) and is
+  # an identity transform otherwise (so the auto-generated <range> survives).
+  assert {
+    condition     = strcontains(local.network_dhcp_hosts_xslt, "<xsl:template match=\"dhcp\">")
+    error_message = "the XSLT must override the <dhcp> element to append the reservations."
+  }
+}
+
+run "on_destroy_reset_defaults_off" {
+  command = plan
+
+  # Default: reset=false (provider no-op on destroy) so `tofu destroy` never
+  # blocks waiting on an unreachable node to gracefully leave etcd. Enabling
+  # clean scale-down is a documented one-line flip (see main.tf on_destroy).
+  assert {
+    condition     = talos_machine_configuration_apply.node["cp-01"].on_destroy.reset == false
+    error_message = "on_destroy reset must be off by default (no reset on destroy)."
+  }
+}
+
 run "bootstrap_targets_first_control_plane" {
   command = plan
 

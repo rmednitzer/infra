@@ -62,6 +62,27 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Talos module review hardening (PR review, round 2)
 
+- **Security/correctness — real static DHCP reservations** (`main.tf`,
+  `network-dhcp-hosts.xslt.tftpl`): the network previously declared node
+  IPs only as `dns` **A records**, not MAC→IP DHCP reservations, so dnsmasq
+  was free to lease any address while `talos_machine_configuration_apply`
+  targeted each node's declared IP — the first apply could hang or hit an
+  address the VM never received. dmacvicar/libvirt 0.8.x exposes no native
+  HCL block for DHCP host reservations (verified against the 0.8.3 provider
+  schema: the `dhcp` block only carries `enabled`), so the module now
+  injects libvirt-native `<dhcp><host mac= name= ip=/>` reservations via an
+  XSLT transform on the network XML. The transform is unit-checked with
+  `xsltproc` (reservations land inside `<dhcp>`; the auto `<range>` and the
+  DNS records survive) and asserted in `tofu test`.
+- **Optional node reset on scale-down** (`main.tf`): `talos_machine_configuration_apply`
+  now sets an explicit `on_destroy { reset = false, graceful = true,
+  reboot = false }`. Default **off** (a no-op) so `tofu destroy` never blocks
+  on an unreachable node's etcd leave; flip `reset = true` for clean
+  scale-down of a healthy cluster (documented, with the unreachable-node
+  caveat). Kept a literal rather than a variable because the talos provider
+  types `on_destroy.reset` as a bool that rejects unknown values and
+  `tofu validate` evaluates variables as unknown — a `var` here fails
+  validate.
 - **Node-key RFC 1123 validation** (`variables.tf`): each
   `control_plane_nodes` / `worker_nodes` key becomes a libvirt
   domain/volume name (`<cluster_name>-<key>`) and the interface/DHCP

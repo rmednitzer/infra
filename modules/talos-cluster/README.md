@@ -41,11 +41,14 @@ libvirt_volume.talos_base ──► libvirt_volume.root[*] ──► libvirt_dom
                     (kubeconfig)              (talosconfig)
 ```
 
-Nodes get **static IPs** (reserved on a module-created libvirt NAT
-network via `dhcp` host entries; pinned on each domain interface). This
-is what makes the Talos API endpoints known *before* any configuration
-is applied — avoiding a DHCP-lease chicken-and-egg with
-`talos_machine_configuration_apply`.
+Nodes get **static IPs** via libvirt-native **MAC→IP DHCP reservations**
+(`<dhcp><host>` entries) on the module-created NAT network. dmacvicar/libvirt
+0.8.x exposes no native HCL block for these, so the module injects them with an
+XSLT transform on the network XML (`network-dhcp-hosts.xslt.tftpl`); the
+`dns` hosts add matching DNS A records but do **not**, on their own, pin the
+lease. This is what makes each Talos API endpoint known *before* any
+configuration is applied — avoiding a DHCP-lease chicken-and-egg with
+`talos_machine_configuration_apply`, which targets each node at its declared IP.
 
 ## Requirements
 
@@ -173,9 +176,10 @@ tofu test
   (disjoint control-plane/worker names, unique node IPs, unique node MACs,
   IPs inside `network_cidr` and not its network/gateway/broadcast address).
 - `tests/module.tftest.hcl` — node-count → resource fan-out, bootstrap
-  targeting, the derived Kubernetes minor, static-IP wiring, config-patch
-  ordering, and the PSA / audit / KSPP-sysctl / kubelet hardening
-  invariants in the rendered patches.
+  targeting, the derived Kubernetes minor, static-IP wiring, the rendered
+  DHCP-reservation XSLT (one `<host>` per node), the `on_destroy` reset
+  default (off), config-patch ordering, and the PSA / audit / KSPP-sysctl /
+  kubelet hardening invariants in the rendered patches.
 
 ## What needs a real host/cluster to validate
 
@@ -185,7 +189,15 @@ host with `talosctl` available:
 
 - Confirm Talos boots from the chosen image and enters maintenance mode,
   and that `talos_machine_configuration_apply` reaches it at the static
-  IP.
+  IP — i.e. the XSLT-injected `<dhcp><host>` reservations actually pin each
+  MAC to its declared IP (the XSLT transform is unit-checked, but only a
+  real libvirtd proves the provider applies it and dnsmasq honours it).
+- Decide node scale-down policy: `on_destroy.reset` defaults to **off** (a
+  removed node's VM is deleted but it is *not* reset, leaving stale etcd /
+  Kubernetes membership). Flip `reset = true` in `main.tf` for clean
+  scale-down of a healthy cluster — but never for removing an already-dead
+  node (a graceful etcd-leave reset blocks `tofu destroy`); reset those out
+  of band (`runbooks/talos/reset-node.sh`) first.
 - Confirm the install disk (`/dev/vda`) matches what Talos sees on the
   virtio bus.
 - Confirm `talos_machine_bootstrap` brings up etcd and the API server,

@@ -254,3 +254,5 @@ variable "apply_mode" {
     error_message = "apply_mode must be one of auto, staged, or staged_if_needing_reboot (the values the talos provider accepts)."
   }
 }
+
+
