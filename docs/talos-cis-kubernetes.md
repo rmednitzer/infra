@@ -54,7 +54,7 @@ Section numbering follows CIS Kubernetes Benchmark v1.10.
 | Control | How it is met | Source |
 |---|---|---|
 | 3.1.x authn: do not use client-cert-only for users where avoidable | Talos uses its own PKI; cluster admin via talosconfig/kubeconfig issued from machine secrets | `talos_machine_secrets` |
-| 3.2.1 a minimal audit policy is set | module sets an explicit `auditPolicy`: `None` for read-only verbs, `RequestResponse` for secrets/RBAC/SA-tokens, `Metadata` elsewhere | controlplane patch |
+| 3.2.1 a minimal audit policy is set | module sets an explicit `auditPolicy` (first-match-wins order): `RequestResponse` for secrets/RBAC/SA-tokens **first** so their reads are audited, then `None` for remaining read-only verbs, `Metadata` elsewhere | controlplane patch |
 | 3.2.2 audit policy covers key security concerns | covered by the `RequestResponse` rule on secrets, configmaps, serviceaccounts/token, and all RBAC objects | controlplane patch |
 
 ## Section 4 — Worker nodes (kubelet)

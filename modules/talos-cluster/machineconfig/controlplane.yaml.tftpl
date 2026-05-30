@@ -44,11 +44,13 @@ cluster:
     auditPolicy:
       apiVersion: audit.k8s.io/v1
       kind: Policy
+      # Rules are FIRST-MATCH-WINS. The sensitive-resource RequestResponse rule
+      # MUST precede the broad read-noise None rule below, or reads (get/list/
+      # watch) of secrets/configmaps/RBAC would match None first and never be
+      # audited -- defeating the policy. Keep this ordering.
       rules:
-        # Do not log read-only, high-volume, low-value requests.
-        - level: None
-          verbs: ["get", "list", "watch"]
-        # Full request+response for secrets, configmaps, and RBAC objects.
+        # Full request+response for secrets, configmaps, and RBAC objects --
+        # including reads -- so this wins over the read-noise None rule.
         - level: RequestResponse
           resources:
             - group: ""
@@ -56,5 +58,9 @@ cluster:
             - group: "rbac.authorization.k8s.io"
               resources:
                 ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+        # Do not log read-only, high-volume, low-value requests on everything
+        # else (the sensitive resources above are already matched and excluded).
+        - level: None
+          verbs: ["get", "list", "watch"]
         # Metadata for everything else that mutates state.
         - level: Metadata

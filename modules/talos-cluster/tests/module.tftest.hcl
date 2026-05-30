@@ -128,6 +128,29 @@ run "control_plane_patch_carries_audit_logging" {
     condition     = strcontains(local.control_plane_patch, "profiling: \"false\"")
     error_message = "control-plane patch must disable API server profiling (CIS-K8s 1.2)."
   }
+
+  # Audit rules are first-match-wins: the sensitive-resource RequestResponse
+  # rule MUST precede the broad read-noise None rule, or reads of
+  # secrets/configmaps/RBAC are matched by None first and never audited. Find
+  # each rule's index in the decoded policy and assert the ordering directly.
+  assert {
+    condition = (
+      [for i, r in yamldecode(local.control_plane_patch).cluster.apiServer.auditPolicy.rules : i if r.level == "RequestResponse"][0]
+      <
+      [for i, r in yamldecode(local.control_plane_patch).cluster.apiServer.auditPolicy.rules : i if r.level == "None"][0]
+    )
+    error_message = "the RequestResponse rule for secrets/RBAC must come BEFORE the broad level:None read rule (first-match-wins)."
+  }
+
+  # The secrets rule must not itself be a None rule: the first rule that lists
+  # "secrets" as a resource must be at level RequestResponse.
+  assert {
+    condition = (
+      [for r in yamldecode(local.control_plane_patch).cluster.apiServer.auditPolicy.rules : r.level
+      if try(contains(flatten([for rg in r.resources : rg.resources]), "secrets"), false)][0] == "RequestResponse"
+    )
+    error_message = "the audit rule matching secrets must be at level RequestResponse, not None."
+  }
 }
 
 run "rendered_patches_are_valid_yaml" {
