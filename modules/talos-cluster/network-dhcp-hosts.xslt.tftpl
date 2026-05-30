@@ -25,9 +25,10 @@
     </xsl:copy>
   </xsl:template>
 
-  <!-- Append a static reservation per node to the existing <dhcp> element
-       (its <range> and any other children are preserved by the apply-templates
-       above). -->
+  <!--
+    Append a static reservation per node to the existing <dhcp> element; its
+    <range> and any other children are preserved by the apply-templates above.
+  -->
   <xsl:template match="dhcp">
     <xsl:copy>
       <xsl:apply-templates select="@*|node()"/>
