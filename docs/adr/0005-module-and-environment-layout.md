@@ -1,6 +1,7 @@
 # ADR-0005: Module and environment layout
 
-- **Status**: Accepted
+- **Status**: Accepted; module file-count rule amended by
+  [ADR-0010](0010-permit-module-supporting-files.md) (2026-05-30)
 - **Date**: 2026-05-24
 
 ## Context
@@ -35,7 +36,7 @@ infra/
 
 ### Module layout (every module)
 
-Every module **must** contain at least these five files:
+Every module **must** contain exactly:
 
 | File | Purpose |
 |------|---------|
@@ -44,16 +45,6 @@ Every module **must** contain at least these five files:
 | `outputs.tf` | Output values — `description` |
 | `versions.tf` | `required_version` + `required_providers` |
 | `README.md` | Usage example, inputs/outputs table, notes |
-
-Beyond the five required files, a module **may** carry supporting
-artifacts when they belong to the module's contract — template files
-referenced from within the module (e.g. `cloud_init.cfg`) and a
-`tests/` directory of native OpenTofu tests (`*.tftest.hcl`, mocking
-providers so they need no live backend). This is the
-"prefer adding files when needed" stance from the Context above, and it
-matches the standard module structure referenced below (which includes
-`tests/`). It is **not** licence to split the five core files
-prematurely.
 
 Modules **must not**:
 

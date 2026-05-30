@@ -42,6 +42,7 @@ underlying code.
 | [0007](docs/adr/0007-set-meta-data-on-libvirt-cloudinit-disk.md) | Set `meta_data` on `libvirt_cloudinit_disk` |
 | [0008](docs/adr/0008-omit-graphics-from-libvirt-domain-by-default.md) | Omit `graphics` from `libvirt_domain` by default |
 | [0009](docs/adr/0009-begin-libvirt-0.9-migration-evaluation.md) | Begin `dmacvicar/libvirt` 0.9.x migration evaluation |
+| [0010](docs/adr/0010-permit-module-supporting-files.md) | Permit module-local supporting files and ship the graphics override |
 
 ## Naming
 

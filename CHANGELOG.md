@@ -28,13 +28,15 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   (`modules/libvirt-vm`, `environments/lab`, `environments/production`)
   via `tofu providers lock`, so contributors and CI runners on any of
   those platforms do not hit a missing-hash error. Documented the
-  command in `CONTRIBUTING.md` ("Provider bumps") and referenced it in
-  ADR-0009's migration steps.
-- Raise the `libvirt-vm` module's `required_version` from `>= 1.6` to
-  `>= 1.10` (`modules/libvirt-vm/versions.tf`). The old floor was never
-  exercised — CI runs 1.12 — and `>= 1.10` aligns with the production
-  `use_lockfile = true` target (ADR-0003). Noted in the module README
-  Requirements.
+  command in `CONTRIBUTING.md` ("Provider bumps").
+- Raise `required_version` from `>= 1.6` to `>= 1.10` across the
+  `libvirt-vm` module and **both environment roots** (`environments/lab`,
+  `environments/production`) so the runnable root constraints match the
+  module they instantiate — a root advertising `>= 1.6` while calling a
+  `>= 1.10` module would fail child-module init on OpenTofu 1.6–1.9. The
+  old floor was never exercised (CI runs 1.12) and `>= 1.10` aligns with
+  the production `use_lockfile = true` target (ADR-0003). Noted in the
+  module README Requirements.
 - Expose two new outputs on the `libvirt-vm` module: `data_disk_ids`
   (map of `additional_disks` name to libvirt volume ID) and
   `cloudinit_disk_id`. Added a module-README note that partitioning,
@@ -45,10 +47,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   into `libvirt_domain.vm` via a `dynamic "graphics"` block. Default is
   `null`, preserving the secure no-graphics default from ADR-0008; a
   caller can opt a specific VM into SPICE/VNC without forking the module.
-  ADR-0008 updated with a 2026-05-30 note recording that the override
-  knob it recommended now exists (the secure-by-default decision is
-  unchanged). Module README inputs table and console/graphics section
-  updated; tests assert both null-default and override behaviour.
+  The additive override is recorded in new **ADR-0010**; ADR-0008 is left
+  intact (its secure-by-default decision is unchanged) per the
+  immutable-ADR process. Module README inputs table and console/graphics
+  section updated; tests assert both null-default and override behaviour.
 - Factor the GiB-to-bytes magic number `1073741824` into
   `locals { bytes_per_gib }` in `modules/libvirt-vm/main.tf` and use it
   for both the root-disk and additional-disk byte computations (was
@@ -58,11 +60,13 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   the ADR-0005 intent. Structural constants intrinsic to the module's
   contract (`format = "qcow2"`, `qemu_agent = true`, the serial-console
   literals) stay inline rather than being promoted to variables.
-- Clarify the module-layout convention in CLAUDE.md and ADR-0005: the
-  five core files are the minimum, and a module **may** also carry
-  template files (`cloud_init.cfg`) and a `tests/` directory. The old
-  "must contain exactly" wording already conflicted with the shipped
-  `cloud_init.cfg`.
+- Add **ADR-0010** (Permit module-local supporting files and ship the
+  graphics override). It permits template files (`cloud_init.cfg`) and a
+  `tests/` directory beyond the five core files — amending the "exactly
+  five files" rule of ADR-0005, whose body is left intact with only its
+  status annotated to point at ADR-0010 (immutable-ADR process). The old
+  wording already conflicted with the shipped `cloud_init.cfg`. CLAUDE.md
+  module-structure note clarified to match.
 - Note in `environments/production/README.md` that `TF_VAR_libvirt_uri`
   is mandatory in production (no default, unlike lab's `qemu:///system`).
 - Guard `scripts/init-backend.sh`: warn (not fail) when run for
