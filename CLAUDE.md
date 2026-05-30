@@ -5,6 +5,16 @@ allocation via [`dmacvicar/libvirt`](https://github.com/dmacvicar/terraform-prov
 (KVM/libvirt). Defines what gets created and destroyed; intentionally
 decoupled from configuration management.
 
+Two operating models coexist:
+
+- **Ubuntu VMs** (`modules/libvirt-vm`) — cloud-init bootstrap, then
+  hardened/configured by the `automation` (Ansible) repo. The infra ↔
+  config-management split (ADR-0004).
+- **Talos Linux Kubernetes** (`modules/talos-cluster`) — an immutable,
+  API-only OS configured entirely by a declarative machine config via
+  the `siderolabs/talos` provider. **Intentionally NOT Ansible-managed**
+  — there is no host to SSH into (ADR-0013/0014/0015).
+
 Companions: `automation` (Ansible), `runbooks` (ad-hoc operator scripts).
 
 **OpenTofu only.** All commands are `tofu`. Never write "terraform" as
@@ -16,10 +26,12 @@ ecosystem artifacts — not Terraform references.
 
 ```
 infra/
-├── modules/libvirt-vm/         # KVM/libvirt VM provisioning module
-├── environments/{lab,production}/
+├── modules/libvirt-vm/         # KVM/libvirt Ubuntu VM provisioning module
+├── modules/talos-cluster/      # Talos Linux Kubernetes on libvirt (siderolabs/talos)
+├── environments/{lab,production,talos-lab}/
 ├── scripts/init-backend.sh
 ├── docs/adr/                   # Architecture Decision Records (read first)
+├── docs/talos-cis-kubernetes.md # Talos hardening -> CIS Kubernetes mapping
 └── .github/                    # CI, PR/issue templates, dependabot, copilot
 ```
 
@@ -43,6 +55,11 @@ underlying code.
 | [0008](docs/adr/0008-omit-graphics-from-libvirt-domain-by-default.md) | Omit `graphics` from `libvirt_domain` by default |
 | [0009](docs/adr/0009-begin-libvirt-0.9-migration-evaluation.md) | Begin `dmacvicar/libvirt` 0.9.x migration evaluation |
 | [0010](docs/adr/0010-permit-module-supporting-files.md) | Permit module-local supporting files and ship the graphics override |
+| [0011](docs/adr/0011-realize-production-s3-backend.md) | Realize the production S3 remote state backend |
+| [0012](docs/adr/0012-libvirt-0.9-schema-diff-inventory.md) | `dmacvicar/libvirt` 0.9.x schema-diff inventory (Proposed) |
+| [0013](docs/adr/0013-adopt-talos-linux.md) | Adopt Talos Linux for the Kubernetes layer (coexists with libvirt/Ubuntu) |
+| [0014](docs/adr/0014-pin-siderolabs-talos-provider.md) | Pin `siderolabs/talos` to `~> 0.11.0` |
+| [0015](docs/adr/0015-talos-machineconfig-as-code-and-secrets.md) | Talos machine-config-as-code and secret handling |
 
 ## Naming
 
@@ -157,6 +174,10 @@ required_providers {
   libvirt = {
     source  = "dmacvicar/libvirt"
     version = "~> 0.8.0"
+  }
+  talos = {
+    source  = "siderolabs/talos"
+    version = "~> 0.11.0" # pre-1.0, patch-pinned (ADR-0014)
   }
 }
 ```

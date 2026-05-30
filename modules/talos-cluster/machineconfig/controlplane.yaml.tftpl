@@ -1,0 +1,60 @@
+# Talos hardened machine-config baseline — control-plane-only knobs.
+# Rendered by modules/talos-cluster/main.tf via templatefile and appended to
+# the control-plane config_patches AFTER common.yaml.tftpl.
+#
+# These map to the Kubernetes-control-plane sections of the CIS Kubernetes
+# Benchmark (sections 1 and 3). See docs/talos-cis-kubernetes.md.
+cluster:
+  apiServer:
+    # CIS-K8s 5.2 / Pod Security: cluster-wide Pod Security Admission.
+    # Talos defaults to enforce=baseline; this module tightens enforce to the
+    # configured profile (default "restricted") while keeping audit/warn at
+    # restricted so violations are always visible. System namespaces that run
+    # privileged infrastructure pods are exempted.
+    admissionControl:
+      - name: PodSecurity
+        configuration:
+          apiVersion: pod-security.admission.config.k8s.io/v1
+          kind: PodSecurityConfiguration
+          defaults:
+            enforce: "${pod_security_enforce_profile}"
+            enforce-version: "v${kubernetes_minor}"
+            audit: "restricted"
+            audit-version: "v${kubernetes_minor}"
+            warn: "restricted"
+            warn-version: "v${kubernetes_minor}"
+          exemptions:
+            usernames: []
+            runtimeClasses: []
+            namespaces:
+%{ for ns in pod_security_exempt_namespaces ~}
+              - ${ns}
+%{ endfor ~}
+    # CIS-K8s 1.2: API server hardening. Talos disables anonymous auth and
+    # profiling by default and always enables Node + RBAC authorization;
+    # these assert the security-relevant flags explicitly as config-as-code.
+    extraArgs:
+      profiling: "false"
+      # Belt-and-suspenders: ensure the API server rejects anonymous requests.
+      anonymous-auth: "false"
+    # CIS-K8s 1.2.16 / 3.2: Kubernetes API audit logging. Talos enables a
+    # Metadata-level policy by default; this sets an explicit, reviewable
+    # policy (RequestResponse for security-sensitive resources, Metadata
+    # elsewhere) plus retention so the audit trail is durable.
+    auditPolicy:
+      apiVersion: audit.k8s.io/v1
+      kind: Policy
+      rules:
+        # Do not log read-only, high-volume, low-value requests.
+        - level: None
+          verbs: ["get", "list", "watch"]
+        # Full request+response for secrets, configmaps, and RBAC objects.
+        - level: RequestResponse
+          resources:
+            - group: ""
+              resources: ["secrets", "configmaps", "serviceaccounts/token"]
+            - group: "rbac.authorization.k8s.io"
+              resources:
+                ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+        # Metadata for everything else that mutates state.
+        - level: Metadata

@@ -5,6 +5,120 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Talos Linux Kubernetes integration
+
+- Add the **`talos-cluster`** module (`modules/talos-cluster/`):
+  provisions a Talos Linux Kubernetes cluster on KVM/libvirt. It creates
+  the VMs with `dmacvicar/libvirt` (a module-owned NAT network with
+  static DHCP reservations, a shared Talos base image, per-node overlay
+  volumes, and per-node domains that boot the Talos image directly —
+  **no cloud-init**) and drives the cluster with the partner-verified
+  `siderolabs/talos` provider: `talos_machine_secrets`,
+  `data.talos_machine_configuration` (control-plane + worker),
+  `talos_machine_configuration_apply`, `talos_machine_bootstrap`,
+  `talos_cluster_kubeconfig` (the resource form — the same-named data
+  source is deprecated in the provider), and
+  `data.talos_client_configuration`. Parameterizes control-plane +
+  worker counts (maps of node → IP/MAC/specs), cluster name, endpoint,
+  Talos/Kubernetes versions, and network CIDR. Outputs `kubeconfig`
+  (sensitive), `talosconfig` (sensitive), and node IPs. New
+  **ADR-0013** (adopt Talos, coexists with libvirt/Ubuntu, intentionally
+  NOT Ansible-managed).
+- Ship a hardened, config-as-code machine-config baseline under
+  `modules/talos-cluster/machineconfig/` (`common.yaml.tftpl`,
+  `controlplane.yaml.tftpl`), threaded into the machine configuration
+  via `config_patches`: Pod Security Admission (`enforce: restricted` —
+  tighter than Talos's `baseline` default), Kubernetes API audit policy
+  (`audit.k8s.io/v1`), API-server profiling/anonymous-auth off, KSPP
+  `machine.sysctls`, kubelet hardening (anonymous-auth off, webhook
+  authz, TLS 1.3, `podPidsLimit`), Talos `features` (rbac, KubePrism,
+  host DNS), NTP, and optional registry mirrors. Validated against the
+  Talos hardening guides and the CIS Kubernetes Benchmark. New
+  **ADR-0015** (machine-config-as-code + secret handling).
+- Pin `siderolabs/talos` to `~> 0.11.0` (patch-level, pre-1.0, per the
+  ADR-0002 rule) in the module and the new environment; committed
+  `.terraform.lock.hcl` records 0.11.0 with `h1` hashes for
+  `linux_amd64`, `darwin_amd64`, `darwin_arm64`, `linux_arm64`. 0.11.0
+  is the current stable release on the Terraform registry (0.12.0 is
+  alpha). New **ADR-0014** (pin rationale + verified resource schema).
+- Add the **`talos-lab`** environment (`environments/talos-lab/`): 1
+  control-plane + 2 workers, local backend, sensitive
+  kubeconfig/talosconfig outputs. Secrets kept out of git via a
+  directory `.gitignore` (`kubeconfig`, `talosconfig`, …); the
+  `talos_machine_secrets` in state are gitignored by the root
+  `.gitignore`. A production Talos cluster must instead use the
+  encrypted remote backend (ADR-0011/0015).
+- Add `docs/talos-cis-kubernetes.md` mapping the Talos baseline to the
+  CIS Kubernetes Benchmark v1.10 (control-plane, etcd, worker/kubelet,
+  policies/RBAC/PSS — a different control set from the host-CIS
+  benchmark), including the documented `kube-bench` architectural
+  false-positive skip-lists.
+- Add native OpenTofu tests for `modules/talos-cluster` mocking **both**
+  the libvirt and talos providers (`mock_provider`), so they need no
+  libvirtd, no talosctl, and no cluster: node-count → resource fan-out,
+  bootstrap targeting, derived Kubernetes minor, static-IP wiring,
+  config-patch ordering, and the PSA/audit/KSPP-sysctl/kubelet hardening
+  invariants in the rendered patches (24 assertions). Wired into CI.
+
+### Ubuntu 26.04 dual-support
+
+- Make the `base_image` variable descriptions version-neutral across
+  Ubuntu 24.04 LTS (noble) **and** 26.04 LTS (resolute, kernel 7.0,
+  `cloud-images.ubuntu.com/resolute/`) in
+  `modules/libvirt-vm/variables.tf` and
+  `environments/lab/variables.tf`. Added a commented 26.04 `base_image`
+  example to `environments/lab/terraform.tfvars`. The shipped
+  `cloud_init.cfg` is distro-neutral (netplan/cloud-init unchanged
+  across the two LTS releases) — verified and noted in the module
+  README; no change to the secure cloud-init defaults. Added a
+  `tofu test` assertion that a 26.04-style (resolute) `base_image`
+  threads into the base volume and the cloud-init security baseline
+  still renders.
+
+### Production remote state backend (ADR-0011)
+
+- Replace the production placeholder `backend "local"` with the real
+  `backend "s3"` in `environments/production/backend.tf`:
+  `use_lockfile = true` (OpenTofu 1.10+ native locking, not
+  `dynamodb_table`), `endpoints = { s3 = "…" }` (not the deprecated
+  top-level `endpoint`), `encrypt = true`, `use_path_style = true`. All
+  values are non-secret config; credentials are injected via `AWS_*`
+  env in CI/prod. CI keeps using `-backend=false`, so
+  `tofu validate -backend=false` still passes (verified: a real
+  `tofu init` correctly attempts S3 and fails on missing credentials).
+  `required_version` was already `>= 1.10` (verified, no bump needed).
+  Updated `environments/production/README.md` and `scripts/init-backend.sh`
+  (the placeholder warning becomes a regression guard; a new guard warns
+  when the S3 backend is configured but no AWS credentials are present).
+  New **ADR-0011** realizes the ADR-0003 production decision.
+
+### libvirt 0.9.x evaluation (ADR-0012, Proposed)
+
+- Add **ADR-0012** (`dmacvicar/libvirt` 0.9.x schema-diff inventory,
+  **Proposed**): the ADR-0009 step-(1) desk exercise comparing the
+  0.8.x (SDK v2) and 0.9.x (plugin-framework rewrite) schemas for
+  `libvirt_domain`, `libvirt_volume`, `libvirt_cloudinit_disk`
+  (source → `create.content.url`, IP read via
+  `libvirt_domain_interface_addresses`/`wait_for_ip`, size `_unit`
+  attributes, new lifecycle controls, the deprioritized
+  `libvirt_cloudinit_disk`). **No pin change** — the pin stays
+  `~> 0.8.0`; the remaining ADR-0009 gates need a real libvirtd host.
+
+### Docs / CI
+
+- CI: add `modules/talos-cluster` and `environments/talos-lab` to the
+  `validate` matrix, and turn the `test` job into a matrix over
+  `modules/libvirt-vm` + `modules/talos-cluster` (`tofu test`). Mirrors
+  the existing SHA-pins, concurrency, and `timeout-minutes`.
+- `.tflint.hcl`: note that no official TFLint ruleset exists for
+  `siderolabs/talos` either (as with libvirt); the core terraform
+  ruleset still lints both modules. `tflint --recursive` passes.
+- Update `README.md` and `CLAUDE.md` to describe the Talos subsystem
+  (and that it is intentionally NOT Ansible-managed), the realized
+  production S3 backend, and Ubuntu 26.04 dual-support; refresh the ADR
+  tables (0011–0015), repository structure, environments table, and the
+  OpenTofu version prerequisite (≥ 1.10).
+
 - Fix the documented pre-commit environment variable. `README.md`,
   `CONTRIBUTING.md`, and the comment in `.pre-commit-config.yaml` told
   contributors to `export TFTOOL=tofu`, but `antonbabenko/pre-commit-terraform`
