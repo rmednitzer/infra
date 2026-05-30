@@ -20,6 +20,7 @@ jobs:
   format:
     name: Format Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -35,6 +36,7 @@ jobs:
   validate:
     name: Validate
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -62,6 +64,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -69,8 +72,12 @@ jobs:
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93 # v6.2.2
 
+      # GITHUB_TOKEN lifts the unauthenticated GitHub API rate limit so the
+      # pinned terraform ruleset (.tflint.hcl) downloads reliably.
       - name: Initialize TFLint
         run: tflint --init
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run TFLint
         run: tflint --recursive
@@ -78,6 +85,7 @@ jobs:
   security:
     name: Security Scan (Trivy)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       security-events: write
@@ -107,6 +115,7 @@ jobs:
   pre-commit:
     name: Pre-commit (hygiene + EditorConfig)
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -121,3 +130,27 @@ jobs:
         uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd # v3.0.1
         env:
           SKIP: terraform_fmt,terraform_validate,terraform_tflint,terraform_trivy
+
+  test:
+    name: Module Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@847eaa4afeb791b06daa46e8eafa8b1b68d7cfb4 # v2.0.1
+        with:
+          tofu_version_file: .opentofu-version
+
+      # The suite mocks the libvirt provider (mock_provider), so no libvirtd
+      # is required. tofu init -backend=false downloads the provider schema
+      # the mock derives its shape from.
+      - name: Initialize (modules/libvirt-vm)
+        run: tofu init -backend=false
+        working-directory: modules/libvirt-vm
+
+      - name: Run module tests
+        run: tofu test
+        working-directory: modules/libvirt-vm

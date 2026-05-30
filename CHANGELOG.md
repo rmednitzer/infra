@@ -5,6 +5,90 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Fix the documented pre-commit environment variable. `README.md`,
+  `CONTRIBUTING.md`, and the comment in `.pre-commit-config.yaml` told
+  contributors to `export TFTOOL=tofu`, but `antonbabenko/pre-commit-terraform`
+  reads `PCT_TFPATH`. `TFTOOL` was a no-op, so on an OpenTofu-only machine
+  the documented hooks silently did not run against `tofu`. All three
+  occurrences now read `PCT_TFPATH=tofu`.
+- Add a native OpenTofu test suite for the `libvirt-vm` module under
+  `modules/libvirt-vm/tests/` (`validation.tftest.hcl`,
+  `module.tftest.hcl`). The suite mocks the provider
+  (`mock_provider "libvirt"`) so it needs no libvirtd. It covers the
+  negative input validations (bad hostnames, malformed/empty
+  `ssh_public_key`, sub-floor `memory_mib`, duplicate `additional_disks`
+  names) and positive assertions: deterministic NoCloud meta-data
+  (ADR-0007), GiB-to-byte disk math, one volume per additional disk, and
+  the ADR-0004 cloud-init security invariants (`ssh_pwauth: false`,
+  `disable_root: true`, `lock_passwd: true`) — closing the M4
+  security-enforcement gap. A `test` job (`Module Tests`) runs
+  `tofu test` in CI, SHA-pinned and bounded by `timeout-minutes`.
+- Record `h1` hashes for `linux_amd64`, `darwin_amd64`, `darwin_arm64`,
+  and `linux_arm64` in every `.terraform.lock.hcl`
+  (`modules/libvirt-vm`, `environments/lab`, `environments/production`)
+  via `tofu providers lock`, so contributors and CI runners on any of
+  those platforms do not hit a missing-hash error. Documented the
+  command in `CONTRIBUTING.md` ("Provider bumps").
+- Raise `required_version` from `>= 1.6` to `>= 1.10` across the
+  `libvirt-vm` module and **both environment roots** (`environments/lab`,
+  `environments/production`) so the runnable root constraints match the
+  module they instantiate — a root advertising `>= 1.6` while calling a
+  `>= 1.10` module would fail child-module init on OpenTofu 1.6–1.9. The
+  old floor was never exercised (CI runs 1.12) and `>= 1.10` aligns with
+  the production `use_lockfile = true` target (ADR-0003). Noted in the
+  module README Requirements.
+- Expose two new outputs on the `libvirt-vm` module: `data_disk_ids`
+  (map of `additional_disks` name to libvirt volume ID) and
+  `cloudinit_disk_id`. Added a module-README note that partitioning,
+  formatting, and mounting data disks is the configuration-management
+  (Ansible) layer's job, consistent with ADR-0004; no `fs_setup` is
+  injected into cloud-init.
+- Add an optional `graphics` input to the `libvirt-vm` module, threaded
+  into `libvirt_domain.vm` via a `dynamic "graphics"` block. Default is
+  `null`, preserving the secure no-graphics default from ADR-0008; a
+  caller can opt a specific VM into SPICE/VNC without forking the module.
+  The additive override is recorded in new **ADR-0010**; ADR-0008 is left
+  intact (its secure-by-default decision is unchanged) per the
+  immutable-ADR process. Module README inputs table and console/graphics
+  section updated; tests assert both null-default and override behaviour.
+- Factor the GiB-to-bytes magic number `1073741824` into
+  `locals { bytes_per_gib }` in `modules/libvirt-vm/main.tf` and use it
+  for both the root-disk and additional-disk byte computations (was
+  inlined twice).
+- Soften the CLAUDE.md HCL rule from "no hardcoded values in resource
+  blocks" to "no **environment-specific** hardcoded values", matching
+  the ADR-0005 intent. Structural constants intrinsic to the module's
+  contract (`format = "qcow2"`, `qemu_agent = true`, the serial-console
+  literals) stay inline rather than being promoted to variables.
+- Add **ADR-0010** (Permit module-local supporting files and ship the
+  graphics override). It permits template files (`cloud_init.cfg`) and a
+  `tests/` directory beyond the five core files — amending the "exactly
+  five files" rule of ADR-0005, whose body is left intact with only its
+  status annotated to point at ADR-0010 (immutable-ADR process). The old
+  wording already conflicted with the shipped `cloud_init.cfg`. CLAUDE.md
+  module-structure note clarified to match.
+- Note in `environments/production/README.md` that `TF_VAR_libvirt_uri`
+  is mandatory in production (no default, unlike lab's `qemu:///system`).
+- Guard `scripts/init-backend.sh`: warn (not fail) when run for
+  `production` while `environments/production/backend.tf` still declares
+  the placeholder `backend "local"`, pointing at ADR-0003, to prevent
+  silently initializing local state in production.
+- Pin the TFLint `terraform` ruleset to `0.14.1` in `.tflint.hcl`
+  (explicit `source` + `version` instead of the bundled preset) so lint
+  results do not shift when the tflint binary is upgraded; `0.14.1`
+  matches the version bundled with tflint 0.62.1. Added a comment noting
+  there is no official libvirt TFLint ruleset, so provider-specific
+  issues are lint-blind. The CI lint job's `tflint --init` now passes
+  `GITHUB_TOKEN` so the ruleset download is not rate-limited.
+- Add `timeout-minutes` to every job in `.github/workflows/ci.yml`
+  (10 for format/validate/lint/pre-commit/test, 15 for the Trivy
+  security scan) to bound hung runs, for parity with the companion
+  repos.
+- Add a repo-neutral `CODE_OF_CONDUCT.md` (Contributor Covenant 2.1,
+  maintainer-email reporting) synced from the `automation` repo, and a
+  root-level `SECURITY.md` stub pointing at `.github/SECURITY.md` for
+  root-scanning tooling (OpenSSF Scorecard). Both added to the README
+  governance table.
 - Add `audit/2026-05-27-engagement.md` -- senior-assurance-engineer
   pass over the repo, captured per the engagement contract's Phase 6
   format. Documents the 12-commit engagement (Tier 1 items #1, #2,

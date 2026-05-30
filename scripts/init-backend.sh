@@ -50,6 +50,18 @@ echo "Initializing OpenTofu backend for environment: ${ENVIRONMENT}"
 echo "Directory: ${ENV_DIR}"
 echo ""
 
+# Guard: warn (do not block) if production still carries the placeholder
+# local backend. Initializing local state in production silently forfeits
+# the remote, locked, encrypted backend that ADR-0003 requires.
+if [[ "${ENVIRONMENT}" == "production" ]] &&
+  grep -Eq '^\s*backend\s+"local"' "${ENV_DIR}/backend.tf" 2>/dev/null; then
+  echo "WARNING: environments/production/backend.tf still declares the" >&2
+  echo "         placeholder 'backend \"local\"'. Production state must use a" >&2
+  echo "         remote, locked, encrypted backend before any resources are" >&2
+  echo "         created. See docs/adr/0003-state-backend-strategy.md." >&2
+  echo "" >&2
+fi
+
 cd "${ENV_DIR}"
 tofu init
 

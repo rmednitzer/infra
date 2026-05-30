@@ -1,6 +1,7 @@
 # ADR-0005: Module and environment layout
 
-- **Status**: Accepted
+- **Status**: Accepted; module file-count rule amended by
+  [ADR-0010](0010-permit-module-supporting-files.md) (2026-05-30)
 - **Date**: 2026-05-24
 
 ## Context

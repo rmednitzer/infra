@@ -5,7 +5,20 @@ provider "registry.opentofu.org/dmacvicar/libvirt" {
   version     = "0.8.3"
   constraints = "~> 0.8.0"
   hashes = [
+    "h1:4R2L9SlbXt5VVZtQ0vPe1s65UygQT3aKTWpsGKqTnvM=",
+    "h1:AGOjd7NzTBQAiOjjlUdq5JjuYdWBL6jfrNf+qO7Z+cg=",
+    "h1:HuCu3y7gzhI1YLYWY7L9c3f5lhJyo5/Peozd50hoj4w=",
+    "h1:SE2o8WY/6vqSTow2nds6P2+IoJln0TvuF794xBjDIeE=",
     "h1:Tttxr3E9O75MM+dDmq5sYHQEw29PwtIj+XDj/5drdfE=",
+    "h1:Wqa218+IMxnn4psH5r4FlvEL2/LKZRHc4tFm63uOrVc=",
+    "h1:Z+uoKz1rZ/z0xwEvycBhuDGDwQDKhHUDxlAfKkoGCko=",
+    "h1:bKZooqVcZ2vCovziB23j4exHuGg8s/FyxjoZ0NIY36Y=",
+    "h1:dSnCr6ib3qdJot4gXPMe8DW9pHwRPTkN+jkCbG/w4uI=",
+    "h1:fg6FmBx96CV7M1osSsZ215N47M3TGFeaoy2XVSmh2/Y=",
+    "h1:h7F4ON38TMmy+8fAoYBaKDOFWv7ZVUnI0J+h7jSL2T8=",
+    "h1:mymyoJNy7FTe3lkYzgt2Gqgrehn1m1EiqNLrpx5nerk=",
+    "h1:x44dqohhlnP6MxVsv0c07CcjOERfOBt79QCaoPgtFic=",
+    "h1:zEKrqI+ape4+ySL7RAZf2PFQ5jBqgfr239zdkyr6U+U=",
     "zh:06ff0169beafd1891dc5a30616983abd32004a4f570d1d3dbb5851d84bd1c007",
     "zh:2dbdd726d0987cda73b56ecdfbcb98a67485e86a7a44aec976c0081b7239d89d",
     "zh:2e195a7bbdfcc13c45460571a5ba848a5c1e746b477c8381058767560f0ac93b",

@@ -17,12 +17,34 @@ decisions in [`docs/adr/`](./docs/adr/). This file is workflow only.
 
 ```bash
 pip install -r requirements-dev.txt && pre-commit install
-export TFTOOL=tofu        # point pre-commit-terraform at OpenTofu
+export PCT_TFPATH=tofu     # point pre-commit-terraform at OpenTofu
 pre-commit run --all-files
 ```
 
 CI mirrors the hook set — `tofu fmt`, `tofu validate`, `tflint`, Trivy
-IaC, hygiene. PRs cannot merge with failing CI.
+IaC, hygiene — plus `tofu test` for the `libvirt-vm` module. PRs cannot
+merge with failing CI.
+
+## Provider bumps
+
+Lock files (`.terraform.lock.hcl`) must record `h1` hashes for every
+platform a contributor or CI runner might use, not just the one that
+last ran `tofu init`. **On every provider version change**, re-record
+all common platforms in each root and commit the result:
+
+```bash
+for d in modules/libvirt-vm environments/lab environments/production; do
+  ( cd "$d" && tofu providers lock \
+      -platform=linux_amd64 \
+      -platform=darwin_amd64 \
+      -platform=darwin_arm64 \
+      -platform=linux_arm64 )
+done
+```
+
+The libvirt-provider migration steps in
+[ADR-0009](./docs/adr/0009-begin-libvirt-0.9-migration-evaluation.md)
+call this out explicitly.
 
 ## Pull request expectations
 
