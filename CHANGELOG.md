@@ -60,6 +60,55 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   config-patch ordering, and the PSA/audit/KSPP-sysctl/kubelet hardening
   invariants in the rendered patches (24 assertions). Wired into CI.
 
+### Talos module review hardening (PR review)
+
+- **Security — audit-policy ordering** (`controlplane.yaml.tftpl`):
+  Kubernetes audit rules are first-match-wins. The broad
+  `level: None` `get/list/watch` rule preceded the `RequestResponse`
+  rule for secrets/configmaps/RBAC, so **reads of those sensitive
+  resources were matched by `None` first and never audited** — a real
+  audit-coverage gap. Reordered so the sensitive-resource
+  `RequestResponse` rule comes first; the broad `None` rule now only
+  catches the remaining read noise. Updated
+  `docs/talos-cis-kubernetes.md` (§3.2.1) and the module README, and
+  added two `tofu test` assertions (the `RequestResponse` rule index is
+  before the `None` rule index; the rule matching `secrets` is at
+  `RequestResponse`, not `None`).
+- **Plan-time guard for cross-variable node invariants**
+  (`main.tf`, `terraform_data.node_invariants` preconditions): a single
+  variable `validation` cannot reference another variable, so these run
+  as resource preconditions that hard-fail the plan before any
+  libvirt/talos resource is created. They reject (a) **overlapping
+  control-plane/worker node names** — previously a same-named worker
+  silently overrode a control-plane entry in `merge()` while
+  `bootstrap_node_*` still pointed at the dropped node; (b) **duplicate
+  node IPs** across both maps (duplicate static leases → `wait_for_lease`
+  timeout); and (c) **node IPs outside `network_cidr`** (compared via
+  each IP's host-network under the CIDR prefix vs the CIDR network
+  address). Three negative `tofu test` runs cover them.
+- **Real IPv4 validation** for the `control_plane_nodes` / `worker_nodes`
+  `ip` fields (`variables.tf`): replaced the dotted-quad regex (which
+  accepted out-of-range octets like `999.999.999.999`) with
+  `can(cidrnetmask("${ip}/32"))`. Applied to both node maps; negative
+  tests added.
+- **Real IPv4 CIDR validation** for `network_cidr` (`variables.tf`):
+  replaced the string-shape regex (which accepted `10.5.0.0/99` and
+  `999.../24`) with `can(cidrhost(var.network_cidr, 0))`, rejecting both
+  bad octets and out-of-range prefix lengths; negative tests added.
+- **VM-sizing validations** for the per-node `vcpus` / `memory_mib` /
+  `disk_gib` overrides on both node maps (`variables.tf`), mirroring
+  `modules/libvirt-vm`: `vcpus >= 1` (integer), `memory_mib >= 512`
+  (integer), `disk_gib >= 10` (integer — the Talos system-disk minimum).
+  Previously zero/negative/fractional values passed straight to libvirt.
+  Negative tests added.
+- **Configurable base-image format**: added a `talos_image_format`
+  variable (default `qcow2`, validated `qcow2`|`raw`) and used it for the
+  `libvirt_volume.talos_base` `format` (was hardcoded `qcow2`), so a raw
+  factory image is no longer misread by libvirt/qemu. The base-volume
+  name extension follows the format. Threaded through the `talos-lab`
+  environment (variable + module call + tfvars); README/tfvars/docs and a
+  negative test updated.
+
 ### Ubuntu 26.04 dual-support
 
 - Make the `base_image` variable descriptions version-neutral across
