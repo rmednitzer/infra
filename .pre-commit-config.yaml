@@ -4,9 +4,9 @@
 # Run on all files: pre-commit run --all-files
 #
 # pre-commit-terraform supports OpenTofu when `tofu` is on PATH and the
-# `TFTOOL=tofu` environment variable is exported. CONTRIBUTING.md documents
-# this. The hooks call `tofu fmt`, `tofu validate`, `tflint`, and `trivy`
-# under the hood. CI mirrors these checks plus a dedicated Trivy job.
+# `PCT_TFPATH=tofu` environment variable is exported. CONTRIBUTING.md
+# documents this. The hooks call `tofu fmt`, `tofu validate`, `tflint`, and
+# `trivy` under the hood. CI mirrors these checks plus a dedicated Trivy job.
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

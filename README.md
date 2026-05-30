@@ -167,7 +167,7 @@ All checks must pass before a PR can merge.
 
 ```bash
 pip install -r requirements-dev.txt && pre-commit install
-export TFTOOL=tofu        # point pre-commit-terraform at OpenTofu
+export PCT_TFPATH=tofu     # point pre-commit-terraform at OpenTofu
 pre-commit run --all-files
 ```
 
@@ -183,9 +183,10 @@ this file and the GitHub Actions workflow weekly.
 |------|---------|
 | [`CLAUDE.md`](./CLAUDE.md) | HCL style, OpenTofu policy, conventions |
 | [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Workflow, ADR expectations |
+| [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 |
 | [`CHANGELOG.md`](./CHANGELOG.md) | Keep a Changelog 1.1.0 |
 | [`docs/adr/`](./docs/adr/) | Architecture Decision Records |
-| [`.github/SECURITY.md`](./.github/SECURITY.md) | Vulnerability reporting |
+| [`SECURITY.md`](./SECURITY.md) / [`.github/SECURITY.md`](./.github/SECURITY.md) | Vulnerability reporting (root stub + policy) |
 | [`.github/PULL_REQUEST_TEMPLATE.md`](./.github/PULL_REQUEST_TEMPLATE.md) | PR checklist |
 | [`.github/CODEOWNERS`](./.github/CODEOWNERS) | Review assignment |
 | [`LICENSE`](./LICENSE) / [`NOTICE`](./NOTICE) | Apache 2.0 |

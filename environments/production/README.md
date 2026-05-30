@@ -5,6 +5,11 @@ placeholder. Per
 [ADR-0003](../../docs/adr/0003-state-backend-strategy.md), production
 requires a remote, locked, encrypted state backend.
 
+`var.libvirt_uri` has **no default** in production (unlike lab, which
+defaults to `qemu:///system`): `TF_VAR_libvirt_uri` is mandatory and must
+be set before any `tofu plan`/`apply` so the production KVM host is always
+named explicitly, never assumed.
+
 ## Backend setup (prerequisite)
 
 1. Provision an S3-compatible bucket with:
