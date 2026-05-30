@@ -12,6 +12,11 @@ Cloud-init defaults:
 
 ## Requirements
 
+- OpenTofu **≥ 1.10** (`versions.tf`). The floor is aligned with the
+  production `use_lockfile = true` target
+  ([ADR-0003](../../docs/adr/0003-state-backend-strategy.md)) and is the
+  oldest version CI exercises in practice; CI runs `1.12`
+  ([`.opentofu-version`](../../.opentofu-version)).
 - A running libvirt/KVM host accessible via the provider's `uri`
 - A cloud-init compatible base image (e.g. Ubuntu 24.04 noble cloud
   image)
@@ -51,6 +56,7 @@ module "k3s_server" {
 | `additional_disks` | `list(object({name, size_gib}))` | `[]` | Optional additional data disks (unique names, size ≥ 1 GiB) |
 | `autostart` | `bool` | `true` | Start VM on host boot |
 | `wait_for_lease` | `bool` | `true` | Wait for a DHCP lease before completing apply; set `false` for bridged/macvtap networks |
+| `graphics` | `object({type, listen_type, listen_address?, autoport?})` | `null` | Optional graphics device. `null` omits graphics entirely (secure default, ADR-0008); set it only for VMs that need a SPICE/VNC console |
 
 ## Outputs
 
@@ -60,16 +66,33 @@ module "k3s_server" {
 | `vm_name` | Libvirt domain name |
 | `ip_address` | VM IP address from DHCP lease, or `null` if no lease is available |
 | `mac_address` | VM MAC address, or `null` if unavailable |
+| `data_disk_ids` | Map of `additional_disks` name to libvirt volume ID (empty when none configured) |
+| `cloudinit_disk_id` | Libvirt volume ID of the cloud-init NoCloud disk |
 
 ## Console and graphics
 
 The domain ships with a `console { type = "pty" target_type = "serial" }`
-block (so `virsh console <vm>` works) and **no** `graphics` block.
-SPICE and VNC listeners are intentionally omitted. Rationale, threat
-model, and operator note in
+block (so `virsh console <vm>` works) and **no** `graphics` block by
+default. SPICE and VNC listeners are intentionally omitted. Rationale,
+threat model, and operator note in
 [ADR-0008](../../docs/adr/0008-omit-graphics-from-libvirt-domain-by-default.md).
-Operators who need graphical access for a specific VM should fork
-the module or thread a `graphics` input through.
+
+Operators who need graphical access for a specific VM set the optional
+`graphics` input rather than forking the module — the secure
+no-listener default holds whenever `graphics` is left `null`:
+
+```hcl
+module "workstation" {
+  source = "../../modules/libvirt-vm"
+  # ... required inputs ...
+
+  graphics = {
+    type           = "spice"
+    listen_type    = "address"
+    listen_address = "127.0.0.1" # keep the listener host-local
+  }
+}
+```
 
 ## Cloud-init
 
@@ -85,6 +108,26 @@ The shipped `cloud_init.cfg`:
   `qemu_agent = true` so libvirt can report guest addresses via the
   agent)
 
+## Tests
+
+Native OpenTofu tests live in [`tests/`](tests/) and mock the libvirt
+provider (`mock_provider "libvirt"`), so they need **no libvirtd**:
+
+```bash
+tofu init -backend=false
+tofu test
+```
+
+- `tests/validation.tftest.hcl` — every input validation rejects bad
+  input at plan time (bad hostnames, malformed/empty `ssh_public_key`,
+  sub-floor `memory_mib`, duplicate `additional_disks` names).
+- `tests/module.tftest.hcl` — positive assertions: the deterministic
+  NoCloud meta-data ([ADR-0007](../../docs/adr/0007-set-meta-data-on-libvirt-cloudinit-disk.md)),
+  GiB-to-byte disk math, one volume per additional disk, the ADR-0004
+  cloud-init security invariants (`ssh_pwauth: false`,
+  `disable_root: true`, `lock_passwd: true`), and the `graphics` default
+  /override behaviour. CI runs the suite as the `Module Tests` job.
+
 ## Notes
 
 - The base image is cloned into a per-VM backing volume; the root disk
@@ -97,7 +140,15 @@ The shipped `cloud_init.cfg`:
   smaller value fails at apply with a libvirt volume error; the root
   overlay cannot be smaller than its backing store.
 - Additional disks are created as separate volumes and attached after
-  the root disk in deterministic (sorted-by-name) order.
+  the root disk in deterministic (sorted-by-name) order. The module
+  **provisions and attaches** the raw block devices only — partitioning,
+  formatting (`mkfs`), and mounting are the **configuration-management
+  (Ansible) layer's** responsibility, consistent with the
+  infra/config-management split in
+  [ADR-0004](../../docs/adr/0004-cloud-init-bootstrap-conventions.md).
+  No `fs_setup`/`mounts` directives are injected into cloud-init. The
+  `data_disk_ids` output exposes each volume's libvirt ID so the
+  downstream layer can map names to devices.
 - `wait_for_lease = true` (default) makes `ip_address` reliable on
   libvirt NAT networks. On bridged or macvtap networks, the libvirt
   host cannot observe the guest's DHCP lease, so apply would hang —

@@ -1,5 +1,9 @@
 locals {
-  disk_size_bytes = var.disk_size_gib * 1073741824
+  # GiB-to-bytes factor. libvirt_volume.size is expressed in bytes; every
+  # disk-size variable in this module is expressed in GiB.
+  bytes_per_gib = 1073741824
+
+  disk_size_bytes = var.disk_size_gib * local.bytes_per_gib
 
   cloud_init_config = templatefile("${path.module}/cloud_init.cfg", {
     hostname       = var.vm_name
@@ -29,7 +33,7 @@ resource "libvirt_volume" "data" {
 
   name   = "${var.vm_name}-${each.key}.qcow2"
   pool   = var.storage_pool
-  size   = each.value.size_gib * 1073741824
+  size   = each.value.size_gib * local.bytes_per_gib
   format = "qcow2"
 }
 
@@ -69,5 +73,18 @@ resource "libvirt_domain" "vm" {
     type        = "pty"
     target_type = "serial"
     target_port = "0"
+  }
+
+  # No graphics device by default (var.graphics = null) so the secure
+  # no-listener default from ADR-0008 holds. Operators who need SPICE/VNC
+  # for a specific VM set var.graphics rather than forking the module.
+  dynamic "graphics" {
+    for_each = var.graphics == null ? [] : [var.graphics]
+    content {
+      type           = graphics.value.type
+      listen_type    = graphics.value.listen_type
+      listen_address = graphics.value.listen_address
+      autoport       = graphics.value.autoport
+    }
   }
 }

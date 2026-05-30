@@ -109,3 +109,24 @@ variable "wait_for_lease" {
   type        = bool
   default     = true
 }
+
+variable "graphics" {
+  description = "Optional graphics device for the domain. Defaults to null, which omits the graphics device entirely (no SPICE/VNC listener) per ADR-0008; set it only for VMs that genuinely need graphical console access. listen_type is typically \"address\" or \"none\"; listen_address binds the listener (e.g. \"127.0.0.1\" to keep it host-local)."
+  type = object({
+    type           = string
+    listen_type    = string
+    listen_address = optional(string)
+    autoport       = optional(bool)
+  })
+  default = null
+
+  validation {
+    condition     = var.graphics == null || contains(["spice", "vnc"], try(var.graphics.type, ""))
+    error_message = "graphics.type must be either \"spice\" or \"vnc\"."
+  }
+
+  validation {
+    condition     = var.graphics == null || contains(["address", "none", "socket"], try(var.graphics.listen_type, ""))
+    error_message = "graphics.listen_type must be one of \"address\", \"none\", or \"socket\"."
+  }
+}
