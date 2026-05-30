@@ -42,6 +42,26 @@ locals {
   network_address      = cidrhost(var.network_cidr, 0)
   node_ips_out_of_cidr = [for ip in local.all_node_ips : ip if cidrhost("${ip}/${local.network_prefix}", 0) != local.network_address]
 
+  # (d) Every node MAC must be UNIQUE across both maps (compared case-folded:
+  # 52:54:00:AB == 52:54:00:ab). The static-address flow keys DHCP leases by
+  # MAC, so two domains with the same NIC MAC collide -- one steals the other's
+  # lease and wait_for_lease hangs even when the IPs are unique.
+  all_node_macs    = [for name, node in local.all_nodes : lower(node.mac)]
+  unique_node_macs = distinct(local.all_node_macs)
+
+  # (e) No node IP may be a network-reserved address of network_cidr: the
+  # network address (cidrhost 0), the libvirt/dnsmasq gateway -- the first host,
+  # cidrhost 1 -- or the broadcast (cidrhost -1, the last address). libvirt
+  # cannot hand any of these to a VM, so wait_for_lease hangs / the endpoint
+  # never comes up. Canonicalise each node IP (cidrhost "${ip}/32", 0) before
+  # the set membership test so e.g. 10.5.0.01 still matches the gateway 10.5.0.1.
+  network_reserved_ips = [
+    cidrhost(var.network_cidr, 0),
+    cidrhost(var.network_cidr, 1),
+    cidrhost(var.network_cidr, -1),
+  ]
+  node_ips_reserved = [for ip in local.all_node_ips : ip if contains(local.network_reserved_ips, cidrhost("${ip}/32", 0))]
+
   # Endpoints (control-plane IPs) for the generated talosconfig so talosctl
   # can reach any control-plane node.
   control_plane_ips = [for name in local.control_plane_names : var.control_plane_nodes[name].ip]
@@ -102,6 +122,16 @@ resource "terraform_data" "node_invariants" {
     precondition {
       condition     = length(local.node_ips_out_of_cidr) == 0
       error_message = "every node IP must fall within network_cidr (${var.network_cidr}); out-of-subnet IP(s): ${join(", ", local.node_ips_out_of_cidr)}."
+    }
+
+    precondition {
+      condition     = length(local.unique_node_macs) == length(local.all_node_macs)
+      error_message = "every node MAC must be unique across control_plane_nodes and worker_nodes; duplicate NIC MACs collide on the MAC-keyed DHCP lease."
+    }
+
+    precondition {
+      condition     = length(local.node_ips_reserved) == 0
+      error_message = "node IP(s) must be usable host addresses, not the network address, gateway (first host), or broadcast of network_cidr (${var.network_cidr}): ${join(", ", local.node_ips_reserved)}."
     }
   }
 }

@@ -167,8 +167,11 @@ tofu test
 
 - `tests/validation.tftest.hcl` — every input validation rejects bad
   input at plan time (bad cluster name/endpoint, non-semver versions,
-  even control-plane count, malformed IP/MAC, bad install disk, unknown
-  PSA profile / apply mode).
+  even control-plane count, non-RFC-1123 node keys, malformed/out-of-range
+  IP/MAC, sub-floor VM sizing, bad install disk, unknown PSA profile /
+  apply mode), plus the cross-variable `node_invariants` preconditions
+  (disjoint control-plane/worker names, unique node IPs, unique node MACs,
+  IPs inside `network_cidr` and not its network/gateway/broadcast address).
 - `tests/module.tftest.hcl` — node-count → resource fan-out, bootstrap
   targeting, the derived Kubernetes minor, static-IP wiring, config-patch
   ordering, and the PSA / audit / KSPP-sysctl / kubelet hardening

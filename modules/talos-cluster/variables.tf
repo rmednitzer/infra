@@ -82,6 +82,14 @@ variable "control_plane_nodes" {
   }
 
   validation {
+    # Each key becomes a libvirt domain/volume name (<cluster_name>-<key>) and
+    # the interface/DHCP hostname, so it must be an RFC 1123 label like
+    # cluster_name -- otherwise libvirt/dnsmasq fails at apply, not plan.
+    condition     = alltrue([for name in keys(var.control_plane_nodes) : can(regex("^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", name))])
+    error_message = "every control_plane_nodes key must be a valid RFC 1123 label (lowercase alphanumerics and hyphens, 1-63 chars, no leading or trailing hyphen); it becomes a libvirt domain/volume name and DHCP hostname."
+  }
+
+  validation {
     # Real IPv4: reject out-of-range octets (e.g. 999.999.999.999). cidrnetmask
     # errors on a malformed/out-of-range IPv4, so can(...) is false for those.
     condition     = alltrue([for n in values(var.control_plane_nodes) : can(cidrnetmask("${n.ip}/32"))])
@@ -121,6 +129,14 @@ variable "worker_nodes" {
     disk_gib   = optional(number, 20)
   }))
   default = {}
+
+  validation {
+    # Each key becomes a libvirt domain/volume name (<cluster_name>-<key>) and
+    # the interface/DHCP hostname, so it must be an RFC 1123 label like
+    # cluster_name -- otherwise libvirt/dnsmasq fails at apply, not plan.
+    condition     = alltrue([for name in keys(var.worker_nodes) : can(regex("^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$", name))])
+    error_message = "every worker_nodes key must be a valid RFC 1123 label (lowercase alphanumerics and hyphens, 1-63 chars, no leading or trailing hyphen); it becomes a libvirt domain/volume name and DHCP hostname."
+  }
 
   validation {
     # Real IPv4: reject out-of-range octets (e.g. 999.999.999.999). cidrnetmask

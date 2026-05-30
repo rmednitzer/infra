@@ -60,6 +60,27 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   config-patch ordering, and the PSA/audit/KSPP-sysctl/kubelet hardening
   invariants in the rendered patches (24 assertions). Wired into CI.
 
+### Talos module review hardening (PR review, round 2)
+
+- **Node-key RFC 1123 validation** (`variables.tf`): each
+  `control_plane_nodes` / `worker_nodes` key becomes a libvirt
+  domain/volume name (`<cluster_name>-<key>`) and the interface/DHCP
+  hostname, so each is now validated as an RFC 1123 label (same rule as
+  `cluster_name`) — a key like `cp_01` or `rack/01` now fails at plan
+  instead of erroring in libvirt at apply. Negative tests for both maps.
+- **Unique node MACs** (`main.tf`, `node_invariants` precondition):
+  added a case-folded cross-map distinct-MAC invariant alongside the
+  existing unique-IP / disjoint-name ones — duplicate NIC MACs collide on
+  the MAC-keyed DHCP lease (one node steals the other's lease, hanging
+  `wait_for_lease`) even when IPs are unique. Negative test added.
+- **Reject network-reserved node IPs** (`main.tf`, `node_invariants`
+  precondition): a node IP inside `network_cidr` could still be the
+  network address (`cidrhost 0`), the libvirt/dnsmasq gateway (first host,
+  `cidrhost 1`), or the broadcast (`cidrhost -1`) — none leaseable to a
+  VM, so `wait_for_lease` hangs. Each node IP is canonicalised and checked
+  against that reserved set. Negative test (node at the gateway) added.
+  `tofu test`: 43 passed (+4).
+
 ### Talos module review hardening (PR review)
 
 - **Security — audit-policy ordering** (`controlplane.yaml.tftpl`):

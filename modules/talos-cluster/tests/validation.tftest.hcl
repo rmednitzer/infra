@@ -186,6 +186,20 @@ run "control_plane_rejects_bad_mac" {
   expect_failures = [var.control_plane_nodes]
 }
 
+run "control_plane_rejects_non_rfc1123_key" {
+  command = plan
+
+  variables {
+    # Underscore is not a valid RFC 1123 label char; the key becomes a libvirt
+    # domain/volume name and DHCP hostname, so it must be rejected at plan time.
+    control_plane_nodes = {
+      cp_01 = { ip = "10.5.0.10", mac = "52:54:00:00:00:10" }
+    }
+  }
+
+  expect_failures = [var.control_plane_nodes]
+}
+
 run "worker_rejects_bad_ip" {
   command = plan
 
@@ -229,6 +243,19 @@ run "worker_rejects_sub_floor_disk" {
   variables {
     worker_nodes = {
       work-01 = { ip = "10.5.0.20", mac = "52:54:00:00:00:20", disk_gib = 0 }
+    }
+  }
+
+  expect_failures = [var.worker_nodes]
+}
+
+run "worker_rejects_non_rfc1123_key" {
+  command = plan
+
+  variables {
+    # A slash is path-unsafe and not a valid hostname label.
+    worker_nodes = {
+      "rack/01" = { ip = "10.5.0.20", mac = "52:54:00:00:00:20" }
     }
   }
 
@@ -326,6 +353,38 @@ run "rejects_node_ip_outside_network_cidr" {
     worker_nodes = {
       # Valid IPv4 but outside 10.5.0.0/24.
       work-01 = { ip = "10.6.0.20", mac = "52:54:00:00:00:20" }
+    }
+  }
+
+  expect_failures = [terraform_data.node_invariants]
+}
+
+run "rejects_duplicate_node_macs" {
+  command = plan
+
+  variables {
+    # Unique IPs and disjoint names, but the worker reuses the control-plane
+    # MAC: the MAC-keyed DHCP lease would collide. Only the MAC invariant fires.
+    control_plane_nodes = {
+      cp-01 = { ip = "10.5.0.10", mac = "52:54:00:00:00:10" }
+    }
+    worker_nodes = {
+      work-01 = { ip = "10.5.0.20", mac = "52:54:00:00:00:10" }
+    }
+  }
+
+  expect_failures = [terraform_data.node_invariants]
+}
+
+run "rejects_network_reserved_node_ip" {
+  command = plan
+
+  variables {
+    # 10.5.0.1 is the libvirt/dnsmasq gateway (first host) of the default
+    # network_cidr -- valid IPv4, in-subnet, unique, but not leaseable to a VM.
+    network_cidr = "10.5.0.0/24"
+    control_plane_nodes = {
+      cp-01 = { ip = "10.5.0.1", mac = "52:54:00:00:00:10" }
     }
   }
 
