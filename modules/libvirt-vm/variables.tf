@@ -42,7 +42,7 @@ variable "disk_size_gib" {
 }
 
 variable "base_image" {
-  description = "Path or URL to a cloud-init compatible base image (e.g., Ubuntu 24.04 cloud image)."
+  description = "Path or URL to a cloud-init compatible base image. Version-neutral: any cloud image that ships cloud-init and netplan works, including Ubuntu 24.04 LTS (noble, cloud-images.ubuntu.com/noble/) and Ubuntu 26.04 LTS (resolute, kernel 7.0, cloud-images.ubuntu.com/resolute/). The shipped cloud_init.cfg is distro-neutral across both."
   type        = string
 
   validation {

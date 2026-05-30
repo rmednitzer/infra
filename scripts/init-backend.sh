@@ -50,15 +50,31 @@ echo "Initializing OpenTofu backend for environment: ${ENVIRONMENT}"
 echo "Directory: ${ENV_DIR}"
 echo ""
 
-# Guard: warn (do not block) if production still carries the placeholder
-# local backend. Initializing local state in production silently forfeits
-# the remote, locked, encrypted backend that ADR-0003 requires.
+# Guard 1: production must carry the remote S3 backend, not a local
+# placeholder. Initializing local state in production silently forfeits the
+# remote, locked, encrypted backend that ADR-0003 requires. The placeholder
+# was replaced with the real `backend "s3"` (ADR-0011); this guard catches a
+# regression where someone re-introduces a local backend.
 if [[ "${ENVIRONMENT}" == "production" ]] &&
   grep -Eq '^\s*backend\s+"local"' "${ENV_DIR}/backend.tf" 2>/dev/null; then
-  echo "WARNING: environments/production/backend.tf still declares the" >&2
-  echo "         placeholder 'backend \"local\"'. Production state must use a" >&2
-  echo "         remote, locked, encrypted backend before any resources are" >&2
-  echo "         created. See docs/adr/0003-state-backend-strategy.md." >&2
+  echo "WARNING: environments/production/backend.tf declares a 'backend" >&2
+  echo "         \"local\"'. Production state must use the remote, locked," >&2
+  echo "         encrypted S3 backend before any resources are created." >&2
+  echo "         See docs/adr/0003-state-backend-strategy.md." >&2
+  echo "" >&2
+fi
+
+# Guard 2: the production S3 backend authenticates via AWS_* environment
+# variables (or an instance role). Initializing it without credentials fails
+# at the backend step with an opaque AWS error; warn early with the fix.
+if [[ "${ENVIRONMENT}" == "production" ]] &&
+  grep -Eq '^\s*backend\s+"s3"' "${ENV_DIR}/backend.tf" 2>/dev/null &&
+  [[ -z "${AWS_ACCESS_KEY_ID:-}" && -z "${AWS_PROFILE:-}" ]]; then
+  echo "WARNING: production uses the S3 state backend but neither" >&2
+  echo "         AWS_ACCESS_KEY_ID nor AWS_PROFILE is set. 'tofu init' will" >&2
+  echo "         fail with 'No valid credential sources found' unless an EC2/" >&2
+  echo "         instance role is available. Export credentials first:" >&2
+  echo "           export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=..." >&2
   echo "" >&2
 fi
 

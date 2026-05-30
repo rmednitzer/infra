@@ -1,0 +1,80 @@
+# Talos hardened machine-config baseline — applied to control-plane AND
+# worker nodes. Rendered by modules/talos-cluster/main.tf via templatefile
+# and threaded into data.talos_machine_configuration.config_patches.
+#
+# Talos is hardened-by-design (no SSH/shell/PAM, immutable rootfs, RBAC and
+# audit on by default). This patch tightens the host- and kubelet-level knobs
+# that Talos leaves to the operator. See docs/talos-cis-kubernetes.md for the
+# CIS Kubernetes Benchmark mapping and the Talos hardening guide references.
+machine:
+  install:
+    # Target the explicit install disk so Talos does not guess on multi-disk
+    # hosts. Must match the libvirt disk bus (virtio -> /dev/vdX).
+    disk: ${install_disk}
+  # Time sync is a prerequisite for TLS and etcd. NTP from a trusted source.
+%{ if length(time_servers) > 0 ~}
+  time:
+    disabled: false
+    servers:
+%{ for server in time_servers ~}
+      - ${server}
+%{ endfor ~}
+%{ endif ~}
+  features:
+    # RBAC for the Talos apid API itself (CIS-K8s 5.x analogue at the host
+    # API layer). Talos defaults this on; we assert it explicitly.
+    rbac: true
+    # KubePrism gives in-cluster components a stable localhost API endpoint,
+    # reducing reliance on a single control-plane IP.
+    kubePrism:
+      enabled: true
+      port: 7445
+    # Host DNS caching; do not forward kube-dns to the host resolver.
+    hostDNS:
+      enabled: true
+      forwardKubeDNSToHost: false
+  # KSPP (Kernel Self-Protection Project) runtime sysctls. Talos applies a
+  # strong KSPP baseline itself from v1.12; these assert the security-relevant
+  # network and kernel knobs explicitly so the posture is config-as-code and
+  # survives a Talos default change.
+  sysctls:
+    # Kernel pointer/dmesg exposure restrictions (KSPP).
+    kernel.kptr_restrict: "2"
+    kernel.dmesg_restrict: "1"
+    # BPF hardening: only privileged users may load eBPF programs.
+    kernel.unprivileged_bpf_disabled: "1"
+    net.core.bpf_jit_harden: "2"
+    # Network anti-spoofing / reverse-path filtering and redirect hardening.
+    net.ipv4.conf.all.rp_filter: "1"
+    net.ipv4.conf.default.rp_filter: "1"
+    net.ipv4.conf.all.accept_redirects: "0"
+    net.ipv4.conf.default.accept_redirects: "0"
+    net.ipv4.conf.all.send_redirects: "0"
+    net.ipv4.conf.default.send_redirects: "0"
+    net.ipv4.conf.all.accept_source_route: "0"
+    net.ipv6.conf.all.accept_redirects: "0"
+    net.ipv6.conf.all.accept_source_route: "0"
+    # Reverse-path martian logging for auditability.
+    net.ipv4.conf.all.log_martians: "1"
+  kubelet:
+    extraArgs:
+      # CIS-K8s 4.2: kubelet hardening. Disable anonymous auth, require
+      # webhook authz, surface event creation limits, and rotate certs.
+      anonymous-auth: "false"
+      authorization-mode: Webhook
+      event-qps: "0"
+      tls-min-version: VersionTLS13
+    # Cap pods per node to limit blast radius (CIS-K8s 4.2 hardening).
+    extraConfig:
+      podPidsLimit: 4096
+%{ if length(registry_mirrors) > 0 ~}
+  registries:
+    mirrors:
+%{ for host, endpoints in registry_mirrors ~}
+      ${host}:
+        endpoints:
+%{ for endpoint in endpoints ~}
+          - ${endpoint}
+%{ endfor ~}
+%{ endfor ~}
+%{ endif ~}

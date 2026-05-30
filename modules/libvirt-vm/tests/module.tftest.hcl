@@ -110,6 +110,28 @@ run "graphics_omitted_by_default" {
   }
 }
 
+run "ubuntu_2604_resolute_base_image_threads_through" {
+  command = plan
+
+  # Workstream A (Ubuntu 26.04 dual-support): base_image is a version-neutral
+  # variable. A 26.04-style (resolute) value must flow into the base volume
+  # source unchanged, and the distro-neutral cloud-init security invariants
+  # (ADR-0004) must still render -- proving the module is not pinned to noble.
+  variables {
+    base_image = "/var/lib/libvirt/images/resolute-server-cloudimg-amd64.img"
+  }
+
+  assert {
+    condition     = libvirt_volume.base.source == "/var/lib/libvirt/images/resolute-server-cloudimg-amd64.img"
+    error_message = "a 26.04 (resolute) base_image must thread into libvirt_volume.base.source unchanged."
+  }
+
+  assert {
+    condition     = strcontains(libvirt_cloudinit_disk.init.user_data, "ssh_pwauth: false")
+    error_message = "the cloud-init security baseline (ADR-0004) must hold for a 26.04 base image too."
+  }
+}
+
 run "graphics_override_threads_through" {
   command = plan
 

@@ -1,0 +1,9 @@
+# Keep Talos cluster secrets out of git. The root .gitignore already covers
+# *.tfstate and .terraform/; these are the talos-lab-specific credential
+# artifacts an operator may write from sensitive outputs.
+kubeconfig
+talosconfig
+*.kubeconfig
+*.talosconfig
+kubeconfig.yaml
+talosconfig.yaml

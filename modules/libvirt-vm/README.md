@@ -18,8 +18,15 @@ Cloud-init defaults:
   oldest version CI exercises in practice; CI runs `1.12`
   ([`.opentofu-version`](../../.opentofu-version)).
 - A running libvirt/KVM host accessible via the provider's `uri`
-- A cloud-init compatible base image (e.g. Ubuntu 24.04 noble cloud
-  image)
+- A cloud-init compatible base image. The `base_image` input is
+  version-neutral — both Ubuntu 24.04 LTS (noble,
+  `cloud-images.ubuntu.com/noble/`) and Ubuntu 26.04 LTS (resolute,
+  kernel 7.0, `cloud-images.ubuntu.com/resolute/`) work. The shipped
+  `cloud_init.cfg` is distro-neutral: netplan and cloud-init behaviour
+  is unchanged across the two LTS releases, so no template edit is
+  needed to switch. The only caveat is the image *path/URL* itself
+  (set via `var.base_image`); the secure cloud-init defaults are
+  identical.
 - An existing libvirt **network** named by `var.network_name`
   (default: `default`) — the module does not create the network
 - An existing libvirt **storage pool** named by `var.storage_pool`
@@ -49,7 +56,7 @@ module "k3s_server" {
 | `vcpus` | `number` | `2` | Virtual CPU count (≥ 1) |
 | `memory_mib` | `number` | `2048` | Memory in MiB (≥ 512) |
 | `disk_size_gib` | `number` | `20` | Root disk size in GiB (≥ 1, and ≥ base image virtual size) |
-| `base_image` | `string` | — | Path or URL to a cloud-init compatible base image |
+| `base_image` | `string` | — | Path or URL to a cloud-init compatible base image (version-neutral: Ubuntu 24.04 noble or 26.04 resolute) |
 | `network_name` | `string` | `"default"` | Libvirt network name |
 | `storage_pool` | `string` | `"default"` | Libvirt storage pool for volumes and the cloud-init disk |
 | `ssh_public_key` | `string` | — | SSH public key for cloud-init injection (sensitive, validated) |

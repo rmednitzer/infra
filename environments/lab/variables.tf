@@ -5,7 +5,7 @@ variable "libvirt_uri" {
 }
 
 variable "base_image" {
-  description = "Path or URL to the Ubuntu 24.04 cloud image used as the base for all VMs."
+  description = "Path or URL to the Ubuntu cloud image used as the base for all VMs. Version-neutral: Ubuntu 24.04 LTS (noble, cloud-images.ubuntu.com/noble/) or 26.04 LTS (resolute, kernel 7.0, cloud-images.ubuntu.com/resolute/)."
   type        = string
 }
 

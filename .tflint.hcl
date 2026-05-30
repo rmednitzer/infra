@@ -8,9 +8,11 @@ config {
 # release. 0.14.1 matches the version bundled with tflint 0.62.1, so this is
 # a pin, not a behaviour change.
 #
-# Note: there is no official libvirt TFLint ruleset, so provider-specific
-# issues in dmacvicar/libvirt resources are lint-blind; rely on
-# `tofu validate`, Trivy, and the module's tofu test suite for those.
+# Note: there is no official TFLint ruleset for dmacvicar/libvirt OR for
+# siderolabs/talos, so provider-specific issues in those resources are
+# lint-blind; rely on `tofu validate`, Trivy, and each module's tofu test
+# suite for those. The terraform ruleset below still lints both modules for
+# core issues (unused declarations, naming, typing, documentation).
 plugin "terraform" {
   enabled = true
   preset  = "recommended"

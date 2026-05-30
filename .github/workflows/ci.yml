@@ -42,8 +42,10 @@ jobs:
       matrix:
         environment:
           - modules/libvirt-vm
+          - modules/talos-cluster
           - environments/lab
           - environments/production
+          - environments/talos-lab
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -135,6 +137,15 @@ jobs:
     name: Module Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # Each module's suite mocks its providers (mock_provider), so neither
+        # libvirtd, talosctl, nor a real cluster is required. talos-cluster
+        # mocks BOTH libvirt and talos.
+        module:
+          - modules/libvirt-vm
+          - modules/talos-cluster
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -144,13 +155,12 @@ jobs:
         with:
           tofu_version_file: .opentofu-version
 
-      # The suite mocks the libvirt provider (mock_provider), so no libvirtd
-      # is required. tofu init -backend=false downloads the provider schema
-      # the mock derives its shape from.
-      - name: Initialize (modules/libvirt-vm)
+      # tofu init -backend=false downloads the provider schemas the mocks
+      # derive their shape from.
+      - name: Initialize (${{ matrix.module }})
         run: tofu init -backend=false
-        working-directory: modules/libvirt-vm
+        working-directory: ${{ matrix.module }}
 
-      - name: Run module tests
+      - name: Run module tests (${{ matrix.module }})
         run: tofu test
-        working-directory: modules/libvirt-vm
+        working-directory: ${{ matrix.module }}
