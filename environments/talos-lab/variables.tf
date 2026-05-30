@@ -9,6 +9,17 @@ variable "talos_image" {
   type        = string
 }
 
+variable "talos_image_format" {
+  description = "Disk-image format of talos_image (qcow2 or raw). Must match the actual on-disk format of the downloaded image."
+  type        = string
+  default     = "qcow2"
+
+  validation {
+    condition     = contains(["qcow2", "raw"], var.talos_image_format)
+    error_message = "talos_image_format must be either qcow2 or raw."
+  }
+}
+
 variable "cluster_name" {
   description = "Name of the lab Talos cluster."
   type        = string

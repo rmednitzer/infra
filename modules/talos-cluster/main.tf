@@ -18,6 +18,30 @@ locals {
   bootstrap_node_name = local.control_plane_names[0]
   bootstrap_node_ip   = var.control_plane_nodes[local.bootstrap_node_name].ip
 
+  # --- Cross-variable invariants, asserted at plan time via
+  # terraform_data.node_invariants preconditions (a single var validation
+  # cannot reference another variable). ---
+
+  # (a) Control-plane and worker node NAMES must be disjoint. merge() would
+  # otherwise let a same-named worker silently drop a control-plane entry while
+  # bootstrap_node_* still points at it -> a broken cluster.
+  overlapping_node_names = setintersection(
+    toset(keys(var.control_plane_nodes)),
+    toset(keys(var.worker_nodes)),
+  )
+
+  # (b) Every node IP must be UNIQUE across both maps. A duplicate static lease
+  # means two domains race for one address and wait_for_lease times out.
+  all_node_ips    = [for name, node in local.all_nodes : node.ip]
+  unique_node_ips = distinct(local.all_node_ips)
+
+  # (c) Every node IP must be CONTAINED in network_cidr. There is no built-in
+  # "ip in cidr", so compare each IP's host-network (the IP under the CIDR's
+  # own prefix length) against the CIDR network address: equal => same subnet.
+  network_prefix       = split("/", var.network_cidr)[1]
+  network_address      = cidrhost(var.network_cidr, 0)
+  node_ips_out_of_cidr = [for ip in local.all_node_ips : ip if cidrhost("${ip}/${local.network_prefix}", 0) != local.network_address]
+
   # Endpoints (control-plane IPs) for the generated talosconfig so talosctl
   # can reach any control-plane node.
   control_plane_ips = [for name in local.control_plane_names : var.control_plane_nodes[name].ip]
@@ -55,6 +79,34 @@ locals {
 }
 
 # ---------------------------------------------------------------------------
+# Plan-time guard for cross-variable invariants that a single var validation
+# cannot express (they reference more than one variable). terraform_data has
+# no provider/infrastructure side effect; its preconditions fail the plan with
+# a clear message before any libvirt/talos resource is created, and they are
+# exercised by the mocked-provider tofu test suite.
+# ---------------------------------------------------------------------------
+resource "terraform_data" "node_invariants" {
+  input = local.all_nodes
+
+  lifecycle {
+    precondition {
+      condition     = length(local.overlapping_node_names) == 0
+      error_message = "control_plane_nodes and worker_nodes must have disjoint names; overlapping name(s) would let a worker override a control-plane node: ${join(", ", local.overlapping_node_names)}."
+    }
+
+    precondition {
+      condition     = length(local.unique_node_ips) == length(local.all_node_ips)
+      error_message = "every node IP must be unique across control_plane_nodes and worker_nodes; duplicate static leases break wait_for_lease."
+    }
+
+    precondition {
+      condition     = length(local.node_ips_out_of_cidr) == 0
+      error_message = "every node IP must fall within network_cidr (${var.network_cidr}); out-of-subnet IP(s): ${join(", ", local.node_ips_out_of_cidr)}."
+    }
+  }
+}
+
+# ---------------------------------------------------------------------------
 # libvirt: network with static DHCP reservations, base image, per-node disks
 # and domains. Talos boots directly from its disk image; no cloud-init.
 # ---------------------------------------------------------------------------
@@ -86,12 +138,14 @@ resource "libvirt_network" "talos" {
   }
 }
 
-# Single shared Talos base image, cloned per node as a backing store.
+# Single shared Talos base image, cloned per node as a backing store. The
+# format follows var.talos_image_format so a raw factory image is not misread
+# as qcow2 (the per-node overlays below are always qcow2 overlays on top).
 resource "libvirt_volume" "talos_base" {
-  name   = "${var.cluster_name}-talos-base.qcow2"
+  name   = "${var.cluster_name}-talos-base.${var.talos_image_format == "qcow2" ? "qcow2" : "img"}"
   pool   = var.storage_pool
   source = var.talos_image
-  format = "qcow2"
+  format = var.talos_image_format
 }
 
 # Per-node root disk: a thin overlay on the shared Talos base image.

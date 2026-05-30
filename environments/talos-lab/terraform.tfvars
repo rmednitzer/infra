@@ -10,8 +10,10 @@ cluster_endpoint = "https://10.5.0.10:6443"
 # Talos disk image (nocloud/metal qcow2 or raw). Download from the Talos
 # image factory for the matching version/architecture, e.g.:
 #   https://factory.talos.dev/image/<schematic-id>/v1.10.5/nocloud-amd64.raw.xz
-# then decompress/convert to a libvirt-readable path.
-talos_image = "/var/lib/libvirt/images/talos-v1.10.5-nocloud-amd64.qcow2"
+# then decompress/convert to a libvirt-readable path. talos_image_format must
+# match the actual on-disk format ("qcow2" default, or "raw" for a raw image).
+talos_image        = "/var/lib/libvirt/images/talos-v1.10.5-nocloud-amd64.qcow2"
+talos_image_format = "qcow2"
 
 talos_version      = "v1.10.5"
 kubernetes_version = "1.32.3"

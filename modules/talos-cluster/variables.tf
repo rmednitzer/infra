@@ -28,6 +28,17 @@ variable "talos_image" {
   }
 }
 
+variable "talos_image_format" {
+  description = "Disk-image format of talos_image, passed to the libvirt base volume's format. \"qcow2\" for a qcow2 image (the default, and what the Talos factory's nocloud/metal qcow2 artifact is); \"raw\" for an uncompressed raw image. Must match the actual on-disk format of talos_image, or qemu/libvirt misreads the source."
+  type        = string
+  default     = "qcow2"
+
+  validation {
+    condition     = contains(["qcow2", "raw"], var.talos_image_format)
+    error_message = "talos_image_format must be either qcow2 or raw."
+  }
+}
+
 variable "talos_version" {
   description = "Talos version contract used to generate machine secrets and configuration, e.g. v1.10.5. Should match the version of the talos_image. Pinning is recommended for reproducible config generation."
   type        = string
@@ -71,13 +82,32 @@ variable "control_plane_nodes" {
   }
 
   validation {
-    condition     = alltrue([for n in values(var.control_plane_nodes) : can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}$", n.ip))])
-    error_message = "every control_plane_nodes ip must be a dotted-quad IPv4 address."
+    # Real IPv4: reject out-of-range octets (e.g. 999.999.999.999). cidrnetmask
+    # errors on a malformed/out-of-range IPv4, so can(...) is false for those.
+    condition     = alltrue([for n in values(var.control_plane_nodes) : can(cidrnetmask("${n.ip}/32"))])
+    error_message = "every control_plane_nodes ip must be a valid IPv4 address (octets 0-255)."
   }
 
   validation {
     condition     = alltrue([for n in values(var.control_plane_nodes) : can(regex("^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$", n.mac))])
     error_message = "every control_plane_nodes mac must be a colon-separated 6-octet MAC address."
+  }
+
+  validation {
+    condition     = alltrue([for n in values(var.control_plane_nodes) : n.vcpus >= 1 && floor(n.vcpus) == n.vcpus])
+    error_message = "every control_plane_nodes vcpus must be a whole number greater than or equal to 1."
+  }
+
+  validation {
+    condition     = alltrue([for n in values(var.control_plane_nodes) : n.memory_mib >= 512 && floor(n.memory_mib) == n.memory_mib])
+    error_message = "every control_plane_nodes memory_mib must be a whole number of at least 512 MiB."
+  }
+
+  validation {
+    # Talos's system disk minimum is ~10 GiB; below that the install fails or
+    # the node is unbootable. Must also be a whole number of GiB for libvirt.
+    condition     = alltrue([for n in values(var.control_plane_nodes) : n.disk_gib >= 10 && floor(n.disk_gib) == n.disk_gib])
+    error_message = "every control_plane_nodes disk_gib must be a whole number of at least 10 GiB (the Talos system-disk minimum)."
   }
 }
 
@@ -93,13 +123,32 @@ variable "worker_nodes" {
   default = {}
 
   validation {
-    condition     = alltrue([for n in values(var.worker_nodes) : can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}$", n.ip))])
-    error_message = "every worker_nodes ip must be a dotted-quad IPv4 address."
+    # Real IPv4: reject out-of-range octets (e.g. 999.999.999.999). cidrnetmask
+    # errors on a malformed/out-of-range IPv4, so can(...) is false for those.
+    condition     = alltrue([for n in values(var.worker_nodes) : can(cidrnetmask("${n.ip}/32"))])
+    error_message = "every worker_nodes ip must be a valid IPv4 address (octets 0-255)."
   }
 
   validation {
     condition     = alltrue([for n in values(var.worker_nodes) : can(regex("^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$", n.mac))])
     error_message = "every worker_nodes mac must be a colon-separated 6-octet MAC address."
+  }
+
+  validation {
+    condition     = alltrue([for n in values(var.worker_nodes) : n.vcpus >= 1 && floor(n.vcpus) == n.vcpus])
+    error_message = "every worker_nodes vcpus must be a whole number greater than or equal to 1."
+  }
+
+  validation {
+    condition     = alltrue([for n in values(var.worker_nodes) : n.memory_mib >= 512 && floor(n.memory_mib) == n.memory_mib])
+    error_message = "every worker_nodes memory_mib must be a whole number of at least 512 MiB."
+  }
+
+  validation {
+    # Talos's system disk minimum is ~10 GiB; below that the install fails or
+    # the node is unbootable. Must also be a whole number of GiB for libvirt.
+    condition     = alltrue([for n in values(var.worker_nodes) : n.disk_gib >= 10 && floor(n.disk_gib) == n.disk_gib])
+    error_message = "every worker_nodes disk_gib must be a whole number of at least 10 GiB (the Talos system-disk minimum)."
   }
 }
 
@@ -109,8 +158,10 @@ variable "network_cidr" {
   default     = "10.5.0.0/24"
 
   validation {
-    condition     = can(regex("^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$", var.network_cidr))
-    error_message = "network_cidr must be an IPv4 CIDR like 10.5.0.0/24."
+    # Real IPv4 CIDR: cidrhost errors on bad octets (e.g. 999.0.0.0/24) AND on
+    # an out-of-range prefix length (e.g. 10.5.0.0/99), so can(...) gates both.
+    condition     = can(cidrhost(var.network_cidr, 0))
+    error_message = "network_cidr must be a valid IPv4 CIDR like 10.5.0.0/24 (octets 0-255, prefix 0-32)."
   }
 }
 

@@ -13,6 +13,7 @@ module "talos" {
   cluster_name       = var.cluster_name
   cluster_endpoint   = var.cluster_endpoint
   talos_image        = var.talos_image
+  talos_image_format = var.talos_image_format
   talos_version      = var.talos_version
   kubernetes_version = var.kubernetes_version
 

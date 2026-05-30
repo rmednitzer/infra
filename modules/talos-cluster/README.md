@@ -55,7 +55,9 @@ is applied — avoiding a DHCP-lease chicken-and-egg with
 - A **Talos disk image** (nocloud/metal qcow2 or raw) for the target
   version/arch, from the Talos image factory
   ([factory.talos.dev](https://factory.talos.dev/)). Set it via
-  `var.talos_image`.
+  `var.talos_image`, and set `var.talos_image_format` to match its
+  format (`qcow2` default, or `raw`) so libvirt/qemu reads the source
+  correctly.
 - The control-plane and worker node IPs must be free on the
   module-created `10.5.0.0/24` NAT network (or override the network
   layout downstream).
@@ -87,6 +89,7 @@ module "talos" {
 | `cluster_name` | `string` | — | Cluster name (RFC 1123 label); domain prefix + Talos cluster name |
 | `cluster_endpoint` | `string` | — | Kubernetes API endpoint URL, e.g. `https://10.5.0.10:6443` |
 | `talos_image` | `string` | — | Path/URL to the Talos disk image (boot disk for every node) |
+| `talos_image_format` | `string` | `"qcow2"` | Disk-image format of `talos_image` (`qcow2` or `raw`); must match the actual on-disk format |
 | `talos_version` | `string` | `v1.10.5` | Talos version contract for secrets/config generation |
 | `kubernetes_version` | `string` | `1.32.3` | Kubernetes version Talos installs (no leading `v`) |
 | `control_plane_nodes` | `map(object)` | — | Control-plane node name → `{ip, mac, vcpus?, memory_mib?, disk_gib?}`; odd count |
@@ -124,8 +127,10 @@ the following on top of Talos's already-hardened defaults:
 
 - **Pod Security Admission** — `enforce: restricted` (Talos default is
   `baseline`), `audit`/`warn: restricted`, system-namespace exemptions.
-- **Kubernetes API audit logging** — explicit `audit.k8s.io/v1` policy
-  (`RequestResponse` for secrets/RBAC, `Metadata` elsewhere).
+- **Kubernetes API audit logging** — explicit `audit.k8s.io/v1` policy.
+  First-match-wins ordering: `RequestResponse` for secrets/configmaps/RBAC
+  (incl. their reads) precedes the broad read-noise `None` rule, then
+  `Metadata` elsewhere.
 - **API server hardening** — profiling disabled, anonymous auth off
   (asserts Talos defaults as config-as-code).
 - **KSPP sysctls** — `kptr_restrict`, `dmesg_restrict`,

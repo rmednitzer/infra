@@ -16,7 +16,8 @@ immutable — this environment is **intentionally not Ansible-managed**
   pool present.
 - A **Talos disk image** for the target version/arch from the Talos
   image factory ([factory.talos.dev](https://factory.talos.dev/)). Point
-  `talos_image` (in [`terraform.tfvars`](./terraform.tfvars)) at it.
+  `talos_image` (in [`terraform.tfvars`](./terraform.tfvars)) at it, and
+  set `talos_image_format` (`qcow2` default, or `raw`) to match it.
 - The IPs in `control_plane_nodes` / `worker_nodes` must be free on the
   module-created `10.5.0.0/24` NAT network.
 - `talosctl` and `kubectl` on the operator workstation to use the
