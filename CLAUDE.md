@@ -63,7 +63,11 @@ underlying code.
   credentials
 - Use `locals {}` for computed/derived values; do not inline complex
   expressions in resource arguments
-- No hardcoded values in resource blocks — reference variables or locals
+- No environment-specific hardcoded values in resource blocks — reference
+  variables or locals. Structural constants intrinsic to the module's
+  contract (e.g. `format = "qcow2"`, `qemu_agent = true`, the serial
+  console literals) may stay inline; the goal is portability across
+  environments, not promoting every constant to a variable (ADR-0005)
 
 Example variable:
 
@@ -86,7 +90,7 @@ output "ip_address" {
 
 ## Module structure
 
-Every module **must** contain exactly:
+Every module **must** contain at least these five files:
 
 | File | Purpose |
 |------|---------|
@@ -95,6 +99,11 @@ Every module **must** contain exactly:
 | `outputs.tf` | Output values (described) |
 | `versions.tf` | `required_version` + `required_providers` |
 | `README.md` | Usage example, inputs/outputs table, notes |
+
+A module may also carry supporting artifacts that belong to its
+contract: template files referenced from within the module (e.g.
+`cloud_init.cfg`) and a `tests/` directory of native OpenTofu tests
+(`*.tftest.hcl`). See [ADR-0005](docs/adr/0005-module-and-environment-layout.md).
 
 Modules must be self-contained and reusable. They must not configure
 providers, hardcode environment-specific values, or depend on paths

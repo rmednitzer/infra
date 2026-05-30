@@ -103,9 +103,20 @@ This is the working sketch. The successor ADR refines and dates it.
    `versions.tf`: change `version = "~> 0.8.0"` to
    `version = "~> 0.9.0"` (patch-level pessimistic, consistent with
    the pre-1.0 pin rule from ADR-0002).
-3. In `environments/lab`: `tofu init -upgrade` -- refreshes
-   `.terraform.lock.hcl` with the 0.9.x hashes. Commit the new
-   lock file in the same PR.
+3. In each root (`modules/libvirt-vm`, `environments/lab`,
+   `environments/production`): refresh `.terraform.lock.hcl` with the
+   0.9.x hashes for **all common dev platforms**, not just the local
+   one, so no contributor or CI runner hits a missing-hash error:
+
+   ```bash
+   tofu providers lock \
+     -platform=linux_amd64 -platform=darwin_amd64 \
+     -platform=darwin_arm64 -platform=linux_arm64
+   ```
+
+   Commit the regenerated lock files in the same PR. (`tofu init
+   -upgrade` alone records only the host platform's hash; see
+   CONTRIBUTING.md "Provider bumps".)
 4. Run `tofu plan` per env. Resolve schema diffs via
    `tofu state mv` / `tofu state rm` + `tofu import` per the
    recipes captured during evaluation step (3). Never hand-edit

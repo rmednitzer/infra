@@ -91,25 +91,49 @@ applies graphics-related XML changes at domain boot, not at
 hot-update). No `libvirt_cloudinit_disk` re-create, no domain
 re-create.
 
-If an operator wants graphical access for a specific VM:
+If an operator wants graphical access for a specific VM, set the
+optional `graphics` module input (added 2026-05-30 — see the update
+note below):
 
 ```hcl
-# In the env root, wrap the module:
 module "workstation" {
   source = "../../modules/libvirt-vm"
   # ... required inputs ...
-}
 
-# And add a separate libvirt_domain attribute via -- this is
-# illustrative; the cleaner path is to add a module input that
-# threads through to libvirt_domain.vm.graphics.
+  graphics = {
+    type           = "spice"
+    listen_type    = "address"
+    listen_address = "127.0.0.1" # keep the listener host-local
+  }
+}
 ```
 
-The cleaner long-term path is to expose a module input (for example
-`graphics = optional(object({ ... }))`) so operators do not have to
-fork the module. That is deliberately not included in this ADR --
-ship the secure default first; add the override knob when an actual
-caller needs it.
+## Update — 2026-05-30: `graphics` override knob shipped
+
+The "cleaner long-term path" anticipated above now exists. The module
+exposes an optional input:
+
+```hcl
+variable "graphics" {
+  type = object({
+    type           = string
+    listen_type    = string
+    listen_address = optional(string)
+    autoport       = optional(bool)
+  })
+  default = null
+}
+```
+
+threaded into `libvirt_domain.vm` via a `dynamic "graphics"` block whose
+`for_each` is empty when `var.graphics == null`. **The decision in this
+ADR is unchanged**: the default remains *no graphics device* (the secure
+default). The knob only lets a specific caller opt in without forking the
+module, which is the exception this ADR always envisaged. No successor
+ADR is required because the standing decision (secure-by-default) holds;
+this is the override the ADR itself recommended. The module README
+documents the input and the test suite asserts both the null-default
+(no device) and override (one device) behaviours.
 
 ## References
 
