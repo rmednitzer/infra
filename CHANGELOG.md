@@ -7,6 +7,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Audit remediation (2026-05-31)
 
+- **`.github/copilot-instructions.md` brought up to date (docs only).** Its
+  repository-layout block now includes `modules/talos-cluster` and
+  `environments/talos-lab` (and `docs/talos-cis-kubernetes.md`); the
+  provider-pinning example now shows the `siderolabs/talos` `~> 0.11.0` pin
+  alongside libvirt; and its ADR table now lists 0001–0015 (it had stopped at
+  0009) — matching the README, `CLAUDE.md`, and `docs/adr/README.md` tables.
 - **Docs aligned with the changes below (docs only).** The README
   OpenTofu-version note now reflects the per-environment floors (`lab`/
   `talos-lab` `>= 1.10`, `production` `>= 1.10.4`) and `.opentofu-version`
