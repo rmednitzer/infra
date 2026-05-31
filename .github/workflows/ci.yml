@@ -125,11 +125,14 @@ jobs:
       # Full working-tree secret scan, server-side. The gitleaks pre-commit
       # hook only scans STAGED changes (a no-op in a clean CI checkout), so
       # this dedicated job is what actually enforces detection on every push/PR.
-      # Pinned to the same gitleaks version as the pre-commit hook (v8.30.1).
+      # Pinned by immutable image digest (matching the action SHA-pins above and
+      # the companion repos); the digest is gitleaks v8.30.1, the same version as
+      # the pre-commit hook. Bump the digest and the version comment together.
       - name: Run gitleaks (full working-tree scan)
         run: |
           docker run --rm -v "${{ github.workspace }}:/repo" \
-            ghcr.io/gitleaks/gitleaks:v8.30.1 dir /repo --redact --no-banner
+            ghcr.io/gitleaks/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            dir /repo --redact --no-banner # gitleaks v8.30.1
 
   pre-commit:
     name: Pre-commit (hygiene + EditorConfig)
