@@ -12,7 +12,7 @@ for production. Backend rationale:
 - A cloud-init compatible base image accessible to `libvirtd` (Ubuntu
   24.04 noble by default)
 - An SSH key pair for VM access
-- OpenTofu ≥ 1.6 (1.12.0 pinned via
+- OpenTofu ≥ 1.10 (1.12.1 pinned via
   [`.opentofu-version`](../../.opentofu-version))
 
 ## Usage

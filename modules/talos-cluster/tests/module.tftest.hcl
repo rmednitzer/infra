@@ -243,6 +243,11 @@ run "common_patch_carries_kspp_sysctls_and_kubelet_hardening" {
   }
 
   assert {
+    condition     = strcontains(local.common_patch, "event-qps: \"5\"")
+    error_message = "common patch must set a positive kubelet event-qps (CIS-K8s 4.2; 0 = unlimited)."
+  }
+
+  assert {
     condition     = strcontains(local.common_patch, "rbac: true")
     error_message = "common patch must assert Talos apid RBAC is enabled."
   }

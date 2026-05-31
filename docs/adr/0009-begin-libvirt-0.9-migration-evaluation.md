@@ -3,6 +3,13 @@
 - **Status**: Accepted
 - **Date**: 2026-05-27
 
+> **Note (2026-05-31, audit remediation):** the "ADR-0010" successor references
+> below are stale — 0010 became "Permit module supporting files." The
+> schema-diff work landed as
+> [ADR-0012](0012-libvirt-0.9-schema-diff-inventory.md); the eventual
+> provider-pin bump will record its own successor ADR. Tracked in
+> [`BACKLOG.md`](../../BACKLOG.md) (BL-1).
+
 ## Context
 
 [ADR-0002](0002-pin-libvirt-provider-to-0.8.md) pins

@@ -38,6 +38,13 @@ repos:
           - --args=--severity=HIGH,CRITICAL
           - --args=--skip-dirs=**/.terraform
 
+  # Secret detection — matches the v8.30.1 pin used by the automation and
+  # runbooks repos (CI also enforces this server-side; see ci.yml).
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
   - repo: https://github.com/editorconfig-checker/editorconfig-checker.python
     rev: 3.6.1
     hooks:
