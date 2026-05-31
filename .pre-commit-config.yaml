@@ -38,8 +38,10 @@ repos:
           - --args=--severity=HIGH,CRITICAL
           - --args=--skip-dirs=**/.terraform
 
-  # Secret detection — matches the v8.30.1 pin used by the automation and
-  # runbooks repos (CI also enforces this server-side; see ci.yml).
+  # Secret detection at commit time (this hook scans STAGED changes only).
+  # Server-side enforcement is the dedicated "Secret Scan (gitleaks)" CI job in
+  # ci.yml, which scans the full working tree; both pin gitleaks v8.30.1 to
+  # match the automation and runbooks repos.
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.30.1
     hooks:

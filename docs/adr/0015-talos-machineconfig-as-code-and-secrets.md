@@ -3,6 +3,13 @@
 - **Status**: Accepted
 - **Date**: 2026-05-30
 
+> **Note (2026-05-31, audit remediation):** the kubelet hardening summary below
+> says `event-qps=0`; that value was corrected to `event-qps: "5"` (a positive
+> QPS — `0` means *unlimited* as the `eventRecordQPS` config field; CIS v1.24+
+> recommends ≥ 1). The decision (machine-config-as-code hardening) is unchanged;
+> only the one value was fixed. See the CHANGELOG and
+> [`docs/talos-cis-kubernetes.md`](../talos-cis-kubernetes.md).
+
 ## Context
 
 [ADR-0013](0013-adopt-talos-linux.md) adopts Talos Linux, whose entire
