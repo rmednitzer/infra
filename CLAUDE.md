@@ -203,9 +203,11 @@ tofu output                # Show output values
 | `tofu validate` | Syntax + type | Per-env `tofu init -backend=false && tofu validate` |
 | `tflint` | Lint | `tflint --recursive` |
 | Trivy | IaC misconfiguration scan | `trivy config . --severity HIGH,CRITICAL` |
+| gitleaks | Secret scan (full working tree) | `gitleaks dir .` (CI pins the image by digest) |
+| `tofu test` | Module tests (mock providers; no live host) | `tofu test` per module |
 | pre-commit | Hygiene | `pre-commit run --all-files` |
 
-CI enforces all five on every push and pull request.
+CI enforces all of these on every push and pull request (plus a CodeQL scan).
 
 ## Workflow
 
