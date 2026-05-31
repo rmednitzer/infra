@@ -64,9 +64,7 @@ tofu apply tfplan.binary       # apply the saved plan; avoids plan/apply race
 
 Secrets via `TF_VAR_*` from the org secret manager. `terraform.tfvars`
 holds non-secret defaults only. Drift detection is out-of-band (cron
-`tofu plan`); automated reconciliation is the
-`state-reconciliation-loop` pattern in
-[`platform-blueprint`](https://github.com/rmednitzer/platform-blueprint).
+`tofu plan`); automated reconciliation is not wired up here.
 
 Reviews assigned via
 [`../../.github/CODEOWNERS`](../../.github/CODEOWNERS).
