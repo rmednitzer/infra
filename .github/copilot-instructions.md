@@ -12,10 +12,12 @@ editing code.
 ## Repository layout
 
 ```
-modules/libvirt-vm/         — Reusable VM provisioning module
-environments/{lab,production}/
+modules/libvirt-vm/         — Reusable Ubuntu VM provisioning module
+modules/talos-cluster/      — Talos Linux Kubernetes on libvirt (siderolabs/talos)
+environments/{lab,production,talos-lab}/
 scripts/                    — Operational helper scripts
 docs/adr/                   — Architecture Decision Records
+docs/talos-cis-kubernetes.md — Talos hardening → CIS Kubernetes mapping
 ```
 
 ## HCL conventions
@@ -57,10 +59,15 @@ required_providers {
     source  = "dmacvicar/libvirt"
     version = "~> 0.8.0"
   }
+  talos = {
+    source  = "siderolabs/talos"
+    version = "~> 0.11.0" # pre-1.0, patch-pinned (ADR-0014)
+  }
 }
 ```
 
-See [ADR-0002](../docs/adr/0002-pin-libvirt-provider-to-0.8.md).
+See [ADR-0002](../docs/adr/0002-pin-libvirt-provider-to-0.8.md) and
+[ADR-0014](../docs/adr/0014-pin-siderolabs-talos-provider.md).
 
 ## State safety
 
@@ -101,3 +108,9 @@ See [ADR-0002](../docs/adr/0002-pin-libvirt-provider-to-0.8.md).
 | [0007](../docs/adr/0007-set-meta-data-on-libvirt-cloudinit-disk.md) | Set `meta_data` on `libvirt_cloudinit_disk` |
 | [0008](../docs/adr/0008-omit-graphics-from-libvirt-domain-by-default.md) | Omit `graphics` from `libvirt_domain` by default |
 | [0009](../docs/adr/0009-begin-libvirt-0.9-migration-evaluation.md) | Begin `dmacvicar/libvirt` 0.9.x migration evaluation |
+| [0010](../docs/adr/0010-permit-module-supporting-files.md) | Permit module-local supporting files and ship the graphics override |
+| [0011](../docs/adr/0011-realize-production-s3-backend.md) | Realize the production S3 remote state backend |
+| [0012](../docs/adr/0012-libvirt-0.9-schema-diff-inventory.md) | `dmacvicar/libvirt` 0.9.x schema-diff inventory (Proposed) |
+| [0013](../docs/adr/0013-adopt-talos-linux.md) | Adopt Talos Linux for the Kubernetes layer |
+| [0014](../docs/adr/0014-pin-siderolabs-talos-provider.md) | Pin `siderolabs/talos` to `~> 0.11.0` |
+| [0015](../docs/adr/0015-talos-machineconfig-as-code-and-secrets.md) | Talos machine-config-as-code and secret handling |
