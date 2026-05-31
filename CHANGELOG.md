@@ -7,6 +7,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Audit remediation (2026-05-31)
 
+- **Docs aligned with the changes below (docs only).** The README
+  OpenTofu-version note now reflects the per-environment floors (`lab`/
+  `talos-lab` `>= 1.10`, `production` `>= 1.10.4`) and `.opentofu-version`
+  `1.12.1`; the `ci.yml` job list, the README CI/quality table, and
+  `CLAUDE.md`'s Quality table now include the `Secret Scan (gitleaks)` job and
+  the `tofu test` module tests (`CLAUDE.md`'s "all five" → "all of these").
 - **Kubelet `event-qps` corrected `"0"` → `"5"`** in
   `modules/talos-cluster/machineconfig/common.yaml.tftpl`. As the
   `eventRecordQPS` config field, `"0"` means *unlimited* (a kubelet-event DoS

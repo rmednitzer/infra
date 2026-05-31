@@ -37,9 +37,11 @@ as required.
 
 ## Prerequisites
 
-- [OpenTofu](https://opentofu.org/docs/intro/install/) ≥ 1.10 (every
-  root pins `required_version = ">= 1.10"`; 1.12 is current). The 1.10
-  floor matches the production S3 backend's `use_lockfile` requirement
+- [OpenTofu](https://opentofu.org/docs/intro/install/) ≥ 1.10 (`lab` and
+  `talos-lab` pin `required_version = ">= 1.10"`; `production` pins
+  `">= 1.10.4"` to avoid the 1.10.0–1.10.3 S3 SSE-on-lockfile bug,
+  opentofu#2970). `.opentofu-version` tracks `1.12.1`. The 1.10 floor
+  matches the production S3 backend's `use_lockfile` requirement
   ([ADR-0003](docs/adr/0003-state-backend-strategy.md),
   [ADR-0011](docs/adr/0011-realize-production-s3-backend.md))
 - A KVM/libvirt host with `qemu-system` and `libvirtd` running; the
@@ -78,7 +80,7 @@ infra/
 ├── scripts/init-backend.sh  # Per-environment init helper
 ├── docs/adr/                # Architecture Decision Records
 ├── docs/talos-cis-kubernetes.md # Talos hardening -> CIS Kubernetes mapping
-└── .github/workflows/ci.yml # CI: fmt + validate + tflint + Trivy + pre-commit + tests
+└── .github/workflows/ci.yml # CI: fmt + validate + tflint + Trivy + gitleaks + pre-commit + tests
 ```
 
 ## Modules
@@ -201,6 +203,8 @@ README section.
 | Validate | `tofu validate` | Per-env `tofu init -backend=false && tofu validate` |
 | Lint | [TFLint](https://github.com/terraform-linters/tflint) | `tflint --recursive` |
 | Security | [Trivy](https://aquasecurity.github.io/trivy/) | `trivy config . --severity HIGH,CRITICAL` |
+| Secret scan | [gitleaks](https://github.com/gitleaks/gitleaks) | `gitleaks dir .` (CI runs the digest-pinned image over the full working tree) |
+| Module tests | `tofu test` | Per module — mock providers, so no libvirtd or live cluster is needed |
 | Hygiene | [pre-commit](https://pre-commit.com/) | `pre-commit run --all-files` |
 
 All checks must pass before a PR can merge.
@@ -214,7 +218,7 @@ pre-commit run --all-files
 ```
 
 Hook set: [`.pre-commit-config.yaml`](.pre-commit-config.yaml). OpenTofu
-version pinned via [`.opentofu-version`](.opentofu-version) (`1.12.0`).
+version pinned via [`.opentofu-version`](.opentofu-version) (`1.12.1`).
 Pre-commit version pinned via
 [`requirements-dev.txt`](requirements-dev.txt); Dependabot watches both
 this file and the GitHub Actions workflow weekly.
