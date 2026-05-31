@@ -64,7 +64,7 @@ Section numbering follows CIS Kubernetes Benchmark v1.10.
 | 4.2.1 kubelet `--anonymous-auth=false` | module sets `anonymous-auth: "false"` in `machine.kubelet.extraArgs` | common patch |
 | 4.2.x kubelet `--authorization-mode=Webhook` | module sets `authorization-mode: Webhook` | common patch |
 | 4.2.x kubelet TLS / `tls-min-version` | module sets `tls-min-version: VersionTLS13` | common patch |
-| 4.2.x kubelet event rate / `event-qps` | module sets `event-qps: "0"` | common patch |
+| 4.2.x kubelet event rate / `event-qps` | module sets `event-qps: "5"` (a positive QPS — `0` means *unlimited* as the `eventRecordQPS` config field; CIS v1.24+ recommends ≥ 1) | common patch |
 | 4.2.x rotate kubelet certificates | Talos default (kubelet cert rotation on) | Talos default |
 | 4.2.x `podPidsLimit` / process limits | module sets `podPidsLimit: 4096` in `kubelet.extraConfig` | common patch |
 | 4.1.x kubelet config file ownership/permissions | **architectural N/A** on Talos (no on-disk kubelet config the operator manages; immutable, API-delivered) | see false positives |

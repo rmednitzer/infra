@@ -5,6 +5,33 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Audit remediation (2026-05-31)
+
+- **Kubelet `event-qps` corrected `"0"` → `"5"`** in
+  `modules/talos-cluster/machineconfig/common.yaml.tftpl`. As the
+  `eventRecordQPS` config field, `"0"` means *unlimited* (a kubelet-event DoS
+  vector); CIS v1.24+ recommends ≥ 1 (kubelet default 5). Updated the
+  CIS-Kubernetes mapping doc and added a `tofu test` assertion for the positive
+  value.
+- **Production OpenTofu floor `>= 1.10` → `>= 1.10.4`**
+  (`environments/production/versions.tf`): 1.10.0–1.10.3 omit the
+  server-side-encryption header on the S3 `.tflock` write (opentofu#2970), which
+  fails `init` on the SSE-enforced bucket the production backend mandates.
+- **OpenTofu pin `1.12.0` → `1.12.1`** (`.opentofu-version`); lab README floor
+  `≥ 1.6` → `≥ 1.10` (matching `versions.tf`).
+- **Secret scanning, server-side and local.** Added a dedicated **`Secret Scan
+  (gitleaks)` CI job** (`ci.yml`) that scans the full working tree with the
+  pinned `gitleaks v8.30.1`, plus the `gitleaks` **pre-commit** hook for local
+  commits — closing infra having no secret detection at all. (The pre-commit
+  hook scans staged changes only, a no-op in a clean CI checkout, so the CI job
+  is what enforces detection on every push/PR; both pin v8.30.1 to match the
+  automation and runbooks repos.) ADR-0015 annotated for the `event-qps` change.
+- **`BACKLOG.md` added** to track explicitly-deferred work (F12 branch-protection
+  verification; the libvirt 0.9.x migration gates; the talos `_wo` secret-arg
+  evaluation) — the 2026-05-27 engagement flagged the absence of such a tracker.
+- **Annotated stale ADR forward-references** in ADR-0002 and ADR-0009 (they named
+  successor numbers that other ADRs since took) per the immutable-ADR process.
+
 ### Talos Linux Kubernetes integration
 
 - Add the **`talos-cluster`** module (`modules/talos-cluster/`):

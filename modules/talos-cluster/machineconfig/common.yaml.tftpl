@@ -62,7 +62,11 @@ machine:
       # webhook authz, surface event creation limits, and rotate certs.
       anonymous-auth: "false"
       authorization-mode: Webhook
-      event-qps: "0"
+      # Positive event QPS, not 0: as the kubelet config field eventRecordQPS,
+      # "0" means UNLIMITED (a kubelet-event DoS vector, the opposite of
+      # hardening); CIS v1.24+ dropped the "=0" guidance and recommends >= 1
+      # (kubelet default 5). 5 is unambiguous on both the flag and config paths.
+      event-qps: "5"
       tls-min-version: VersionTLS13
     # Cap pods per node to limit blast radius (CIS-K8s 4.2 hardening).
     extraConfig:

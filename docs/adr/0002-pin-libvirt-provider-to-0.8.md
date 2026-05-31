@@ -3,6 +3,13 @@
 - **Status**: Accepted
 - **Date**: 2026-05-24
 
+> **Note (2026-05-31, audit remediation):** the "Open a new ADR (`0007-…`)"
+> reference in *Consequences* is stale — 0007 became the cloud-init `meta_data`
+> ADR. The libvirt 0.9.x migration trail is now
+> [ADR-0009](0009-begin-libvirt-0.9-migration-evaluation.md) (evaluation) →
+> [ADR-0012](0012-libvirt-0.9-schema-diff-inventory.md) (schema-diff inventory);
+> the eventual pin bump will record its own successor ADR.
+
 ## Context
 
 The KVM/libvirt VM provisioning module depends on the community-maintained
