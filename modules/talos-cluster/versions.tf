@@ -3,12 +3,12 @@ terraform {
 
   required_providers {
     # libvirt provisions the Talos VMs (volumes + domains). Pinned at the
-    # patch level per ADR-0002, consistent with modules/libvirt-vm. The
-    # 0.9.x migration is evaluated separately (ADR-0009, ADR-0012) and would
-    # move this module and libvirt-vm together.
+    # patch level per ADR-0002, consistent with modules/libvirt-vm. Moved to
+    # 0.9.x together with libvirt-vm per the migration recorded in ADR-0016
+    # (supersedes the ADR-0009/0012 evaluation trail).
     libvirt = {
       source  = "dmacvicar/libvirt"
-      version = "~> 0.8.0"
+      version = "~> 0.9.0"
     }
 
     # siderolabs/talos generates the machine secrets and configuration,

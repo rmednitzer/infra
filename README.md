@@ -13,7 +13,7 @@ configuration + hardening) and
 scripts).
 
 The rationale behind every standing decision — OpenTofu over Terraform,
-the `dmacvicar/libvirt` `~> 0.8.0` pin, the state-backend strategy, the
+the `dmacvicar/libvirt` pin, the state-backend strategy, the
 cloud-init baseline, the module/environment layout — lives in
 [`docs/adr/`](docs/adr/).
 
@@ -28,7 +28,10 @@ configure; [ADR-0013](docs/adr/0013-adopt-talos-linux.md)).
 Current providers:
 
 - **KVM/libvirt** via [`dmacvicar/libvirt`](https://github.com/dmacvicar/terraform-provider-libvirt),
-  pinned `~> 0.8.0` ([ADR-0002](docs/adr/0002-pin-libvirt-provider-to-0.8.md))
+  pinned `~> 0.9.0` ([ADR-0002](docs/adr/0002-pin-libvirt-provider-to-0.8.md)
+  pin rule; bumped 0.8→0.9 in
+  [ADR-0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md), Proposed —
+  merge gated on host verification)
 - **Talos Linux** via [`siderolabs/talos`](https://registry.terraform.io/providers/siderolabs/talos),
   pinned `~> 0.11.0` ([ADR-0014](docs/adr/0014-pin-siderolabs-talos-provider.md))
 
@@ -170,6 +173,7 @@ README section.
 | [0013](docs/adr/0013-adopt-talos-linux.md) | Adopt Talos Linux for the Kubernetes layer |
 | [0014](docs/adr/0014-pin-siderolabs-talos-provider.md) | Pin `siderolabs/talos` to `~> 0.11.0` |
 | [0015](docs/adr/0015-talos-machineconfig-as-code-and-secrets.md) | Talos machine-config-as-code and secret handling |
+| [0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md) | Migrate `dmacvicar/libvirt` to `~> 0.9.0` (Proposed; merge gated on host verification) |
 
 ## State safety
 

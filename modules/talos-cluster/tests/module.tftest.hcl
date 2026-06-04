@@ -49,27 +49,33 @@ run "node_counts_and_resource_fanout" {
   }
 }
 
-run "network_xslt_injects_a_dhcp_reservation_per_node" {
+run "network_dhcp_reservation_per_node" {
   command = plan
 
-  # The network XSLT must carry a libvirt-native <host> DHCP reservation for
-  # every node (MAC + IP), so each VM is guaranteed its declared static IP --
-  # the dns{} hosts only add DNS records, they do not pin the lease.
+  # 0.9.x exposes native DHCP host reservations (ips[].dhcp.hosts); the module
+  # declares one MAC->IP reservation per node, which is what pins each lease so
+  # every VM gets its declared static IP. (Replaces the 0.8.x XSLT transform on
+  # the network XML; the dns{} hosts only add DNS records, not leases.)
   assert {
-    condition     = strcontains(local.network_dhcp_hosts_xslt, "<host mac=\"52:54:00:00:00:10\" name=\"cp-01\" ip=\"10.5.0.10\"/>")
-    error_message = "the network XSLT must inject a DHCP host reservation for the control-plane node."
+    condition = length([
+      for h in libvirt_network.talos.ips[0].dhcp.hosts :
+      h if h.mac == "52:54:00:00:00:10" && h.ip == "10.5.0.10" && h.name == "cp-01"
+    ]) == 1
+    error_message = "the network must carry a DHCP reservation pinning the control-plane node's MAC to its IP."
   }
 
   assert {
-    condition     = strcontains(local.network_dhcp_hosts_xslt, "<host mac=\"52:54:00:00:00:20\" name=\"work-01\" ip=\"10.5.0.20\"/>")
-    error_message = "the network XSLT must inject a DHCP host reservation for each worker node."
+    condition = length([
+      for h in libvirt_network.talos.ips[0].dhcp.hosts :
+      h if h.mac == "52:54:00:00:00:20" && h.ip == "10.5.0.20" && h.name == "work-01"
+    ]) == 1
+    error_message = "the network must carry a DHCP reservation for each worker node."
   }
 
-  # The transform overrides <dhcp> (so the reservations land inside it) and is
-  # an identity transform otherwise (so the auto-generated <range> survives).
+  # One reservation per node (1 control-plane + 2 workers).
   assert {
-    condition     = strcontains(local.network_dhcp_hosts_xslt, "<xsl:template match=\"dhcp\">")
-    error_message = "the XSLT must override the <dhcp> element to append the reservations."
+    condition     = length(libvirt_network.talos.ips[0].dhcp.hosts) == 3
+    error_message = "the network must carry one DHCP reservation per node."
   }
 }
 
@@ -287,21 +293,25 @@ run "config_patch_ordering_puts_caller_extras_last" {
 run "static_ip_wiring_on_domains_and_network" {
   command = plan
 
-  # Each domain pins its static IP + MAC on the interface, and the network
-  # carries a DNS host entry per node. This is what makes the Talos API
-  # endpoints known before config apply.
+  # Each domain declares its MAC on the interface; the matching network DHCP
+  # reservation (see network_dhcp_reservation_per_node) pins that MAC to the
+  # node's static IP, so the Talos API endpoint is known before config apply.
+  # 0.9.x has no interface-level addresses/hostname/wait_for_lease (0.8.x did);
+  # the reservation is the single source of truth for the IP.
   assert {
-    condition     = libvirt_domain.node["cp-01"].network_interface[0].addresses[0] == "10.5.0.10"
-    error_message = "cp-01 domain must pin its static IP on the network interface."
+    condition     = libvirt_domain.node["cp-01"].devices.interfaces[0].mac.address == "52:54:00:00:00:10"
+    error_message = "cp-01 domain must declare its MAC on the network interface."
   }
 
   assert {
-    condition     = libvirt_domain.node["cp-01"].network_interface[0].mac == "52:54:00:00:00:10"
-    error_message = "cp-01 domain must pin its MAC on the network interface."
+    condition = one([
+      for h in libvirt_network.talos.ips[0].dhcp.hosts : h.ip if h.name == "cp-01"
+    ]) == "10.5.0.10"
+    error_message = "the network reservation for cp-01 must pin its static IP."
   }
 
   assert {
-    condition     = length(libvirt_network.talos.dns[0].hosts) == 3
+    condition     = length(libvirt_network.talos.dns.host) == 3
     error_message = "the network must carry a DNS host entry per node."
   }
 }

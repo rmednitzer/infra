@@ -8,7 +8,10 @@
 > ADR. The libvirt 0.9.x migration trail is now
 > [ADR-0009](0009-begin-libvirt-0.9-migration-evaluation.md) (evaluation) →
 > [ADR-0012](0012-libvirt-0.9-schema-diff-inventory.md) (schema-diff inventory);
-> the eventual pin bump will record its own successor ADR.
+> the eventual pin bump will record its own successor ADR. That successor is now
+> [ADR-0016](0016-migrate-libvirt-provider-to-0.9.md) (Proposed) — it bumps the
+> pin to `~> 0.9.0` and supersedes this ADR's migration plan; its merge is gated
+> on the ADR-0009 host-verification steps.
 
 ## Context
 

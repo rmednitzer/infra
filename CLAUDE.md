@@ -60,6 +60,7 @@ underlying code.
 | [0013](docs/adr/0013-adopt-talos-linux.md) | Adopt Talos Linux for the Kubernetes layer (coexists with libvirt/Ubuntu) |
 | [0014](docs/adr/0014-pin-siderolabs-talos-provider.md) | Pin `siderolabs/talos` to `~> 0.11.0` |
 | [0015](docs/adr/0015-talos-machineconfig-as-code-and-secrets.md) | Talos machine-config-as-code and secret handling |
+| [0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md) | Migrate `dmacvicar/libvirt` to `~> 0.9.0` (Proposed; merge gated on host verification) |
 
 ## Naming
 
@@ -83,8 +84,8 @@ underlying code.
   expressions in resource arguments
 - No environment-specific hardcoded values in resource blocks — reference
   variables or locals. Structural constants intrinsic to the module's
-  contract (e.g. `format = "qcow2"`, `qemu_agent = true`, the serial
-  console literals) may stay inline; the goal is portability across
+  contract (e.g. the qcow2 `target.format.type`, the domain `type = "kvm"`,
+  the serial console literals) may stay inline; the goal is portability across
   environments, not promoting every constant to a variable (ADR-0005)
 
 Example variable:
@@ -101,8 +102,8 @@ Example output:
 
 ```hcl
 output "ip_address" {
-  description = "VM IP address assigned via DHCP."
-  value       = libvirt_domain.vm.network_interface[0].addresses[0]
+  description = "VM IP address from its first DHCP lease."
+  value       = data.libvirt_domain_interface_addresses.vm.interfaces[0].addrs[0].addr
 }
 ```
 
@@ -173,7 +174,7 @@ author's signal that breaking changes have shipped
 required_providers {
   libvirt = {
     source  = "dmacvicar/libvirt"
-    version = "~> 0.8.0"
+    version = "~> 0.9.0" # pre-1.0, patch-pinned (ADR-0002; bumped 0.8->0.9 in ADR-0016)
   }
   talos = {
     source  = "siderolabs/talos"

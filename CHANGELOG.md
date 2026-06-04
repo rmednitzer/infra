@@ -5,6 +5,45 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### libvirt provider 0.8.x → 0.9.x migration (2026-06-04, Proposed — merge gated on host verification)
+
+- **Bumped `dmacvicar/libvirt` `~> 0.8.0` → `~> 0.9.0`** in both modules
+  (`libvirt-vm`, `talos-cluster`) and all three environment roots, and adapted
+  every resource to the 0.9.x plugin-framework schema (a breaking, ground-up
+  rewrite that mirrors the libvirt XML tree). Recorded in
+  [ADR-0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md), which supersedes
+  ADR-0002's migration plan and host-doc-verifies the ADR-0012 inventory against
+  the real v0.9.8 provider. The `siderolabs/talos` pin is unchanged (`~> 0.11.0`).
+- **Resource reshapes.** `libvirt_volume`: `source`→`create.content.url`,
+  `base_volume_id`→`backing_store.path`, `size`→`capacity`,
+  `format`→`target.format.type`. `libvirt_domain`: explicit `type = "kvm"` +
+  `os`, `memory_unit = "MiB"` (0.9.x default unit is not MiB), `running = true`,
+  and the `disk`/`network_interface`/`console`/`graphics` blocks moved under the
+  nested `devices` attribute tree; `qemu_agent = true` → an
+  `org.qemu.guest_agent.0` virtio channel; cloud-init attached as a CD-ROM disk
+  (built from `libvirt_cloudinit_disk.*.path`) rather than the removed top-level
+  `cloudinit` argument.
+- **Talos network: XSLT hack removed.** 0.9.x exposes native DHCP host
+  reservations (`ips[].dhcp.hosts`), so `network-dhcp-hosts.xslt.tftpl` and the
+  `xml { xslt = … }` transform are **deleted** — the MAC→IP reservations are now
+  declared directly.
+- **Module interface changes.** `libvirt-vm` drops `var.wait_for_lease` (0.9.x
+  has no interface-level wait flag) and reshapes `var.graphics` (drops
+  `listen_type`). `ip_address`/`mac_address` outputs now read from the
+  `libvirt_domain_interface_addresses` data source; `ip_address` may be `null`
+  on first apply until the guest acquires a lease (a behaviour change from the
+  blocking `wait_for_lease`).
+- **Evidence.** `tofu validate` clean on all three environments and `tofu test`
+  green (`libvirt-vm` 16/16, `talos-cluster` 45/45) against libvirt v0.9.8 (and
+  talos v0.11.0); the mock-provider suites were re-shaped to the 0.9.x surface.
+  All five `.terraform.lock.hcl` files refreshed to v0.9.8 with multi-platform
+  hashes.
+- **NOT merge-ready.** The ADR-0009 real-host gates (state migration, domain-XML
+  acceptance, cloud-init-via-CD-ROM, IP read-out timing, Talos static-IP
+  bring-up, maintenance-horizon check) require a libvirtd host and are **open** —
+  see ADR-0016 "Open gates." `tofu validate` proves schema-correctness, not that
+  libvirt accepts the XML or that guests boot.
+
 ### Audit remediation (2026-05-31)
 
 - **`.github/copilot-instructions.md` brought up to date (docs only).** Its

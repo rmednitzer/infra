@@ -3,6 +3,13 @@
 - **Status**: Proposed
 - **Date**: 2026-05-30
 
+> **Note (2026-06-04):** carried forward by
+> [ADR-0016](0016-migrate-libvirt-provider-to-0.9.md), which host-doc-verifies
+> the deltas below against the real v0.9.8 provider (re-shaping both modules,
+> `tofu validate`/`tofu test` clean) and proposes the pin bump. The desk
+> inventory here proved accurate against the released schema; ADR-0016 carries
+> the remaining ADR-0009 host gates.
+
 ## Context
 
 [ADR-0009](0009-begin-libvirt-0.9-migration-evaluation.md) opened a
