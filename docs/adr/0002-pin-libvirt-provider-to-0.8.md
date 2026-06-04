@@ -1,6 +1,6 @@
 # ADR-0002: Pin `dmacvicar/libvirt` to `~> 0.8.0`
 
-- **Status**: Accepted
+- **Status**: Superseded by [ADR-0016](0016-migrate-libvirt-provider-to-0.9.md) (pin moved 0.8→0.9; the pre-1.0 patch-pin rule it established is retained)
 - **Date**: 2026-05-24
 
 > **Note (2026-05-31, audit remediation):** the "Open a new ADR (`0007-…`)"

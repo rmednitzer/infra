@@ -1,6 +1,6 @@
 # ADR-0009: Begin `dmacvicar/libvirt` 0.9.x migration evaluation
 
-- **Status**: Accepted
+- **Status**: Superseded by [ADR-0016](0016-migrate-libvirt-provider-to-0.9.md) (evaluation concluded; gates host-verified)
 - **Date**: 2026-05-27
 
 > **Note (2026-05-31, audit remediation):** the "ADR-0010" successor references

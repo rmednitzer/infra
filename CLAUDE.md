@@ -60,7 +60,7 @@ underlying code.
 | [0013](docs/adr/0013-adopt-talos-linux.md) | Adopt Talos Linux for the Kubernetes layer (coexists with libvirt/Ubuntu) |
 | [0014](docs/adr/0014-pin-siderolabs-talos-provider.md) | Pin `siderolabs/talos` to `~> 0.11.0` |
 | [0015](docs/adr/0015-talos-machineconfig-as-code-and-secrets.md) | Talos machine-config-as-code and secret handling |
-| [0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md) | Migrate `dmacvicar/libvirt` to `~> 0.9.0` (Proposed; merge gated on host verification) |
+| [0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md) | Migrate `dmacvicar/libvirt` to `~> 0.9.0` |
 
 ## Naming
 

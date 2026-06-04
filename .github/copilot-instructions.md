@@ -57,7 +57,7 @@ is the provider author's signal that breaking changes have shipped:
 required_providers {
   libvirt = {
     source  = "dmacvicar/libvirt"
-    version = "~> 0.9.0" # bumped 0.8->0.9 in ADR-0016 (Proposed)
+    version = "~> 0.9.0" # bumped 0.8->0.9 in ADR-0016
   }
   talos = {
     source  = "siderolabs/talos"
@@ -114,4 +114,4 @@ See [ADR-0002](../docs/adr/0002-pin-libvirt-provider-to-0.8.md) and
 | [0013](../docs/adr/0013-adopt-talos-linux.md) | Adopt Talos Linux for the Kubernetes layer |
 | [0014](../docs/adr/0014-pin-siderolabs-talos-provider.md) | Pin `siderolabs/talos` to `~> 0.11.0` |
 | [0015](../docs/adr/0015-talos-machineconfig-as-code-and-secrets.md) | Talos machine-config-as-code and secret handling |
-| [0016](../docs/adr/0016-migrate-libvirt-provider-to-0.9.md) | Migrate `dmacvicar/libvirt` to `~> 0.9.0` (Proposed; merge gated on host verification) |
+| [0016](../docs/adr/0016-migrate-libvirt-provider-to-0.9.md) | Migrate `dmacvicar/libvirt` to `~> 0.9.0` |

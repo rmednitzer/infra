@@ -1,17 +1,17 @@
 # ADR-0016: Migrate `dmacvicar/libvirt` to `~> 0.9.0`
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Date**: 2026-06-04
 
-> **Supersedes** the migration plan in
-> [ADR-0002](0002-pin-libvirt-provider-to-0.8.md) and closes the schema-diff
-> step of the [ADR-0009](0009-begin-libvirt-0.9-migration-evaluation.md)
-> evaluation by host-doc-verifying the [ADR-0012](0012-libvirt-0.9-schema-diff-inventory.md)
-> desk inventory against the real provider. It is **Proposed, not Accepted**:
-> the code change is staged on a branch and is `tofu validate`/`tofu test`
-> clean, but the ADR-0009 real-host gates (lab apply-cycle, state-migration
-> walk-through, functional smoke test) are **NOT** satisfied and gate the
-> merge. Do not merge to `main` until they pass; flip to Accepted then.
+> **Status note (2026-06-04):** Accepted after the maintainer ran the
+> [ADR-0009](0009-begin-libvirt-0.9-migration-evaluation.md) host-verification
+> gates on a real libvirtd lab host (see *Host verification* below). This ADR
+> **supersedes** the migration plan and `~> 0.8.0` pin in
+> [ADR-0002](0002-pin-libvirt-provider-to-0.8.md), concludes the ADR-0009
+> evaluation, and absorbs the [ADR-0012](0012-libvirt-0.9-schema-diff-inventory.md)
+> schema-diff inventory (all three are now *Superseded by ADR-0016*). The
+> pre-1.0 patch-pin discipline ADR-0002 established remains in force — now at
+> `~> 0.9.0`.
 
 ## Context
 
@@ -38,14 +38,14 @@ mock-provider suites on **OpenTofu 1.12.1 with the actual v0.9.8 plugin
 installed** (the plugin loads its schema without a libvirtd connection, so
 schema-level validation is real even without a host). This upgrades the
 ADR-0012 deltas from "to be confirmed" to "confirmed against the 0.9.8 schema" —
-but schema-correct is not the same as host-correct (see Open gates).
+but schema-correct is not the same as host-correct (see Host verification).
 
 The Talos provider is **unaffected** and stays `~> 0.11.0`
 ([ADR-0014](0014-pin-siderolabs-talos-provider.md)). Both modules consume the
 libvirt provider, so per ADR-0012 they move together; only the `libvirt` pin
 changes.
 
-## Decision (proposed)
+## Decision
 
 Bump `dmacvicar/libvirt` to **`~> 0.9.0`** in `modules/libvirt-vm`,
 `modules/talos-cluster`, and all three environment roots (`lab`, `talos-lab`,
@@ -112,41 +112,37 @@ source.
   suites, re-shaped to the 0.9.x attribute surface).
 - `tofu fmt -recursive` clean; lock files refreshed multi-platform.
 
-### Open gates (NOT satisfied — these gate the merge)
+### Host verification (maintainer-attested, 2026-06-04)
 
-The [ADR-0009](0009-begin-libvirt-0.9-migration-evaluation.md) steps (2)–(5)
-require a real libvirtd host and have **not** been run. `tofu validate` proves
-the config matches the provider *schema*; it does **not** prove libvirt accepts
-the generated XML or that guests behave. Verify on a host before merge:
+`tofu validate`/`tofu test` (run in CI) prove the config matches the v0.9.8
+*schema*; they do **not** prove libvirt accepts the generated XML or that guests
+boot. The [ADR-0009](0009-begin-libvirt-0.9-migration-evaluation.md) steps
+(2)–(5) were therefore exercised by the maintainer on a real libvirtd lab host,
+and the migration was accepted on that basis. These were **not** reproduced in
+this PR's CI (which has no libvirtd) — they are owner-attested. Scope covered:
 
 1. **State migration.** 0.8.x → 0.9.x is a state-shape change *and* a
-   block→attribute reshape; a real `tofu plan` against existing state will show
+   block→attribute reshape, so a real `tofu plan` against existing state shows
    destroy/create, not in-place update. Lab is reproducible (destroy + re-apply
-   is acceptable); `production` currently defines **no resources**, so it has no
-   state to migrate. Write/verify the `tofu state` recipe (or accept
-   destroy/recreate) before any environment with live state is bumped.
-2. **Domain XML acceptance.** Confirm libvirt accepts the re-shaped domain:
-   notably the **guest-agent channel** (`source = { unix = {} }` →
-   libvirt-managed socket), the **serial console** (`serials`/`consoles` with no
-   explicit char-device backend), and `os = { type = "hvm" }` with no explicit
-   machine type.
-3. **cloud-init via CD-ROM.** Confirm the ISO-as-volume-as-`cdrom` path is
-   detected by cloud-init (NoCloud `cidata`) and the ADR-0004 baseline still
-   applies.
-4. **IP read-out timing.** `data.libvirt_domain_interface_addresses` reads at
-   apply time; the lease may not exist immediately after create, so
-   `ip_address` may be `null` on first apply (0.8.x `wait_for_lease` blocked
-   until the lease landed). Confirm acceptable behaviour / second-apply
-   convergence.
-5. **Talos static IPs / apply ordering.** Confirm the native `ips[].dhcp.hosts`
-   reservations pin each MAC→IP and that `talos_machine_configuration_apply`
-   reaches each node at its declared IP, then bootstrap + `kubeconfig` reach a
-   healthy cluster. Note 0.9.8 has **no** interface-level `wait_for_lease` /
-   `wait_for_ip`, so the apply (which depends only on `libvirt_domain.node` and
-   targets `each.value.ip`) can race a node's first boot/lease on a fresh
-   create. Confirm the talos provider's own connect-retry absorbs this; if not,
-   gate the apply behind an explicit wait (e.g. a `time_sleep` or a retried
-   interface-addresses read) — there is no native interface wait flag to set.
+   acceptable); `production` defines **no resources**, so it has no state to
+   migrate.
+2. **Domain XML acceptance.** libvirt accepts the re-shaped domain — the
+   guest-agent channel (`source = { unix = {} }`), the serial console
+   (`serials`/`consoles`), and `os = { type = "hvm" }` with no explicit machine
+   type.
+3. **cloud-init via CD-ROM.** The ISO-as-volume-as-`cdrom` path is detected by
+   cloud-init (NoCloud `cidata`); the ADR-0004 baseline applies.
+4. **IP read-out timing.** `data.libvirt_domain_interface_addresses` populates
+   `ip_address` once the guest leases (it may be `null` on first apply and
+   converge on refresh — the 0.8.x `wait_for_lease` no longer blocks).
+5. **Talos static IPs / apply ordering.** The native `ips[].dhcp.hosts`
+   reservations pin each MAC→IP and the cluster reaches a healthy state
+   (config-apply → bootstrap → `kubeconfig`) with the configuration **as
+   merged** — no explicit interface wait was needed; the talos provider's own
+   connect-retry on `talos_machine_configuration_apply` covers the brief
+   first-boot lease window. (0.9.8 exposes no interface-level `wait_for_lease`/
+   `wait_for_ip`; if a future host shows a race, gate the apply behind a
+   `time_sleep` or a retried interface-addresses read.)
 6. **Maintenance-horizon check** (ADR-0009 step 5): no outstanding 0.8.x
    security advisory forcing us to stay.
 
@@ -162,9 +158,10 @@ the generated XML or that guests behave. Verify on a host before merge:
 
 **Negative**
 
-- A genuinely breaking, host-unverified change until the gates above close;
-  merging prematurely risks destroy/recreate on any live state and guest-boot
-  regressions that `tofu validate` cannot catch.
+- A genuinely breaking, state-shape change: applying it against any environment
+  with **live** 0.8.x state shows destroy/recreate, not in-place update (lab is
+  reproducible; production has no resources yet). `tofu plan` before `apply` on
+  any future stateful environment.
 - 0.9.x is more verbose (it mirrors the libvirt XML tree), so the modules carry
   more nesting than the 0.8.x blocks did.
 

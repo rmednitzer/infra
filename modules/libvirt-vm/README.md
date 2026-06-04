@@ -8,8 +8,8 @@ disks, and configurable CPU, memory, and disk resources.
 Provider pin: `~> 0.9.0`
 ([ADR-0002](../../docs/adr/0002-pin-libvirt-provider-to-0.8.md) pin rule;
 bumped 0.8→0.9 in
-[ADR-0016](../../docs/adr/0016-migrate-libvirt-provider-to-0.9.md) — **Proposed,
-merge gated on host verification**). Cloud-init defaults:
+[ADR-0016](../../docs/adr/0016-migrate-libvirt-provider-to-0.9.md)). Cloud-init
+defaults:
 [ADR-0004](../../docs/adr/0004-cloud-init-bootstrap-conventions.md).
 
 ## Requirements

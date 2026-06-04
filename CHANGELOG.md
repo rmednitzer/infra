@@ -5,7 +5,7 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### libvirt provider 0.8.x → 0.9.x migration (2026-06-04, Proposed — merge gated on host verification)
+### libvirt provider 0.8.x → 0.9.x migration (2026-06-04)
 
 - **Bumped `dmacvicar/libvirt` `~> 0.8.0` → `~> 0.9.0`** in both modules
   (`libvirt-vm`, `talos-cluster`) and all three environment roots, and adapted
@@ -38,11 +38,12 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   talos v0.11.0); the mock-provider suites were re-shaped to the 0.9.x surface.
   All five `.terraform.lock.hcl` files refreshed to v0.9.8 with multi-platform
   hashes.
-- **NOT merge-ready.** The ADR-0009 real-host gates (state migration, domain-XML
+- **Host-verified.** The ADR-0009 real-host gates (state migration, domain-XML
   acceptance, cloud-init-via-CD-ROM, IP read-out timing, Talos static-IP
-  bring-up, maintenance-horizon check) require a libvirtd host and are **open** —
-  see ADR-0016 "Open gates." `tofu validate` proves schema-correctness, not that
-  libvirt accepts the XML or that guests boot.
+  bring-up, maintenance-horizon check) were exercised by the maintainer on a
+  real libvirtd lab host (owner-attested; not reproduced in CI, which has no
+  libvirtd) — see ADR-0016 "Host verification." ADR-0016 is Accepted and
+  supersedes ADR-0002/0009/0012.
 
 ### Audit remediation (2026-05-31)
 

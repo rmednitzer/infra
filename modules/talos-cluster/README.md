@@ -19,9 +19,8 @@ cloud-init + downstream Ansible). See
 
 Provider pins: libvirt `~> 0.9.0`
 ([ADR-0002](../../docs/adr/0002-pin-libvirt-provider-to-0.8.md) pin rule; bumped
-0.8→0.9 in [ADR-0016](../../docs/adr/0016-migrate-libvirt-provider-to-0.9.md) —
-**Proposed, merge gated on host verification**), talos
-`~> 0.11.0` ([ADR-0014](../../docs/adr/0014-pin-siderolabs-talos-provider.md)).
+0.8→0.9 in [ADR-0016](../../docs/adr/0016-migrate-libvirt-provider-to-0.9.md)),
+talos `~> 0.11.0` ([ADR-0014](../../docs/adr/0014-pin-siderolabs-talos-provider.md)).
 Hardening baseline + secret handling:
 [ADR-0015](../../docs/adr/0015-talos-machineconfig-as-code-and-secrets.md).
 CIS Kubernetes mapping: [`docs/talos-cis-kubernetes.md`](../../docs/talos-cis-kubernetes.md).
@@ -194,10 +193,9 @@ host with `talosctl` available:
   and that `talos_machine_configuration_apply` reaches it at the static
   IP — i.e. the native `ips[].dhcp.hosts` reservations actually pin each
   MAC to its declared IP (the reservations are unit-checked in the mock
-  suite, but only a real libvirtd proves dnsmasq honours them). This whole
-  module was re-shaped to the 0.9.x schema in ADR-0016 and is `tofu
-  validate`/`tofu test` clean but **not yet host-verified** — see the
-  ADR-0016 "Open gates" before trusting it.
+  suite, but only a real libvirtd proves dnsmasq honours them). The 0.9.x
+  schema migration itself was host-verified by the maintainer (ADR-0016);
+  this list is the per-deployment validation any new cluster still warrants.
 - Decide node scale-down policy: `on_destroy.reset` defaults to **off** (a
   removed node's VM is deleted but it is *not* reset, leaving stale etcd /
   Kubernetes membership). Flip `reset = true` in `main.tf` for clean
@@ -226,5 +224,4 @@ host with `talosctl` available:
 - The 0.9.x libvirt migration landed in
   [ADR-0016](../../docs/adr/0016-migrate-libvirt-provider-to-0.9.md), which
   moved this module and `libvirt-vm` together (they shared the 0.8.x surface).
-  It is Proposed — `tofu validate`/`tofu test` clean, merge gated on the
-  ADR-0016 host-verification gates.
+  Accepted after host verification.

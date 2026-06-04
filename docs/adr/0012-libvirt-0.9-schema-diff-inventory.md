@@ -1,6 +1,6 @@
 # ADR-0012: `dmacvicar/libvirt` 0.9.x schema-diff inventory
 
-- **Status**: Proposed
+- **Status**: Superseded by [ADR-0016](0016-migrate-libvirt-provider-to-0.9.md) (inventory host-verified and absorbed)
 - **Date**: 2026-05-30
 
 > **Note (2026-06-04):** carried forward by
