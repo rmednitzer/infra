@@ -32,8 +32,9 @@
       groupName: 'pre-commit hooks',
     },
     {
-      description: 'Group OpenTofu/Terraform provider and module updates. Patch bumps stay inside the pessimistic ~> pin (ADR-0002); only out-of-range minor/major bumps open a PR, which is the provider-migration evaluation the ADRs call for.',
+      description: 'Group non-major OpenTofu/Terraform provider and module updates. Patch bumps stay inside the pessimistic ~> pin (ADR-0002); only out-of-range minor bumps land here, and majors open a separate PR for the provider-migration evaluation the ADRs call for.',
       matchManagers: ['terraform'],
+      matchUpdateTypes: ['minor', 'patch', 'digest'],
       groupName: 'terraform providers',
     },
   ],
