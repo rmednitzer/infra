@@ -9,12 +9,6 @@
 > [ADR-0012](0012-libvirt-0.9-schema-diff-inventory.md); the eventual
 > provider-pin bump will record its own successor ADR. Tracked in
 > [`BACKLOG.md`](../../BACKLOG.md) (BL-1).
->
-> **Note (2026-06-04):** the successor pin-bump ADR is now
-> [ADR-0016](0016-migrate-libvirt-provider-to-0.9.md). It completes evaluation
-> step (1) (the schema diff, host-doc-verified against v0.9.8) and stages the
-> bump with `tofu validate`/`tofu test` evidence; steps (2)–(5) below — the
-> real-host gates — remain open and gate the merge.
 
 ## Context
 

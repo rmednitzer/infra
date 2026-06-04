@@ -138,9 +138,15 @@ the generated XML or that guests behave. Verify on a host before merge:
    `ip_address` may be `null` on first apply (0.8.x `wait_for_lease` blocked
    until the lease landed). Confirm acceptable behaviour / second-apply
    convergence.
-5. **Talos static IPs.** Confirm the native `ips[].dhcp.hosts` reservations pin
-   each MAC→IP and that `talos_machine_configuration_apply` reaches each node at
-   its declared IP, then bootstrap + `kubeconfig` reach a healthy cluster.
+5. **Talos static IPs / apply ordering.** Confirm the native `ips[].dhcp.hosts`
+   reservations pin each MAC→IP and that `talos_machine_configuration_apply`
+   reaches each node at its declared IP, then bootstrap + `kubeconfig` reach a
+   healthy cluster. Note 0.9.8 has **no** interface-level `wait_for_lease` /
+   `wait_for_ip`, so the apply (which depends only on `libvirt_domain.node` and
+   targets `each.value.ip`) can race a node's first boot/lease on a fresh
+   create. Confirm the talos provider's own connect-retry absorbs this; if not,
+   gate the apply behind an explicit wait (e.g. a `time_sleep` or a retried
+   interface-addresses read) — there is no native interface wait flag to set.
 6. **Maintenance-horizon check** (ADR-0009 step 5): no outstanding 0.8.x
    security advisory forcing us to stay.
 
