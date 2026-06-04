@@ -24,6 +24,6 @@ output "data_disk_ids" {
 }
 
 output "cloudinit_disk_id" {
-  description = "Libvirt volume ID of the cloud-init NoCloud disk attached to the domain."
-  value       = libvirt_cloudinit_disk.init.id
+  description = "Libvirt volume ID of the cloud-init NoCloud disk attached to the domain (the pool volume holding the generated ISO, attached as a CD-ROM). In 0.9.x this is the uploaded libvirt_volume, distinct from the libvirt_cloudinit_disk ISO-generator resource."
+  value       = libvirt_volume.cloudinit.id
 }

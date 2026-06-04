@@ -96,6 +96,15 @@ variable "additional_disks" {
     condition     = alltrue([for disk in var.additional_disks : disk.size_gib >= 1])
     error_message = "Each additional disk size_gib must be at least 1 GiB."
   }
+
+  validation {
+    # Each data disk is attached as vdb, vdc, ... vdz on the virtio bus
+    # alongside the vda root disk, so the module supports at most 25. Caps the
+    # device-letter derivation (main.tf) which would otherwise yield an invalid
+    # device name past vdz; fail fast at plan with a clear message.
+    condition     = length(var.additional_disks) <= 25
+    error_message = "additional_disks supports at most 25 data disks (attached as vdb-vdz on the virtio bus alongside the vda root disk)."
+  }
 }
 
 variable "autostart" {

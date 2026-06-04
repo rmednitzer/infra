@@ -98,3 +98,15 @@ run "additional_disks_rejects_duplicate_names" {
 
   expect_failures = [var.additional_disks]
 }
+
+run "additional_disks_rejects_more_than_25" {
+  command = plan
+
+  variables {
+    # 26 disks: past the vdb-vdz device-letter range, which would otherwise
+    # derive an invalid device name (vd) instead of failing at plan.
+    additional_disks = [for i in range(26) : { name = "disk-${i}", size_gib = 1 }]
+  }
+
+  expect_failures = [var.additional_disks]
+}
