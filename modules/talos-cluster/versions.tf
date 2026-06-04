@@ -8,7 +8,7 @@ terraform {
     # move this module and libvirt-vm together.
     libvirt = {
       source  = "dmacvicar/libvirt"
-      version = "~> 0.8.0"
+      version = "~> 0.9.0"
     }
 
     # siderolabs/talos generates the machine secrets and configuration,
