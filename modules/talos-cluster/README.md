@@ -17,9 +17,10 @@ That is a deliberate split from `modules/libvirt-vm` (Ubuntu +
 cloud-init + downstream Ansible). See
 [ADR-0013](../../docs/adr/0013-adopt-talos-linux.md).
 
-Provider pins: libvirt `~> 0.8.0`
-([ADR-0002](../../docs/adr/0002-pin-libvirt-provider-to-0.8.md)), talos
-`~> 0.11.0` ([ADR-0014](../../docs/adr/0014-pin-siderolabs-talos-provider.md)).
+Provider pins: libvirt `~> 0.9.0`
+([ADR-0002](../../docs/adr/0002-pin-libvirt-provider-to-0.8.md) pin rule; bumped
+0.8→0.9 in [ADR-0016](../../docs/adr/0016-migrate-libvirt-provider-to-0.9.md)),
+talos `~> 0.11.0` ([ADR-0014](../../docs/adr/0014-pin-siderolabs-talos-provider.md)).
 Hardening baseline + secret handling:
 [ADR-0015](../../docs/adr/0015-talos-machineconfig-as-code-and-secrets.md).
 CIS Kubernetes mapping: [`docs/talos-cis-kubernetes.md`](../../docs/talos-cis-kubernetes.md).
@@ -42,13 +43,14 @@ libvirt_volume.talos_base ──► libvirt_volume.root[*] ──► libvirt_dom
 ```
 
 Nodes get **static IPs** via libvirt-native **MAC→IP DHCP reservations**
-(`<dhcp><host>` entries) on the module-created NAT network. dmacvicar/libvirt
-0.8.x exposes no native HCL block for these, so the module injects them with an
-XSLT transform on the network XML (`network-dhcp-hosts.xslt.tftpl`); the
-`dns` hosts add matching DNS A records but do **not**, on their own, pin the
-lease. This is what makes each Talos API endpoint known *before* any
-configuration is applied — avoiding a DHCP-lease chicken-and-egg with
-`talos_machine_configuration_apply`, which targets each node at its declared IP.
+(`ips[].dhcp.hosts` entries) on the module-created NAT network. dmacvicar/libvirt
+0.9.x exposes these reservations as a native HCL attribute, so the module
+declares them directly (ADR-0016 — this replaced the 0.8.x XSLT-on-XML hack the
+module previously needed); the `dns` hosts add matching DNS A records but do
+**not**, on their own, pin the lease. This is what makes each Talos API endpoint
+known *before* any configuration is applied — avoiding a DHCP-lease
+chicken-and-egg with `talos_machine_configuration_apply`, which targets each
+node at its declared IP.
 
 ## Requirements
 
@@ -176,9 +178,9 @@ tofu test
   (disjoint control-plane/worker names, unique node IPs, unique node MACs,
   IPs inside `network_cidr` and not its network/gateway/broadcast address).
 - `tests/module.tftest.hcl` — node-count → resource fan-out, bootstrap
-  targeting, the derived Kubernetes minor, static-IP wiring, the rendered
-  DHCP-reservation XSLT (one `<host>` per node), the `on_destroy` reset
-  default (off), config-patch ordering, and the PSA / audit / KSPP-sysctl /
+  targeting, the derived Kubernetes minor, static-IP wiring, the native
+  DHCP reservations (one `ips[].dhcp.hosts` entry per node), the `on_destroy`
+  reset default (off), config-patch ordering, and the PSA / audit / KSPP-sysctl /
   kubelet hardening invariants in the rendered patches.
 
 ## What needs a real host/cluster to validate
@@ -189,9 +191,11 @@ host with `talosctl` available:
 
 - Confirm Talos boots from the chosen image and enters maintenance mode,
   and that `talos_machine_configuration_apply` reaches it at the static
-  IP — i.e. the XSLT-injected `<dhcp><host>` reservations actually pin each
-  MAC to its declared IP (the XSLT transform is unit-checked, but only a
-  real libvirtd proves the provider applies it and dnsmasq honours it).
+  IP — i.e. the native `ips[].dhcp.hosts` reservations actually pin each
+  MAC to its declared IP (the reservations are unit-checked in the mock
+  suite, but only a real libvirtd proves dnsmasq honours them). The 0.9.x
+  schema migration itself was host-verified by the maintainer (ADR-0016);
+  this list is the per-deployment validation any new cluster still warrants.
 - Decide node scale-down policy: `on_destroy.reset` defaults to **off** (a
   removed node's VM is deleted but it is *not* reset, leaving stale etcd /
   Kubernetes membership). Flip `reset = true` in `main.tf` for clean
@@ -214,7 +218,10 @@ host with `talosctl` available:
   `var.network_cidr`, default `10.5.0.0/24`) so the static IP↔MAC
   reservations are guaranteed. This differs from `modules/libvirt-vm`,
   which attaches to a pre-existing network.
-- `qemu_agent = false` on the domains: Talos does not run the QEMU guest
-  agent (no general-purpose userspace), so the module does not expect it.
-- The 0.9.x libvirt migration (ADR-0009 / ADR-0012) would re-touch this
-  module and `libvirt-vm` together; they share the same 0.8.x surface.
+- No QEMU guest-agent channel on the domains: Talos does not run the QEMU
+  guest agent (no general-purpose userspace), so the module omits it (0.8.x:
+  `qemu_agent = false`).
+- The 0.9.x libvirt migration landed in
+  [ADR-0016](../../docs/adr/0016-migrate-libvirt-provider-to-0.9.md), which
+  moved this module and `libvirt-vm` together (they shared the 0.8.x surface).
+  Accepted after host verification.

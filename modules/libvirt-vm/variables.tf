@@ -96,6 +96,15 @@ variable "additional_disks" {
     condition     = alltrue([for disk in var.additional_disks : disk.size_gib >= 1])
     error_message = "Each additional disk size_gib must be at least 1 GiB."
   }
+
+  validation {
+    # Each data disk is attached as vdb, vdc, ... vdz on the virtio bus
+    # alongside the vda root disk, so the module supports at most 25. Caps the
+    # device-letter derivation (main.tf) which would otherwise yield an invalid
+    # device name past vdz; fail fast at plan with a clear message.
+    condition     = length(var.additional_disks) <= 25
+    error_message = "additional_disks supports at most 25 data disks (attached as vdb-vdz on the virtio bus alongside the vda root disk)."
+  }
 }
 
 variable "autostart" {
@@ -104,17 +113,10 @@ variable "autostart" {
   default     = true
 }
 
-variable "wait_for_lease" {
-  description = "Wait for a DHCP lease on the primary interface before completing apply. Set to false for bridged or macvtap networks where the libvirt host cannot observe DHCP leases."
-  type        = bool
-  default     = true
-}
-
 variable "graphics" {
-  description = "Optional graphics device for the domain. Defaults to null, which omits the graphics device entirely (no SPICE/VNC listener) per ADR-0008; set it only for VMs that genuinely need graphical console access. listen_type is typically \"address\" or \"none\"; listen_address binds the listener (e.g. \"127.0.0.1\" to keep it host-local)."
+  description = "Optional graphics device for the domain. Defaults to null, which omits the graphics device entirely (no SPICE/VNC listener) per ADR-0008; set it only for VMs that genuinely need graphical console access. listen_address binds the listener (e.g. \"127.0.0.1\" to keep it host-local); leave it null for the libvirt default. autoport lets libvirt pick the port. (libvirt 0.9.x models graphics per protocol, so listen_type from 0.8.x is gone.)"
   type = object({
     type           = string
-    listen_type    = string
     listen_address = optional(string)
     autoport       = optional(bool)
   })
@@ -123,10 +125,5 @@ variable "graphics" {
   validation {
     condition     = var.graphics == null || contains(["spice", "vnc"], try(var.graphics.type, ""))
     error_message = "graphics.type must be either \"spice\" or \"vnc\"."
-  }
-
-  validation {
-    condition     = var.graphics == null || contains(["address", "none", "socket"], try(var.graphics.listen_type, ""))
-    error_message = "graphics.listen_type must be one of \"address\", \"none\", or \"socket\"."
   }
 }

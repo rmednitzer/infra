@@ -34,10 +34,11 @@ run "root_disk_byte_math" {
     disk_size_gib = 30
   }
 
-  # 30 GiB expressed in bytes; libvirt_volume.size is bytes.
+  # 30 GiB expressed in bytes; libvirt_volume.capacity is bytes (0.9.x; 0.8.x
+  # called this `size`).
   assert {
-    condition     = libvirt_volume.root.size == 30 * 1073741824
-    error_message = "root volume size must equal disk_size_gib * 1073741824."
+    condition     = libvirt_volume.root.capacity == 30 * 1073741824
+    error_message = "root volume capacity must equal disk_size_gib * 1073741824."
   }
 }
 
@@ -58,13 +59,13 @@ run "additional_disk_byte_math_and_count" {
   }
 
   assert {
-    condition     = libvirt_volume.data["data"].size == 10 * 1073741824
-    error_message = "data volume size must equal size_gib * 1073741824."
+    condition     = libvirt_volume.data["data"].capacity == 10 * 1073741824
+    error_message = "data volume capacity must equal size_gib * 1073741824."
   }
 
   assert {
-    condition     = libvirt_volume.data["logs"].size == 5 * 1073741824
-    error_message = "logs volume size must equal size_gib * 1073741824."
+    condition     = libvirt_volume.data["logs"].capacity == 5 * 1073741824
+    error_message = "logs volume capacity must equal size_gib * 1073741824."
   }
 }
 
@@ -103,9 +104,10 @@ run "cloud_init_enforces_adr0004_security_invariants" {
 run "graphics_omitted_by_default" {
   command = plan
 
-  # ADR-0008: the default-shaped VM has no graphics listener.
+  # ADR-0008: the default-shaped VM has no graphics listener. 0.9.x nests
+  # devices under the domain's devices attribute (0.8.x: top-level graphics{}).
   assert {
-    condition     = length(libvirt_domain.vm.graphics) == 0
+    condition     = length(libvirt_domain.vm.devices.graphics) == 0
     error_message = "no graphics device must be present when var.graphics is null (ADR-0008)."
   }
 }
@@ -122,8 +124,8 @@ run "ubuntu_2604_resolute_base_image_threads_through" {
   }
 
   assert {
-    condition     = libvirt_volume.base.source == "/var/lib/libvirt/images/resolute-server-cloudimg-amd64.img"
-    error_message = "a 26.04 (resolute) base_image must thread into libvirt_volume.base.source unchanged."
+    condition     = libvirt_volume.base.create.content.url == "/var/lib/libvirt/images/resolute-server-cloudimg-amd64.img"
+    error_message = "a 26.04 (resolute) base_image must thread into libvirt_volume.base.create.content.url unchanged (0.9.x; 0.8.x used .source)."
   }
 
   assert {
@@ -138,20 +140,20 @@ run "graphics_override_threads_through" {
   variables {
     graphics = {
       type           = "vnc"
-      listen_type    = "address"
       listen_address = "127.0.0.1"
     }
   }
 
-  # ADR-0008 override knob: setting var.graphics adds exactly one device
-  # with the requested type.
+  # ADR-0008 override knob: setting var.graphics adds exactly one device of the
+  # requested protocol. 0.9.x models the protocol as a vnc{}/spice{} attribute
+  # rather than 0.8.x's flat type field.
   assert {
-    condition     = length(libvirt_domain.vm.graphics) == 1
+    condition     = length(libvirt_domain.vm.devices.graphics) == 1
     error_message = "setting var.graphics must add one graphics device."
   }
 
   assert {
-    condition     = libvirt_domain.vm.graphics[0].type == "vnc"
-    error_message = "graphics device type must match var.graphics.type."
+    condition     = libvirt_domain.vm.devices.graphics[0].vnc != null
+    error_message = "a vnc graphics override must populate the device's vnc attribute."
   }
 }

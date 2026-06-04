@@ -5,9 +5,11 @@ KVM/libvirt VM provisioning with cloud-init via
 Supports cloud-init user-data injection, optional additional data
 disks, and configurable CPU, memory, and disk resources.
 
-Provider pin: `~> 0.8.0`
-([ADR-0002](../../docs/adr/0002-pin-libvirt-provider-to-0.8.md)).
-Cloud-init defaults:
+Provider pin: `~> 0.9.0`
+([ADR-0002](../../docs/adr/0002-pin-libvirt-provider-to-0.8.md) pin rule;
+bumped 0.8→0.9 in
+[ADR-0016](../../docs/adr/0016-migrate-libvirt-provider-to-0.9.md)). Cloud-init
+defaults:
 [ADR-0004](../../docs/adr/0004-cloud-init-bootstrap-conventions.md).
 
 ## Requirements
@@ -62,8 +64,7 @@ module "k3s_server" {
 | `ssh_public_key` | `string` | — | SSH public key for cloud-init injection (sensitive, validated) |
 | `additional_disks` | `list(object({name, size_gib}))` | `[]` | Optional additional data disks (unique names, size ≥ 1 GiB) |
 | `autostart` | `bool` | `true` | Start VM on host boot |
-| `wait_for_lease` | `bool` | `true` | Wait for a DHCP lease before completing apply; set `false` for bridged/macvtap networks |
-| `graphics` | `object({type, listen_type, listen_address?, autoport?})` | `null` | Optional graphics device. `null` omits graphics entirely (secure default, ADR-0008); set it only for VMs that need a SPICE/VNC console |
+| `graphics` | `object({type, listen_address?, autoport?})` | `null` | Optional graphics device. `null` omits graphics entirely (secure default, ADR-0008); set it only for VMs that need a SPICE/VNC console |
 
 ## Outputs
 
@@ -78,10 +79,10 @@ module "k3s_server" {
 
 ## Console and graphics
 
-The domain ships with a `console { type = "pty" target_type = "serial" }`
-block (so `virsh console <vm>` works) and **no** `graphics` block by
-default. SPICE and VNC listeners are intentionally omitted. Rationale,
-threat model, and operator note in
+The domain ships with a serial console (`devices.serials` + a matching
+`devices.consoles` aliased to it, so `virsh console <vm>` works) and **no**
+graphics device by default. SPICE and VNC listeners are intentionally omitted.
+Rationale, threat model, and operator note in
 [ADR-0008](../../docs/adr/0008-omit-graphics-from-libvirt-domain-by-default.md).
 
 Operators who need graphical access for a specific VM set the optional
@@ -95,7 +96,6 @@ module "workstation" {
 
   graphics = {
     type           = "spice"
-    listen_type    = "address"
     listen_address = "127.0.0.1" # keep the listener host-local
   }
 }
@@ -111,9 +111,9 @@ The shipped `cloud_init.cfg`:
   password authentication (`ssh_pwauth: false`) and root login
   (`disable_root: true`)
 - Runs `package_update` on first boot (no upgrade — operator action)
-- Installs and enables `qemu-guest-agent` (the domain sets
-  `qemu_agent = true` so libvirt can report guest addresses via the
-  agent)
+- Installs and enables `qemu-guest-agent` (the domain attaches an
+  `org.qemu.guest_agent.0` virtio channel — the 0.9.x equivalent of 0.8.x's
+  `qemu_agent = true` — so libvirt can report guest state)
 
 ## Tests
 
@@ -147,7 +147,8 @@ tofu test
   smaller value fails at apply with a libvirt volume error; the root
   overlay cannot be smaller than its backing store.
 - Additional disks are created as separate volumes and attached after
-  the root disk in deterministic (sorted-by-name) order. The module
+  the root disk (vda) as vdb, vdc, … in declared `additional_disks`
+  list order, with the cloud-init CD-ROM last. The module
   **provisions and attaches** the raw block devices only — partitioning,
   formatting (`mkfs`), and mounting are the **configuration-management
   (Ansible) layer's** responsibility, consistent with the
@@ -156,11 +157,13 @@ tofu test
   No `fs_setup`/`mounts` directives are injected into cloud-init. The
   `data_disk_ids` output exposes each volume's libvirt ID so the
   downstream layer can map names to devices.
-- `wait_for_lease = true` (default) makes `ip_address` reliable on
-  libvirt NAT networks. On bridged or macvtap networks, the libvirt
-  host cannot observe the guest's DHCP lease, so apply would hang —
-  set `wait_for_lease = false` and obtain the address out of band
-  (e.g. via the guest agent).
+- `ip_address`/`mac_address` are read via the
+  `libvirt_domain_interface_addresses` data source (`source = "lease"`), since
+  libvirt 0.9.x dropped 0.8.x's `wait_for_lease` / `network_interface[].addresses`
+  surface (ADR-0016). The address only becomes known once the guest boots and
+  acquires a DHCP lease, so `ip_address` may be `null` on the first apply and
+  populate on a subsequent refresh/apply — a behaviour change from 0.8.x's
+  blocking `wait_for_lease` that is flagged for host verification in ADR-0016.
 - `var.storage_pool` and `var.network_name` must point at libvirt
   resources that already exist on the host. Creating them is outside
   the module's scope; on a fresh libvirtd install, `virsh pool-list

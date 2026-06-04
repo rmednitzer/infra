@@ -1,7 +1,14 @@
 # ADR-0012: `dmacvicar/libvirt` 0.9.x schema-diff inventory
 
-- **Status**: Proposed
+- **Status**: Superseded by [ADR-0016](0016-migrate-libvirt-provider-to-0.9.md) (inventory host-verified and absorbed)
 - **Date**: 2026-05-30
+
+> **Note (2026-06-04):** carried forward by
+> [ADR-0016](0016-migrate-libvirt-provider-to-0.9.md), which host-doc-verifies
+> the deltas below against the real v0.9.8 provider (re-shaping both modules,
+> `tofu validate`/`tofu test` clean) and proposes the pin bump. The desk
+> inventory here proved accurate against the released schema; ADR-0016 carries
+> the remaining ADR-0009 host gates.
 
 ## Context
 

@@ -1,5 +1,5 @@
 locals {
-  # GiB-to-bytes factor. libvirt_volume.size is expressed in bytes; the
+  # GiB-to-bytes factor. libvirt_volume.capacity is expressed in bytes; the
   # per-node disk-size specs in this module are expressed in GiB. (Mirrors
   # modules/libvirt-vm.)
   bytes_per_gib = 1073741824
@@ -31,7 +31,7 @@ locals {
   )
 
   # (b) Every node IP must be UNIQUE across both maps. A duplicate static lease
-  # means two domains race for one address and wait_for_lease times out.
+  # means two domains race for one address and the node never comes up.
   all_node_ips    = [for name, node in local.all_nodes : node.ip]
   unique_node_ips = distinct(local.all_node_ips)
 
@@ -45,14 +45,14 @@ locals {
   # (d) Every node MAC must be UNIQUE across both maps (compared case-folded:
   # 52:54:00:AB == 52:54:00:ab). The static-address flow keys DHCP leases by
   # MAC, so two domains with the same NIC MAC collide -- one steals the other's
-  # lease and wait_for_lease hangs even when the IPs are unique.
+  # lease and the node never receives its declared IP.
   all_node_macs    = [for name, node in local.all_nodes : lower(node.mac)]
   unique_node_macs = distinct(local.all_node_macs)
 
   # (e) No node IP may be a network-reserved address of network_cidr: the
   # network address (cidrhost 0), the libvirt/dnsmasq gateway -- the first host,
   # cidrhost 1 -- or the broadcast (cidrhost -1, the last address). libvirt
-  # cannot hand any of these to a VM, so wait_for_lease hangs / the endpoint
+  # cannot hand any of these to a VM, so the lease never lands / the endpoint
   # never comes up. Canonicalise each node IP (cidrhost "${ip}/32", 0) before
   # the set membership test so e.g. 10.5.0.01 still matches the gateway 10.5.0.1.
   network_reserved_ips = [
@@ -96,13 +96,6 @@ locals {
     [local.common_patch],
     var.extra_worker_config_patches,
   )
-
-  # XSLT that injects a libvirt-native <dhcp><host> reservation per node into
-  # the network XML (the provider has no native HCL block for this on 0.8.x).
-  # Kept as a local (not inlined in the resource) per the HCL style guide.
-  network_dhcp_hosts_xslt = templatefile("${path.module}/network-dhcp-hosts.xslt.tftpl", {
-    nodes = local.all_nodes
-  })
 }
 
 # ---------------------------------------------------------------------------
@@ -123,7 +116,7 @@ resource "terraform_data" "node_invariants" {
 
     precondition {
       condition     = length(local.unique_node_ips) == length(local.all_node_ips)
-      error_message = "every node IP must be unique across control_plane_nodes and worker_nodes; duplicate static leases break wait_for_lease."
+      error_message = "every node IP must be unique across control_plane_nodes and worker_nodes; duplicate static leases break node bring-up."
     }
 
     precondition {
@@ -150,40 +143,52 @@ resource "terraform_data" "node_invariants" {
 
 # Dedicated NAT network with a static MAC->IP DHCP reservation per node, so
 # every Talos API endpoint is known and stable before any configuration is
-# applied. dmacvicar/libvirt 0.8.x has no native HCL block for DHCP host
-# reservations (the dhcp{} block only carries `enabled`), so the reservations
-# are injected as libvirt-native <dhcp><host> elements via an XSLT transform on
-# the network XML (xml.xslt below). The dns{} hosts add matching DNS A records
-# (name resolution); they do NOT, on their own, pin the lease.
+# applied. dmacvicar/libvirt 0.9.x exposes native DHCP host reservations
+# (ips[].dhcp.hosts), so the reservations are declared directly -- this
+# replaces the 0.8.x XSLT transform on the network XML that was needed because
+# 0.8.x had no native reservation block. The dns{} hosts add matching DNS A
+# records (name resolution); the dhcp hosts are what pin each lease.
 resource "libvirt_network" "talos" {
   name      = "${var.cluster_name}-net"
-  mode      = "nat"
-  domain    = "${var.cluster_name}.local"
-  addresses = [var.network_cidr]
   autostart = true
 
-  dhcp {
-    enabled = true
+  forward = {
+    mode = "nat"
   }
 
-  dns {
-    enabled = true
+  domain = {
+    name = "${var.cluster_name}.local"
+  }
 
-    dynamic "hosts" {
-      for_each = local.all_nodes
-      content {
-        hostname = hosts.key
-        ip       = hosts.value.ip
+  ips = [
+    {
+      # Gateway/bridge address (first host of the CIDR) and its prefix length.
+      address = cidrhost(var.network_cidr, 1)
+      prefix  = tonumber(local.network_prefix)
+
+      # One libvirt-native DHCP reservation per node. This is what guarantees
+      # each node receives its declared IP, which the talos provider targets.
+      dhcp = {
+        hosts = [
+          for name, node in local.all_nodes : {
+            mac  = node.mac
+            ip   = node.ip
+            name = name
+          }
+        ]
       }
     }
-  }
+  ]
 
-  # Inject one libvirt-native <host mac= name= ip=/> DHCP reservation per node
-  # into the auto-generated <dhcp> element (see network-dhcp-hosts.xslt.tftpl).
-  # This is what guarantees each node receives its declared IP, which the talos
-  # provider then targets. 0.8.x exposes no native reservation block, so XSLT.
-  xml {
-    xslt = local.network_dhcp_hosts_xslt
+  dns = {
+    enable = "yes"
+
+    host = [
+      for name, node in local.all_nodes : {
+        ip        = node.ip
+        hostnames = [{ hostname = name }]
+      }
+    ]
   }
 }
 
@@ -191,55 +196,86 @@ resource "libvirt_network" "talos" {
 # format follows var.talos_image_format so a raw factory image is not misread
 # as qcow2 (the per-node overlays below are always qcow2 overlays on top).
 resource "libvirt_volume" "talos_base" {
-  name   = "${var.cluster_name}-talos-base.${var.talos_image_format == "qcow2" ? "qcow2" : "img"}"
-  pool   = var.storage_pool
-  source = var.talos_image
-  format = var.talos_image_format
+  name = "${var.cluster_name}-talos-base.${var.talos_image_format == "qcow2" ? "qcow2" : "img"}"
+  pool = var.storage_pool
+
+  target = {
+    format = { type = var.talos_image_format }
+  }
+
+  create = {
+    content = { url = var.talos_image }
+  }
 }
 
-# Per-node root disk: a thin overlay on the shared Talos base image.
+# Per-node root disk: a thin qcow2 overlay on the shared Talos base image.
 resource "libvirt_volume" "root" {
   for_each = local.all_nodes
 
-  name           = "${var.cluster_name}-${each.key}-root.qcow2"
-  pool           = var.storage_pool
-  base_volume_id = libvirt_volume.talos_base.id
-  size           = each.value.disk_gib * local.bytes_per_gib
-  format         = "qcow2"
+  name     = "${var.cluster_name}-${each.key}-root.qcow2"
+  pool     = var.storage_pool
+  capacity = each.value.disk_gib * local.bytes_per_gib
+
+  target = {
+    format = { type = "qcow2" }
+  }
+
+  backing_store = {
+    path   = libvirt_volume.talos_base.path
+    format = { type = var.talos_image_format }
+  }
 }
 
 # Per-node domain. Boots from the Talos disk image directly: Talos is
 # immutable and API-configured, so there is intentionally NO cloudinit disk
 # and NO cloud-init user-data (contrast modules/libvirt-vm). The node comes up
 # in Talos maintenance mode; the talos provider applies config over the API.
+# The static IP is pinned by the network's MAC->IP DHCP reservation above
+# (0.8.x set addresses/hostname/wait_for_lease on the interface; 0.9.x has no
+# such interface conveniences, so the reservation is the single source of truth
+# and the interface only declares its MAC).
 resource "libvirt_domain" "node" {
   for_each = local.all_nodes
 
-  name       = "${var.cluster_name}-${each.key}"
-  vcpu       = each.value.vcpus
-  memory     = each.value.memory_mib
-  autostart  = true
-  qemu_agent = false
+  name        = "${var.cluster_name}-${each.key}"
+  type        = "kvm"
+  vcpu        = each.value.vcpus
+  memory      = each.value.memory_mib
+  memory_unit = "MiB"
+  autostart   = true
+  running     = true
 
-  disk {
-    volume_id = libvirt_volume.root[each.key].id
+  os = {
+    type = "hvm"
   }
 
-  network_interface {
-    network_id     = libvirt_network.talos.id
-    hostname       = each.key
-    addresses      = [each.value.ip]
-    mac            = each.value.mac
-    wait_for_lease = true
-  }
+  devices = {
+    disks = [
+      {
+        source = { volume = { pool = var.storage_pool, volume = libvirt_volume.root[each.key].name } }
+        target = { dev = "vda", bus = "virtio" }
+        driver = { type = "qcow2" }
+      }
+    ]
 
-  console {
-    type        = "pty"
-    target_type = "serial"
-    target_port = "0"
-  }
+    interfaces = [
+      {
+        type   = "network"
+        model  = { type = "virtio" }
+        source = { network = { network = libvirt_network.talos.name } }
+        mac    = { address = each.value.mac }
+      }
+    ]
 
-  # No graphics device (ADR-0008 posture); serial console only.
+    # Serial console only (Talos logs to serial); no graphics (ADR-0008).
+    serials = [
+      { target = { port = 0 } }
+    ]
+
+    consoles = [
+      { target = { type = "serial", port = 0 } }
+    ]
+  }
 }
 
 # ---------------------------------------------------------------------------
