@@ -32,7 +32,7 @@ infra/
 ├── scripts/init-backend.sh
 ├── docs/adr/                   # Architecture Decision Records (read first)
 ├── docs/talos-cis-kubernetes.md # Talos hardening -> CIS Kubernetes mapping
-└── .github/                    # CI, PR/issue templates, dependabot, copilot
+└── .github/                    # CI, PR/issue templates, copilot
 ```
 
 ## Architecture Decision Records

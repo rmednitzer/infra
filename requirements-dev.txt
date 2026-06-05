@@ -4,8 +4,8 @@
 # hooks declared in .pre-commit-config.yaml (terraform_fmt,
 # terraform_validate, terraform_tflint, terraform_trivy, plus hygiene
 # checks). Pinning a single version here keeps every contributor on
-# the same hook runner and lets Dependabot (.github/dependabot.yml,
-# pip ecosystem) propose upgrades on a weekly cycle.
+# the same hook runner and lets Renovate (renovate.json5, pip
+# manager) propose upgrades on a weekly cycle.
 #
 # Install:
 #

@@ -223,7 +223,7 @@ pre-commit run --all-files
 Hook set: [`.pre-commit-config.yaml`](.pre-commit-config.yaml). OpenTofu
 version pinned via [`.opentofu-version`](.opentofu-version) (`1.12.1`).
 Pre-commit version pinned via
-[`requirements-dev.txt`](requirements-dev.txt); Dependabot watches both
+[`requirements-dev.txt`](requirements-dev.txt); Renovate watches both
 this file and the GitHub Actions workflow weekly.
 
 ## Governance
