@@ -5,7 +5,7 @@ config {
 # Pin the terraform ruleset explicitly rather than relying on the version
 # bundled with the tflint binary, so lint results do not silently shift when
 # the tflint binary is upgraded. `tflint --init` downloads the pinned
-# release. 0.14.1 matches the version bundled with tflint 0.62.1, so this is
+# release. 0.15.0 matches the version bundled with tflint 0.63.1, so this is
 # a pin, not a behaviour change.
 #
 # Note: there is no official TFLint ruleset for dmacvicar/libvirt OR for
@@ -17,5 +17,5 @@ plugin "terraform" {
   enabled = true
   preset  = "recommended"
   source  = "github.com/terraform-linters/tflint-ruleset-terraform"
-  version = "0.14.1"
+  version = "0.15.0"
 }
