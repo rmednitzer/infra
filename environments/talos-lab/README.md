@@ -49,7 +49,10 @@ talosctl -n 10.5.0.10 health
 - **Local backend** (`backend.tf`), acceptable for a single operator
   (ADR-0003). The state contains `talos_machine_secrets` (the cluster CA
   + bootstrap token); the state file is gitignored by the root
-  `.gitignore`.
+  `.gitignore`. The per-node apply/bootstrap resources pass their secrets
+  through write-only (`_wo`) arguments, so the rendered machine config and
+  client credentials are not duplicated per node in state (ADR-0017;
+  needs OpenTofu ≥ 1.11).
 - `kubeconfig` / `talosconfig` outputs are `sensitive = true`. The files
   you write from them are gitignored by this directory's
   [`.gitignore`](./.gitignore).

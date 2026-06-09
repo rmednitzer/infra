@@ -1,5 +1,8 @@
 terraform {
-  required_version = ">= 1.10"
+  # 1.11 floor: the talos_machine_configuration_apply / talos_machine_bootstrap
+  # write-only (_wo) secret arguments need OpenTofu's write-only attribute
+  # support, introduced in 1.11 (ADR-0017).
+  required_version = ">= 1.11"
 
   required_providers {
     # libvirt provisions the Talos VMs (volumes + domains). Pinned at the

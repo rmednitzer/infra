@@ -91,6 +91,31 @@ run "on_destroy_reset_defaults_off" {
   }
 }
 
+run "secret_arguments_are_write_only" {
+  command = plan
+
+  # ADR-0017: the per-node config apply and the bootstrap pass the client TLS
+  # credentials and the rendered machine config through the write-only (_wo)
+  # arguments, so neither is persisted in those resources' state. The provider
+  # enforces exactly-one-of for each _wo/persisted pair, and _wo attributes
+  # always read back null by design -- so the decidable invariant to pin here
+  # is that the state-persisted twin arguments stay UNSET.
+  assert {
+    condition     = talos_machine_configuration_apply.node["cp-01"].machine_configuration_input == null
+    error_message = "machine config must flow through machine_configuration_input_wo; the persisted machine_configuration_input must stay unset."
+  }
+
+  assert {
+    condition     = talos_machine_configuration_apply.node["cp-01"].client_configuration == null
+    error_message = "client credentials must flow through client_configuration_wo; the persisted client_configuration must stay unset."
+  }
+
+  assert {
+    condition     = talos_machine_bootstrap.this.client_configuration == null
+    error_message = "bootstrap client credentials must flow through client_configuration_wo; the persisted client_configuration must stay unset."
+  }
+}
+
 run "bootstrap_targets_first_control_plane" {
   command = plan
 

@@ -10,6 +10,15 @@
 > only the one value was fixed. See the CHANGELOG and
 > [`docs/talos-cis-kubernetes.md`](../talos-cis-kubernetes.md).
 
+> **Note (2026-06-09):**
+> [ADR-0017](0017-adopt-talos-write-only-secret-arguments.md) adopts the
+> provider's write-only (`_wo`) secret arguments, so the rendered machine
+> config and client credentials no longer fan out per node into the
+> `talos_machine_configuration_apply` / `talos_machine_bootstrap` state. The
+> decision below is unchanged — `talos_machine_secrets` and the
+> machine-configuration data sources still live in state, so the
+> encrypted-remote-backend constraint stands.
+
 ## Context
 
 [ADR-0013](0013-adopt-talos-linux.md) adopts Talos Linux, whose entire

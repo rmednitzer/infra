@@ -54,7 +54,8 @@ node at its declared IP.
 
 ## Requirements
 
-- OpenTofu **≥ 1.10** (`versions.tf`).
+- OpenTofu **≥ 1.11** (`versions.tf`) — the module passes the Talos secrets
+  through write-only (`_wo`) arguments, an OpenTofu 1.11 feature (ADR-0017).
 - A running libvirt/KVM host accessible via the provider's `uri`, with
   the named `storage_pool` already present.
 - A **Talos disk image** (nocloud/metal qcow2 or raw) for the target
@@ -158,6 +159,13 @@ baseline so they can override it.
 encrypted remote backend (ADR-0015). `kubeconfig` and `talosconfig`
 outputs are `sensitive = true`; consuming environments must keep the
 written files out of git (see `environments/talos-lab/.gitignore`).
+
+The per-node config apply and the bootstrap pass the client TLS
+credentials and the rendered machine configuration through the
+provider's **write-only (`_wo`) arguments** (ADR-0017), so neither is
+duplicated into those resources' state — state exposure does not scale
+with node count. Config drift still plans correctly via the
+provider-persisted `machine_configuration_hash`.
 
 ## Tests
 

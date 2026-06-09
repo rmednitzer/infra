@@ -5,6 +5,46 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Talos write-only secret arguments + backlog closure (2026-06-09)
+
+- **Adopted the `siderolabs/talos` write-only (`_wo`) secret arguments**
+  (BACKLOG BL-2, audit 2026-05-31) in `modules/talos-cluster`:
+  `talos_machine_configuration_apply` now passes `client_configuration_wo` +
+  `machine_configuration_input_wo`, and `talos_machine_bootstrap` passes
+  `client_configuration_wo` — so the rendered machine configuration and the
+  Talos client TLS credentials no longer fan out per node into those
+  resources' state (previously 2×N rendered-config copies and N+1
+  client-credential copies for an N-node cluster). Drift in the write-only
+  input still surfaces as a plan diff via the provider-persisted
+  `machine_configuration_hash`. Recorded in
+  [ADR-0017](docs/adr/0017-adopt-talos-write-only-secret-arguments.md);
+  outcome noted in ADR-0014, ADR-0015 annotated. The provider pin
+  (`~> 0.11.0`) and lock files are unchanged; `talos_cluster_kubeconfig`
+  keeps the persisted `client_configuration` (no `_wo` variant at 0.11.x),
+  and the ADR-0015 backend constraint stands — `talos_machine_secrets` and
+  the machine-configuration data sources still live in state by design.
+- **OpenTofu floor `>= 1.10` → `>= 1.11`** for `modules/talos-cluster` and
+  `environments/talos-lab` (write-only attributes are an OpenTofu 1.11
+  feature). `lab` (`>= 1.10`) and `production` (`>= 1.10.4`) are unaffected;
+  `.opentofu-version` stays `1.12.1`.
+- **Evidence.** `tofu validate` clean on all three environments;
+  `tofu test` green — `talos-cluster` 46/46 (new
+  `secret_arguments_are_write_only` run pins that the persisted twin
+  arguments stay unset), `libvirt-vm` 17/17. Provider-side `_wo` semantics
+  verified against the provider source at v0.11.0 (not on a live cluster;
+  see ADR-0017 "Evidence").
+- **`BACKLOG.md`: BL-1 and BL-2 moved to Resolved.** BL-1 (libvirt 0.9.x
+  migration gates + successor ADR) was completed by ADR-0016 / PR #29 but
+  never closed in the tracker; BL-2 is resolved by ADR-0017. F12
+  (branch-protection verification) remains open — it still needs the
+  repo-admin API/UI.
+- **Docs.** ADR index tables (`docs/adr/README.md`, `CLAUDE.md`,
+  `.github/copilot-instructions.md`) gain ADR-0017; the stale "(Proposed)"
+  marker on the ADR-0012 row (superseded by ADR-0016 since 2026-06-04) is
+  dropped from `CLAUDE.md` and `.github/copilot-instructions.md`; README /
+  module README / talos-lab README reflect the new 1.11 floor and the
+  write-only secret handling.
+
 ### libvirt provider 0.8.x → 0.9.x migration (2026-06-04)
 
 - **Bumped `dmacvicar/libvirt` `~> 0.8.0` → `~> 0.9.0`** in both modules

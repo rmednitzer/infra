@@ -39,11 +39,13 @@ as required.
 
 ## Prerequisites
 
-- [OpenTofu](https://opentofu.org/docs/intro/install/) ≥ 1.10 (`lab` and
-  `talos-lab` pin `required_version = ">= 1.10"`; `production` pins
-  `">= 1.10.4"` to avoid the 1.10.0–1.10.3 S3 SSE-on-lockfile bug,
-  opentofu#2970). `.opentofu-version` tracks `1.12.1`. The 1.10 floor
-  matches the production S3 backend's `use_lockfile` requirement
+- [OpenTofu](https://opentofu.org/docs/intro/install/) ≥ 1.10 (`lab` pins
+  `required_version = ">= 1.10"`; `production` pins `">= 1.10.4"` to avoid
+  the 1.10.0–1.10.3 S3 SSE-on-lockfile bug, opentofu#2970; `talos-lab` pins
+  `">= 1.11"` for the write-only secret arguments,
+  [ADR-0017](docs/adr/0017-adopt-talos-write-only-secret-arguments.md)).
+  `.opentofu-version` tracks `1.12.1`. The 1.10 floor matches the production
+  S3 backend's `use_lockfile` requirement
   ([ADR-0003](docs/adr/0003-state-backend-strategy.md),
   [ADR-0011](docs/adr/0011-realize-production-s3-backend.md))
 - A KVM/libvirt host with `qemu-system` and `libvirtd` running; the
