@@ -84,7 +84,8 @@ run "on_destroy_reset_defaults_off" {
 
   # Default: reset=false (provider no-op on destroy) so `tofu destroy` never
   # blocks waiting on an unreachable node to gracefully leave etcd. Enabling
-  # clean scale-down is a documented one-line flip (see main.tf on_destroy).
+  # clean scale-down is a documented two-line change -- reset=true plus a
+  # revert to the persisted client_configuration (see main.tf on_destroy).
   assert {
     condition     = talos_machine_configuration_apply.node["cp-01"].on_destroy.reset == false
     error_message = "on_destroy reset must be off by default (no reset on destroy)."
