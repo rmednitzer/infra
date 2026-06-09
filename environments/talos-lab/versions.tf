@@ -1,6 +1,5 @@
 terraform {
-  # 1.11 floor: modules/talos-cluster uses write-only (_wo) secret arguments,
-  # which need OpenTofu's write-only attribute support from 1.11 (ADR-0017).
+  # >= 1.11: required by modules/talos-cluster's write-only arguments (ADR-0017).
   required_version = ">= 1.11"
 
   required_providers {

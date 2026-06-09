@@ -328,9 +328,7 @@ data "talos_client_configuration" "this" {
 # never persisted in this resource's state -- without them, every node stores
 # its own copy of both. Changes to the write-only input still surface as plan
 # diffs: the provider persists machine_configuration_hash (a SHA256 of the
-# rendered config) and re-computes it at plan time. The same secrets remain in
-# state at their sources (talos_machine_secrets, the machine-configuration
-# data sources), so the ADR-0015 backend constraint is unchanged.
+# rendered config) and re-computes it at plan time.
 resource "talos_machine_configuration_apply" "node" {
   for_each = local.all_nodes
 
@@ -346,7 +344,13 @@ resource "talos_machine_configuration_apply" "node" {
   # node.
   #
   # Default OFF (reset=false is a provider no-op). To enable clean scale-down
-  # of a HEALTHY cluster, flip reset=true here (a one-line, reviewed change).
+  # of a HEALTHY cluster, flip reset=true here -- AND switch this resource's
+  # client_configuration_wo back to the persisted client_configuration:
+  # write-only values are not in state, so the provider cannot re-read the
+  # client credentials during destroy and errors out if reset=true is asked
+  # to act without them (accepting the per-node credential copy back into
+  # state is the price of destroy-time resets; ADR-0017). It is a reviewed
+  # two-line change.
   # Caveat: with graceful=true an enabled reset performs an etcd leave, which
   # BLOCKS `tofu destroy` waiting on the node -- so to remove an already-dead
   # node, keep reset=false (or `tofu state rm` it) and clean etcd membership

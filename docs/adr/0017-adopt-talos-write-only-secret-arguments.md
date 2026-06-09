@@ -71,9 +71,20 @@ write-only acceptance tests cover.
    required). This is the one remaining per-resource copy of the client
    credentials, on a resource whose entire purpose is to persist the
    (equally sensitive) kubeconfig.
-4. **The provider pin is unchanged** (`~> 0.11.0`, ADR-0014). The change is
+4. **`on_destroy.reset = true` now requires reverting to the persisted
+   credential.** Write-only values are not in state, so the provider cannot
+   re-read the client credentials during destroy; its Delete handler errors
+   if `reset = true` is set while `client_configuration_wo` is in use
+   (provider source: "Users must use client_configuration (non-write-only)
+   if they need on_destroy.reset"). The module ships `reset = false`
+   (destroy is a provider no-op), so the default behaviour is unchanged —
+   but enabling destroy-time resets is now a documented two-line change:
+   flip `reset` **and** switch that resource back to the persisted
+   `client_configuration`, re-accepting the per-node credential copy in
+   state. The `main.tf` comment and module README carry the same warning.
+5. **The provider pin is unchanged** (`~> 0.11.0`, ADR-0014). The change is
    config-shape only; the committed `.terraform.lock.hcl` files are untouched.
-5. **ADR-0015 stands, unweakened.** The cluster trust root
+6. **ADR-0015 stands, unweakened.** The cluster trust root
    (`talos_machine_secrets`), the rendered machine configuration (in the two
    machine-configuration data sources), and the talosconfig
    (`data.talos_client_configuration`) **remain in state by design** — the
@@ -101,7 +112,9 @@ Switching an existing deployment to the write-only arguments is an **in-place
 update**, not a replace: the plan shows the persisted arguments and the
 computed `machine_configuration` nulling out and `machine_configuration_hash`
 being set; the node receives an idempotent re-apply of an identical rendered
-config. Values already written by previous applies remain in state history
+config. Until that first apply lands, every plan repeats the same per-node
+diff (the hash is computed at plan time but only persisted by an apply) — a
+plan-only pipeline run against unmigrated state will keep showing it. Values already written by previous applies remain in state history
 (and any state backups) until rotated or recycled — for `talos-lab` the
 cluster is reproducible (destroy + re-apply), which also recycles the lab
 secrets. Production defines no Talos resources, so nothing else migrates.
@@ -138,9 +151,13 @@ secrets. Production defines no Talos resources, so nothing else migrates.
 **Negative**
 
 - The state no longer contains the *applied* rendered config per node — an
-  operator inspecting state sees only its hash. The rendered input remains
+  operator inspecting state (or tooling that greps `tofu state show` for
+  `machine_configuration`) sees only its hash. The rendered input remains
   readable from the machine-configuration data sources in state, and
   `talosctl get machineconfig` reads the live document from the node.
+- Destroy-time resets lose their one-line opt-in: `on_destroy.reset = true`
+  is incompatible with `client_configuration_wo` (Decision 4), so enabling
+  it means trading the per-node credential copy back into state.
 - OpenTofu floor for the Talos module/environment rises to 1.11; operators on
   1.10 must upgrade (the repo's pinned toolchain is already 1.12.1).
 - A mixed floor across roots (`>= 1.10` / `>= 1.10.4` / `>= 1.11`) is mildly

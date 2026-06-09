@@ -96,10 +96,11 @@ run "secret_arguments_are_write_only" {
 
   # ADR-0017: the per-node config apply and the bootstrap pass the client TLS
   # credentials and the rendered machine config through the write-only (_wo)
-  # arguments, so neither is persisted in those resources' state. The provider
-  # enforces exactly-one-of for each _wo/persisted pair, and _wo attributes
-  # always read back null by design -- so the decidable invariant to pin here
-  # is that the state-persisted twin arguments stay UNSET.
+  # arguments, so neither is persisted in those resources' state. Asserting
+  # the _wo attributes themselves proves nothing (write-only values always
+  # plan/read as null no matter what was assigned); the decidable invariant
+  # is that their state-persisted twin arguments stay UNSET -- the provider
+  # enforces exactly-one-of per pair, so unset twins pin the _wo path.
   assert {
     condition     = talos_machine_configuration_apply.node["cp-01"].machine_configuration_input == null
     error_message = "machine config must flow through machine_configuration_input_wo; the persisted machine_configuration_input must stay unset."

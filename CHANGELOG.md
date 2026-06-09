@@ -13,10 +13,14 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `machine_configuration_input_wo`, and `talos_machine_bootstrap` passes
   `client_configuration_wo` — so the rendered machine configuration and the
   Talos client TLS credentials no longer fan out per node into those
-  resources' state (previously 2×N rendered-config copies and N+1
-  client-credential copies for an N-node cluster). Drift in the write-only
-  input still surfaces as a plan diff via the provider-persisted
-  `machine_configuration_hash`. Recorded in
+  resources' state (eliminating the 2×N rendered-config and N+1
+  client-credential copies those resources previously held for an N-node
+  cluster). Drift in the write-only input still surfaces as a plan diff via
+  the provider-persisted `machine_configuration_hash`. One trade-off:
+  `on_destroy.reset = true` now also requires reverting that resource to the
+  persisted `client_configuration` (write-only values are unavailable at
+  destroy time); the shipped `reset = false` default is unaffected.
+  Recorded in
   [ADR-0017](docs/adr/0017-adopt-talos-write-only-secret-arguments.md);
   outcome noted in ADR-0014, ADR-0015 annotated. The provider pin
   (`~> 0.11.0`) and lock files are unchanged; `talos_cluster_kubeconfig`
