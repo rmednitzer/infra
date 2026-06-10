@@ -1,5 +1,6 @@
 terraform {
-  required_version = ">= 1.10"
+  # >= 1.11: required by modules/talos-cluster's write-only arguments (ADR-0017).
+  required_version = ">= 1.11"
 
   required_providers {
     libvirt = {

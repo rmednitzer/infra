@@ -54,7 +54,11 @@ node at its declared IP.
 
 ## Requirements
 
-- OpenTofu **≥ 1.10** (`versions.tf`).
+- OpenTofu **≥ 1.11** (`versions.tf`) — the module passes the Talos secrets
+  through write-only (`_wo`) arguments, an OpenTofu 1.11 feature (ADR-0017).
+  The module's own `required_version` enforces this for every consumer, so
+  any environment that calls it is also constrained to ≥ 1.11 regardless of
+  its root floor.
 - A running libvirt/KVM host accessible via the provider's `uri`, with
   the named `storage_pool` already present.
 - A **Talos disk image** (nocloud/metal qcow2 or raw) for the target
@@ -159,6 +163,13 @@ encrypted remote backend (ADR-0015). `kubeconfig` and `talosconfig`
 outputs are `sensitive = true`; consuming environments must keep the
 written files out of git (see `environments/talos-lab/.gitignore`).
 
+The per-node config apply and the bootstrap pass the client TLS
+credentials and the rendered machine configuration through the
+provider's **write-only (`_wo`) arguments** (ADR-0017), so neither is
+duplicated into those resources' state — state exposure does not scale
+with node count. Config drift still plans correctly via the
+provider-persisted `machine_configuration_hash`.
+
 ## Tests
 
 Native OpenTofu tests in [`tests/`](tests/) mock **both** providers
@@ -198,10 +209,14 @@ host with `talosctl` available:
   this list is the per-deployment validation any new cluster still warrants.
 - Decide node scale-down policy: `on_destroy.reset` defaults to **off** (a
   removed node's VM is deleted but it is *not* reset, leaving stale etcd /
-  Kubernetes membership). Flip `reset = true` in `main.tf` for clean
-  scale-down of a healthy cluster — but never for removing an already-dead
-  node (a graceful etcd-leave reset blocks `tofu destroy`); reset those out
-  of band (`runbooks/talos/reset-node.sh`) first.
+  Kubernetes membership). Enabling `reset = true` in `main.tf` for clean
+  scale-down of a healthy cluster is now a **two-line change**: the
+  destroy-time reset needs credentials, and write-only values are not in
+  state — so the same resource must also switch `client_configuration_wo`
+  back to the persisted `client_configuration` (re-accepting the per-node
+  credential copy in state; ADR-0017). Never enable it for removing an
+  already-dead node (a graceful etcd-leave reset blocks `tofu destroy`);
+  reset those out of band (`runbooks/talos/reset-node.sh`) first.
 - Confirm the install disk (`/dev/vda`) matches what Talos sees on the
   virtio bus.
 - Confirm `talos_machine_bootstrap` brings up etcd and the API server,

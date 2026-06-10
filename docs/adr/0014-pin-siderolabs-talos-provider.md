@@ -3,6 +3,15 @@
 - **Status**: Accepted
 - **Date**: 2026-05-30
 
+> **Note (2026-06-09, BACKLOG BL-2 outcome):** the provider's write-only
+> secret arguments (`client_configuration_wo`,
+> `machine_configuration_input_wo`) were evaluated and **adopted** within the
+> `~> 0.11.0` pin — see
+> [ADR-0017](0017-adopt-talos-write-only-secret-arguments.md). The pin and
+> the migration plan below are unchanged; when the 0.12.x bump is reviewed,
+> also re-assess the items ADR-0017 defers (a `_wo` variant on
+> `talos_cluster_kubeconfig`, and the ephemeral resource variants).
+
 ## Context
 
 [ADR-0013](0013-adopt-talos-linux.md) adopts Talos Linux and introduces

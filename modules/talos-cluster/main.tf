@@ -322,14 +322,21 @@ data "talos_client_configuration" "this" {
 # Apply the (type-appropriate) machine configuration to every node over the
 # Talos API. On first apply the node is in maintenance mode (applied
 # insecurely by the provider); thereafter it is an authenticated apply.
+#
+# Write-only (_wo) arguments (ADR-0017; OpenTofu >= 1.11): the client TLS
+# credentials and the rendered machine config are handed to the provider but
+# never persisted in this resource's state -- without them, every node stores
+# its own copy of both. Changes to the write-only input still surface as plan
+# diffs: the provider persists machine_configuration_hash (a SHA256 of the
+# rendered config) and re-computes it at plan time.
 resource "talos_machine_configuration_apply" "node" {
   for_each = local.all_nodes
 
-  client_configuration        = talos_machine_secrets.this.client_configuration
-  machine_configuration_input = each.value.machine_type == "controlplane" ? data.talos_machine_configuration.controlplane.machine_configuration : data.talos_machine_configuration.worker.machine_configuration
-  node                        = each.value.ip
-  endpoint                    = each.value.ip
-  apply_mode                  = var.apply_mode
+  client_configuration_wo        = talos_machine_secrets.this.client_configuration
+  machine_configuration_input_wo = each.value.machine_type == "controlplane" ? data.talos_machine_configuration.controlplane.machine_configuration : data.talos_machine_configuration.worker.machine_configuration
+  node                           = each.value.ip
+  endpoint                       = each.value.ip
+  apply_mode                     = var.apply_mode
 
   # On destroy (a node removed from the maps, or `tofu destroy`), whether to
   # reset the node so it leaves etcd/Kubernetes cleanly instead of just
@@ -337,7 +344,13 @@ resource "talos_machine_configuration_apply" "node" {
   # node.
   #
   # Default OFF (reset=false is a provider no-op). To enable clean scale-down
-  # of a HEALTHY cluster, flip reset=true here (a one-line, reviewed change).
+  # of a HEALTHY cluster, flip reset=true here -- AND switch this resource's
+  # client_configuration_wo back to the persisted client_configuration:
+  # write-only values are not in state, so the provider cannot re-read the
+  # client credentials during destroy and errors out if reset=true is asked
+  # to act without them (accepting the per-node credential copy back into
+  # state is the price of destroy-time resets; ADR-0017). It is a reviewed
+  # two-line change.
   # Caveat: with graceful=true an enabled reset performs an etcd leave, which
   # BLOCKS `tofu destroy` waiting on the node -- so to remove an already-dead
   # node, keep reset=false (or `tofu state rm` it) and clean etcd membership
@@ -357,18 +370,23 @@ resource "talos_machine_configuration_apply" "node" {
   depends_on = [libvirt_domain.node]
 }
 
-# Bootstrap etcd on the first control-plane node, exactly once.
+# Bootstrap etcd on the first control-plane node, exactly once. The client
+# credentials are write-only here too (ADR-0017) -- they are a connection
+# credential, not a diffable property of the bootstrap.
 resource "talos_machine_bootstrap" "this" {
-  node                 = local.bootstrap_node_ip
-  endpoint             = local.bootstrap_node_ip
-  client_configuration = talos_machine_secrets.this.client_configuration
+  node                    = local.bootstrap_node_ip
+  endpoint                = local.bootstrap_node_ip
+  client_configuration_wo = talos_machine_secrets.this.client_configuration
 
   depends_on = [talos_machine_configuration_apply.node]
 }
 
 # Retrieve the cluster kubeconfig once bootstrap has completed. This is the
 # resource form (talos provider >= 0.7); the data source of the same name is
-# deprecated and slated for removal in a later minor.
+# deprecated and slated for removal in a later minor. client_configuration is
+# required and has NO write-only variant on this resource at provider 0.11.x
+# (ADR-0017) -- this is the one remaining per-resource copy of the client
+# credentials in state, alongside the kubeconfig the resource exists to export.
 resource "talos_cluster_kubeconfig" "this" {
   client_configuration = talos_machine_secrets.this.client_configuration
   node                 = local.bootstrap_node_ip

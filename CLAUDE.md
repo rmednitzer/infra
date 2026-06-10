@@ -56,11 +56,12 @@ underlying code.
 | [0009](docs/adr/0009-begin-libvirt-0.9-migration-evaluation.md) | Begin `dmacvicar/libvirt` 0.9.x migration evaluation |
 | [0010](docs/adr/0010-permit-module-supporting-files.md) | Permit module-local supporting files and ship the graphics override |
 | [0011](docs/adr/0011-realize-production-s3-backend.md) | Realize the production S3 remote state backend |
-| [0012](docs/adr/0012-libvirt-0.9-schema-diff-inventory.md) | `dmacvicar/libvirt` 0.9.x schema-diff inventory (Proposed) |
+| [0012](docs/adr/0012-libvirt-0.9-schema-diff-inventory.md) | `dmacvicar/libvirt` 0.9.x schema-diff inventory |
 | [0013](docs/adr/0013-adopt-talos-linux.md) | Adopt Talos Linux for the Kubernetes layer (coexists with libvirt/Ubuntu) |
 | [0014](docs/adr/0014-pin-siderolabs-talos-provider.md) | Pin `siderolabs/talos` to `~> 0.11.0` |
 | [0015](docs/adr/0015-talos-machineconfig-as-code-and-secrets.md) | Talos machine-config-as-code and secret handling |
 | [0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md) | Migrate `dmacvicar/libvirt` to `~> 0.9.0` |
+| [0017](docs/adr/0017-adopt-talos-write-only-secret-arguments.md) | Adopt `siderolabs/talos` write-only secret arguments |
 
 ## Naming
 
