@@ -26,7 +26,7 @@ No fixes were required, so baseline equals post-fix.
 | Trivy HIGH/CRITICAL | 0 | 0 |
 | gitleaks (history + tree) | 0 | 0 |
 | Provider currency | libvirt 0.9.8 (latest), talos 0.11.0 (current stable) | unchanged |
-| Open security findings | 0 new; 1 carried (S-1, governance) | 0 new |
+| Open security findings | 0 new; 1 carried (S-1, governance) | 0 new; 1 carried (S-1, governance) |
 
 ## Commits in this pass
 

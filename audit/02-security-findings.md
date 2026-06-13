@@ -9,7 +9,7 @@ Severity scale: critical / high / medium / low / info.
 ## Summary
 
 **No new critical, high, medium, or low security findings.** The repository
-was last audited 2026-05-27 (see `audit/2026-05-27-engagement.md`, 14 findings
+was last audited 2026-05-27 (see [2026-05-27-engagement.md](2026-05-27-engagement.md), 14 findings
 F1-F14, all FIXED or explicitly DEFERRED/OUTSTANDING) and has since landed
 ADR-0010 through ADR-0017. This pass re-ran the full gate suite (see
 `01-baseline.md`) and reviewed every `.tf` source, the cloud-init template,

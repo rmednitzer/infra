@@ -72,7 +72,7 @@ limitation of the audit container, not a repository defect.
 
 | Tool | Command | Result |
 |------|---------|--------|
-| Trivy (IaC) | `trivy config . --severity HIGH,CRITICAL --skip-dirs '**/.terraform'` | 0 misconfigurations across all 3 terraform targets |
+| Trivy (IaC) | `trivy config . --severity HIGH,CRITICAL --skip-dirs '**/.terraform'` | 0 misconfigurations across all 3 scanned OpenTofu roots (lab, production, talos-lab; Trivy labels the type `terraform`) |
 | gitleaks (history) | `gitleaks detect --redact` | 35 commits scanned, **no leaks** |
 | gitleaks (working tree) | `gitleaks detect --no-git --redact` | **no leaks** |
 

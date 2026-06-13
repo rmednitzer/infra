@@ -87,5 +87,6 @@ repo tree alone — consistent with the 2026-05-27 engagement's finding.
 | gitleaks | dev build (`detect`/`protect`, no `dir` subcommand) | CI uses v8.30.1 |
 | python3 | 3.11.15 | |
 
-Absent: `tofu` (installed this session), `semgrep`, `pip-audit` (no Python
+Absent at container start: `tofu` (installed this session; see the table
+above), `semgrep`, `pip-audit` (no Python
 package manifest beyond `requirements-dev.txt` pinning `pre-commit`).
