@@ -1,0 +1,17 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:best-practices", ":semanticCommitsEnabled", "schedule:weekly"],
+  "timezone": "Europe/Vienna",
+  "labels": ["dependencies"],
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 2,
+  "lockFileMaintenance": { "enabled": true, "schedule": ["before 5am on monday"], "automerge": true },
+  "vulnerabilityAlerts": { "labels": ["security"] },
+  "osvVulnerabilityAlerts": true,
+  "packageRules": [
+    { "description": "Automerge low-risk updates once checks pass.", "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"], "automerge": true, "platformAutomerge": true },
+    { "description": "Group all GitHub Actions updates into a single PR.", "matchManagers": ["github-actions"], "groupName": "github-actions" },
+    { "description": "Group non-major Python dependency updates into a single PR.", "matchManagers": ["pep621", "pip_requirements", "pip-compile", "poetry", "setup-cfg"], "matchUpdateTypes": ["minor", "patch"], "groupName": "python dependencies" },
+    { "description": "Major dependency updates: separate, labelled, manual review.", "matchManagers": ["pep621", "pip_requirements", "pip-compile", "poetry", "setup-cfg", "npm", "cargo", "gomod"], "matchUpdateTypes": ["major"], "automerge": false, "labels": ["dependencies", "major-review"] }
+  ]
+}
