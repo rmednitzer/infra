@@ -1,0 +1,51 @@
+name: Validate Renovate config
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate renovate preset
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+
+      - name: Check whether renovate config changed
+        id: check
+        run: |
+          BASE="${{ github.event.pull_request.base.sha || github.event.before }}"
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            echo "No usable diff base, validating to be safe."
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$BASE" "${{ github.sha }}" -- renovate-preset.json renovate.json5 | grep -q .; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "relevant=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        if: steps.check.outputs.relevant == 'true'
+        with:
+          node-version: '22'
+
+      - name: Schema and syntax check (renovate-preset.json)
+        if: steps.check.outputs.relevant == 'true'
+        run: npx --yes --package renovate -- renovate-config-validator --no-global --strict renovate-preset.json
+
+      - name: Schema and syntax check (renovate.json5)
+        if: steps.check.outputs.relevant == 'true'
+        run: npx --yes --package renovate -- renovate-config-validator --no-global --strict renovate.json5
+
+      - name: Full preset resolution check (renovate-preset.json)
+        if: steps.check.outputs.relevant == 'true'
+        env:
+          RENOVATE_CONFIG_FILE: renovate-preset.json
+        run: npx --yes --package renovate -- renovate --platform=local --dry-run=extract
