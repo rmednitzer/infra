@@ -71,8 +71,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
+      # Pinned: tflint v0.61.0+ panics (nil pointer in sigstore-go's Bundle.TlogEntries,
+      # inside tflint's plugin signature verification) when installing the pinned
+      # terraform ruleset plugin from .tflint.hcl. Reproduced locally: v0.59.1 installs
+      # cleanly, v0.61.0/v0.62.1/v0.63.1 (latest) all crash identically. Likely tied to
+      # tflint enabling plugin keyless verification by default around this version range.
+      # Revisit this pin once upstream fixes it; check https://github.com/terraform-linters/tflint/issues
+      # for the sigstore-go TlogEntries panic before bumping.
       - name: Setup TFLint
         uses: terraform-linters/setup-tflint@b480b8fcdaa6f2c577f8e4fa799e89e756bb7c93 # v6.2.2
+        with:
+          tflint_version: v0.59.1
 
       # GITHUB_TOKEN lifts the unauthenticated GitHub API rate limit so the
       # pinned terraform ruleset (.tflint.hcl) downloads reliably.
