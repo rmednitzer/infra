@@ -1,0 +1,41 @@
+name: Validate Renovate config
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'renovate-preset.json'
+      - 'renovate.json5'
+  push:
+    branches: [main]
+    paths:
+      - 'renovate-preset.json'
+      - 'renovate.json5'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+
+      - name: Schema and syntax check (renovate-preset.json)
+        run: npx --yes --package renovate -- renovate-config-validator --no-global --strict renovate-preset.json
+
+      - name: Schema and syntax check (renovate.json5)
+        run: npx --yes --package renovate -- renovate-config-validator --no-global --strict renovate.json5
+
+      - name: Full preset resolution check (renovate-preset.json)
+        # renovate-config-validator only checks syntax and does not resolve
+        # bare preset shorthand (e.g. :someDeprecatedAlias) against
+        # Renovate's bundled preset list. A real run does. This step is what
+        # would have caught the :semanticCommitsEnabled break that broke
+        # Renovate across 9 repos starting 2026-06-29. Verified empirically
+        # 2026-07-17: broken preset exits 1 with "Cannot find preset's
+        # package"; fixed preset exits 0.
+        env:
+          RENOVATE_CONFIG_FILE: renovate-preset.json
+        run: npx --yes --package renovate -- renovate --platform=local --dry-run=extract
