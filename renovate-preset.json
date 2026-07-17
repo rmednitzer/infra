@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:best-practices", ":semanticCommitsEnabled", "schedule:weekly"],
+  "extends": ["config:best-practices", ":semanticCommits", "schedule:weekly"],
   "timezone": "Europe/Vienna",
   "labels": ["dependencies"],
   "prConcurrentLimit": 10,
