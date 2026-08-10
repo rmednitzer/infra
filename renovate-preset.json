@@ -5,7 +5,7 @@
   "labels": ["dependencies"],
   "prConcurrentLimit": 10,
   "prHourlyLimit": 2,
-  "lockFileMaintenance": { "enabled": true, "schedule": ["before 5am on monday"], "automerge": true },
+  "lockFileMaintenance": { "enabled": true, "schedule": ["before 5am on monday"], "description": "No automerge: a lockfile refresh can pull a major transitive upgrade with no major-version PR to review." },
   "vulnerabilityAlerts": { "labels": ["security"] },
   "osvVulnerabilityAlerts": true,
   "packageRules": [
