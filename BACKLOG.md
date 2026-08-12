@@ -10,7 +10,40 @@ moving it to **Resolved**.
 
 | Id | Item | Origin | Why deferred | Next step |
 |----|------|--------|--------------|-----------|
-| F12 | Verify `main` branch-protection rules (required CI checks, required review, no admin bypass, signed commits if intended) | [audit/2026-05-27-engagement.md](audit/2026-05-27-engagement.md) §8.1 (F12) | Not inspectable from the engagement's tool surface; needs the repo-admin API/UI | An admin confirms the ruleset out-of-band and records the confirmed settings here |
+| F12 | Verify the *contents* of `main` branch protection (which checks are required, required review, no admin bypass, signed commits if intended) | [audit/2026-05-27-engagement.md](audit/2026-05-27-engagement.md) §8.1 (F12) | The branch-protection contents are still not exposed by any available tool; only the `protected` boolean is. Needs the repo-admin API/UI | An admin confirms the required-checks list and bypass posture, and records them under "F12 evidence" below |
+
+### F12 evidence (2026-08-12)
+
+Partially advanced. `GET /repos/{owner}/{repo}/branches` exposes a `protected`
+boolean, which the 2026-05-27 engagement could not reach. Observed across the
+eleven reachable fleet repositories:
+
+| Protected | Repositories |
+|---|---|
+| yes | `infra`, `core-graph`, `agents`, `relay-shell`, `6dof-ascent-sim`, `aiops-mcp`, `ai-stack`, `automation`, `rmednitzer.github.io`, `runbooks` |
+| **no** | `renovate-config` |
+
+`renovate-config` is the one gap. It publishes a Renovate preset that any
+repository may extend, so an unreviewed push to its `main` propagates fleet-wide
+dependency policy. Nothing automerges there (it has no dependencies of its own),
+so the exposure is unreviewed change rather than unreviewed merge.
+
+The boolean is necessary but not sufficient, and the remaining gap now matters
+more than "Info" implied when F12 was raised. `renovate-preset.json` automerges
+minor, patch, digest, pin and pinDigest updates with `platformAutomerge: true`,
+and its own description states the property as "automerge low-risk updates once
+required checks pass". That property is delegated, not self-enforced:
+
+- Renovate's **branch** automerge waits for passing status checks it observes,
+  independent of branch protection ("By default, Renovate will not automerge
+  until it sees passing status checks / check runs for the branch",
+  [Renovate automerge docs](https://docs.renovatebot.com/key-concepts/automerge/)).
+- **`platformAutomerge: true` hands merging to GitHub's native auto-merge**,
+  which waits for *required* reviews and status checks. If a protected branch
+  declares no required checks, there is nothing for it to wait on.
+
+So the required-checks list is a precondition of the preset's stated safety
+property, not an independent hardening nicety. Confirming it is what closes F12.
 
 ## Resolved
 
