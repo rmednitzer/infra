@@ -20,16 +20,20 @@ eleven reachable fleet repositories:
 
 | Protected | Repositories |
 |---|---|
-| yes | `infra`, `core-graph`, `agents`, `relay-shell`, `6dof-ascent-sim`, `aiops-mcp`, `ai-stack`, `automation`, `rmednitzer.github.io`, `runbooks` |
-| **no** | `renovate-config` |
+| yes | `infra`, `core-graph`, `agents`, `relay-shell`, `6dof-ascent-sim`, `aiops-mcp`, `ai-stack`, `automation`, `rmednitzer.github.io`, `runbooks`, `renovate-config` |
+| no | none |
 
-`renovate-config` is the one gap. It publishes a Renovate preset that any
-repository may extend, so an unreviewed push to its `main` propagates fleet-wide
-dependency policy. Nothing automerges there (it has no dependencies of its own),
-so the exposure is unreviewed change rather than unreviewed merge.
+**Closed later the same day.** `renovate-config` was the one gap at first
+observation: it publishes a Renovate preset that any repository may extend, so
+an unreviewed push to its `main` propagated fleet-wide dependency policy.
+Nothing automerges there (it has no dependencies of its own), so the exposure
+was unreviewed change rather than unreviewed merge. The maintainer applied a
+ruleset and `protected` was re-verified as true, so all eleven reachable
+repositories now protect `main`.
 
-The boolean is necessary but not sufficient, and the remaining gap now matters
-more than "Info" implied when F12 was raised. `renovate-preset.json` automerges
+The boolean is necessary but not sufficient. What remains unverified is the
+required-checks list, and it matters more than "Info" implied when F12 was
+raised. `renovate-preset.json` automerges
 minor, patch, digest, pin and pinDigest updates with `platformAutomerge: true`,
 and its own description states the property as "automerge low-risk updates once
 required checks pass". That property is delegated, not self-enforced:
@@ -44,6 +48,16 @@ required checks pass". That property is delegated, not self-enforced:
 
 So the required-checks list is a precondition of the preset's stated safety
 property, not an independent hardening nicety. Confirming it is what closes F12.
+
+The repositories where that actually bites are the ones Renovate automerges
+into: `ai-stack`, `aiops-mcp`, `core-graph`, `agents`, `relay-shell`. A
+protected branch there with no required checks would let an automerged update
+land without CI having passed. `renovate-config` has no dependencies of its
+own, so its own protection is about unreviewed change, not unreviewed merge.
+
+Also unverified from here, and worth recording when an admin next has the UI
+open: whether the ruleset bypass list is empty, and whether **Allow auto-merge**
+is enabled per repository, since `platformAutomerge` is a no-op without it.
 
 ## Resolved
 
