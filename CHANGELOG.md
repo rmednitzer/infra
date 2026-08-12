@@ -5,6 +5,25 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### F12 branch-protection evidence (2026-08-12)
+
+- **Recorded the first observed branch-protection state** under BACKLOG F12,
+  which had been open since 2026-05-27 with no evidence attached because the
+  engagement's tool surface could not reach it. The branches API exposes a
+  `protected` boolean: ten of the eleven reachable fleet repositories protect
+  `main`; `renovate-config` does not, and it is the repository that publishes
+  the shared Renovate preset.
+- **Re-scoped F12 from "Info" to a precondition of the automerge design.**
+  `renovate-preset.json` sets `platformAutomerge: true` on low-risk update
+  types, which delegates merging to GitHub native auto-merge. Native auto-merge
+  waits for *required* checks, so the preset's stated "automerge low-risk
+  updates once required checks pass" holds only if a required-checks list is
+  actually configured. Renovate's own branch automerge would wait for observed
+  check runs regardless; `platformAutomerge` opts out of that behaviour.
+- F12 stays **open**: the boolean is visible, the contents (required-checks
+  list, review requirement, admin-bypass posture, signed-commit requirement)
+  are not, and still need an admin to confirm.
+
 ### Talos write-only secret arguments + backlog closure (2026-06-09)
 
 - **Adopted the `siderolabs/talos` write-only (`_wo`) secret arguments**
