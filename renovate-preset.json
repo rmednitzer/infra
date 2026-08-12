@@ -5,13 +5,43 @@
   "labels": ["dependencies"],
   "prConcurrentLimit": 10,
   "prHourlyLimit": 2,
-  "lockFileMaintenance": { "enabled": true, "schedule": ["before 5am on monday"], "description": "No automerge: a lockfile refresh can pull a major transitive upgrade with no major-version PR to review." },
-  "vulnerabilityAlerts": { "labels": ["security"] },
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 5am on monday"],
+    "automerge": false,
+    "description": "Never automerge. A lockfile refresh crosses a major boundary for any dependency whose manifest range has no upper bound, and it does so without raising a major-version PR to review. That is precisely how mcp 2.0.0 reached nous main on 2026-08-10 and broke it. automerge is false by default here, but it is stated explicitly so a future edit has to argue with this comment."
+  },
+  "vulnerabilityAlerts": {
+    "labels": ["dependencies", "security"],
+    "schedule": ["at any time"],
+    "minimumReleaseAge": null,
+    "description": "Security fixes bypass both the Monday branch-creation window and the release-age quarantine below, so a CVE fix is not held for up to a week. Whether one merges unattended is still decided by the update-type rules below, so a security major keeps its human review."
+  },
   "osvVulnerabilityAlerts": true,
   "packageRules": [
-    { "description": "Automerge low-risk updates once checks pass.", "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"], "automerge": true, "platformAutomerge": true },
-    { "description": "Group all GitHub Actions updates into a single PR.", "matchManagers": ["github-actions"], "groupName": "github-actions" },
-    { "description": "Group non-major Python dependency updates into a single PR.", "matchManagers": ["pep621", "pip_requirements", "pip-compile", "poetry", "setup-cfg"], "matchUpdateTypes": ["minor", "patch"], "groupName": "python dependencies" },
-    { "description": "Major dependency updates: separate, labelled, manual review.", "matchManagers": ["pep621", "pip_requirements", "pip-compile", "poetry", "setup-cfg", "npm", "cargo", "gomod"], "matchUpdateTypes": ["major"], "automerge": false, "labels": ["dependencies", "major-review"] }
+    {
+      "description": "Automerge low-risk updates once required checks pass. The release-age quarantine is what makes unattended merging defensible: it is the window in which a broken or compromised release is normally yanked. config:best-practices ships this for npm only (security:minimumReleaseAgeNpm), so it is set here to cover every other ecosystem in the fleet (PyPI, Docker, GitHub Actions, Terraform, Galaxy, pre-commit). Note it stacks with schedule:weekly: a release cut on a Saturday is not 3 days old on Monday and waits for the following window. Lower this to '1 day' if that latency is not wanted.",
+      "matchUpdateTypes": ["minor", "patch", "digest", "pin", "pinDigest"],
+      "automerge": true,
+      "platformAutomerge": true,
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Group all GitHub Actions updates so concurrent bumps do not collide on the same workflow files. separateMajorMinor is on by default, so majors still split into their own 'github-actions (major)' PR, which the major rule below labels and keeps out of automerge.",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    },
+    {
+      "description": "Group non-major Python dependency updates into a single PR.",
+      "matchManagers": ["pep621", "pip_requirements", "pip-compile", "poetry", "setup-cfg"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "groupName": "python dependencies"
+    },
+    {
+      "description": "Major updates: separate, labelled, never automerged, across every manager. Majors already fail to match the automerge rule above, so automerge is false by default; it is stated for the same reason as lockFileMaintenance. This rule deliberately carries no matchManagers so that a major GitHub Actions, Docker, or Terraform bump is labelled for review like a major code dependency.",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "major-review"]
+    }
   ]
 }
