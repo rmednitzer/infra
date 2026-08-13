@@ -8,9 +8,60 @@ moving it to **Resolved**.
 
 ## Open
 
-| Id | Item | Origin | Why deferred | Next step |
-|----|------|--------|--------------|-----------|
-| F13 | Give `ai-stack` a requireable aggregate status check, so the repository is not the one fleet member where a merge can land with no CI | F12 evidence 2026-08-13 (this file) | `ai-stack` is the only fleet repository with no `required_status_checks` rule, because every PR-triggered workflow is `paths`-filtered. The Renovate path is already mitigated by `platformAutomerge: false` in `ai-stack/renovate.json5`; the residual is that repository-level `allow_auto_merge: true` lets a manually enabled auto-merge land an ordinary PR with no CI gate. Fixing it properly means restructuring `lint.yaml`, which is a design change to the repository's primary CI and needs the maintainer's call | Adopt the `ci-success` aggregate pattern already used by `agents` and `aiops-mcp`: drop the workflow-level `paths` filter, add a `changes` job that computes changed paths, gate each existing job on it with `if:`, and finish with an `if: always()` aggregate that fails when any non-skipped job failed. Then require that one context on ruleset 15857143 |
+*(none)*
+
+### F13 evidence (2026-08-13) — closed
+
+`ai-stack` was the one fleet repository where a merge could land with no CI:
+every PR-triggered workflow was `paths`-filtered, so no check was guaranteed to
+report, and a check that never reports cannot be required. Combined with
+repository-level `allow_auto_merge: true`, an ordinary pull request could be
+auto-merged with nothing having run. Renovate was already covered by a
+`platformAutomerge: false` override; the non-Renovate path was not.
+
+Closed in two steps.
+
+**1. The requireable check** (`ai-stack` PR #200). The path filter moved off the
+`on:` trigger into a `changes` job, the nine chart-validation jobs are gated on
+its output, and the workflow ends in an `if: always()` `ci-success` aggregate
+that fails when any dependency is anything other than `success` or `skipped`.
+This is the pattern `agents` and `aiops-mcp` already require under the same
+name. Both paths are verified live:
+
+| Pull request | `changes` | Validation jobs | `ci-success` |
+|---|---|---|---|
+| #200 (touches `lint.yaml`, in the filter list) | `chart=true` | all 9 ran, all green | success |
+| #201 (touches only `renovate.json5` + `CHANGELOG.md`) | `chart=false` | all 9 skipped | success |
+
+The second row is the one that matters for safety: it proves requiring the
+context cannot wedge a change that touches no chart path.
+
+Recorded because it is the obvious fix and it does **not** work: a trivial
+always-green unconditional job would give native auto-merge something to wait
+on while going green in seconds regardless of the diff, converting the gap into
+the *appearance* of a gate. The aggregate's verdict is a function of the real
+jobs' results, including the case where the `changes` job itself fails, in which
+every gated job skips and `ci-success` still fails.
+
+**2. The required context.** `ci-success` added to ruleset `15857143` as a
+full-object read-modify-write, because the rulesets API replaces the whole
+object and a partial `PUT` would have stripped the other rules. Verified
+immediately after the write:
+
+```
+prepared: 4 existing rules preserved, +1 required_status_checks
+VERIFY OK: rules=['deletion', 'non_fast_forward', 'pull_request',
+                  'required_linear_history', 'required_status_checks']
+           bypass=[] enforcement=active contexts=['ci-success']
+```
+
+The `platformAutomerge: false` override was then dropped (`ai-stack` PR #201),
+so the repository uses the shared preset default like the rest of the fleet. The
+ordering was load-bearing: dropping it before the context was required would
+have handed merging to native auto-merge while there was still nothing required
+to wait on, which is the exact failure the override existed to prevent.
+
+**All eleven fleet repositories now have at least one required status check.**
 
 ### F12 evidence (2026-08-12)
 
@@ -177,6 +228,7 @@ file beside it.
 
 | Id | Item | Origin | Resolved by |
 |----|------|--------|-------------|
+| F13 | Give `ai-stack` a requireable aggregate status check, so the repository is not the one fleet member where a merge can land with no CI | F12 evidence 2026-08-13 (this file) | "F13 evidence (2026-08-13)" above. `ai-stack` PR #200 (the `changes` job + `ci-success` aggregate, both the run and skip paths verified) and PR #201 (dropping the now-unnecessary `platformAutomerge` override), plus `ci-success` added to ruleset 15857143 with all four pre-existing rules and the empty bypass list preserved |
 | F12 | Verify the *contents* of `main` branch protection (which checks are required, required review, no admin bypass, signed commits if intended) | [audit/2026-05-27-engagement.md](audit/2026-05-27-engagement.md) §8.1 (F12) | "F12 evidence (2026-08-13)" above. All four questions answered by direct read of the eleven rulesets: bypass lists empty, no required approvals, required checks present on ten of eleven, signed commits not required. The `ai-stack` exception is carried forward as F13 |
 | BL-1 | Execute the libvirt 0.9.x migration evaluation gates against a real lab host, then author the successor pin-bump ADR | [ADR-0009](docs/adr/0009-begin-libvirt-0.9-migration-evaluation.md) gates 2–5; [ADR-0012](docs/adr/0012-libvirt-0.9-schema-diff-inventory.md) | [ADR-0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md) (PR #29, merged 2026-06-04): gates 2–5 host-verified by the maintainer, pin bumped to `~> 0.9.0`, ADR-0002/0009/0012 superseded |
 | BL-2 | Evaluate `siderolabs/talos` write-only secret arguments (`client_configuration_wo`, `machine_configuration_input_wo`) to keep rendered machine config out of state | audit 2026-05-31 | [ADR-0017](docs/adr/0017-adopt-talos-write-only-secret-arguments.md) (PR #38, 2026-06-09): adopted on `talos_machine_configuration_apply` + `talos_machine_bootstrap`; outcome noted in [ADR-0014](docs/adr/0014-pin-siderolabs-talos-provider.md) |
