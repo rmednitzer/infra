@@ -10,7 +10,7 @@ moving it to **Resolved**.
 
 | Id | Item | Origin | Why deferred | Next step |
 |----|------|--------|--------------|-----------|
-| F12 | Verify the *contents* of `main` branch protection (which checks are required, required review, no admin bypass, signed commits if intended) | [audit/2026-05-27-engagement.md](audit/2026-05-27-engagement.md) §8.1 (F12) | The branch-protection contents are still not exposed by any available tool; only the `protected` boolean is. Needs the repo-admin API/UI | An admin confirms the required-checks list and bypass posture, and records them under "F12 evidence" below |
+| F13 | Give `ai-stack` a requireable aggregate status check, so the repository is not the one fleet member where a merge can land with no CI | F12 evidence 2026-08-13 (this file) | `ai-stack` is the only fleet repository with no `required_status_checks` rule, because every PR-triggered workflow is `paths`-filtered. The Renovate path is already mitigated by `platformAutomerge: false` in `ai-stack/renovate.json5`; the residual is that repository-level `allow_auto_merge: true` lets a manually enabled auto-merge land an ordinary PR with no CI gate. Fixing it properly means restructuring `lint.yaml`, which is a design change to the repository's primary CI and needs the maintainer's call | Adopt the `ci-success` aggregate pattern already used by `agents` and `aiops-mcp`: drop the workflow-level `paths` filter, add a `changes` job that computes changed paths, gate each existing job on it with `if:`, and finish with an `if: always()` aggregate that fails when any non-skipped job failed. Then require that one context on ruleset 15857143 |
 
 ### F12 evidence (2026-08-12)
 
@@ -59,9 +59,124 @@ Also unverified from here, and worth recording when an admin next has the UI
 open: whether the ruleset bypass list is empty, and whether **Allow auto-merge**
 is enabled per repository, since `platformAutomerge` is a no-op without it.
 
+### F12 evidence (2026-08-13) — contents verified, F12 closed
+
+Read with an authenticated `gh api` from the Vertex control plane, which is not
+subject to the egress policy that blocked `api.github.com` from earlier
+sessions. Two read-only operations, both recorded in the MCP broker log:
+`op-9a17fbde789036a9d16f658b` (protection endpoint, rulesets index, repo flags)
+and `op-cfb3cb50b92ecd2341d0fc31` (ruleset contents).
+
+**Protection is implemented as rulesets, not legacy branch protection.** This is
+the detail that made F12 hard to close and is the first thing to know when
+re-verifying: `GET /repos/{owner}/{repo}/branches/main/protection` returns
+**404 on all eleven repositories**. Read alone, that 404 reads as "`main` is
+unprotected", which is the opposite of the truth. The protection lives at
+`GET /repos/{owner}/{repo}/rulesets/{id}`.
+
+#### The four questions F12 asked
+
+| Question | Answer | Confidence |
+|---|---|---|
+| No admin bypass? | **Yes, verified.** `bypass_actors` is `[]` on all eleven rulesets. Nobody bypasses, including the owner | Direct read |
+| Required review? | **Not required anywhere.** `required_approving_review_count: 0` and `require_code_owner_review: false` on all eleven. A pull request *is* required (direct push to `main` is blocked), but no approval is | Direct read |
+| Required checks? | **Configured on ten of eleven.** `ai-stack` has no `required_status_checks` rule at all. Full list below | Direct read |
+| Signed commits? | **Not required anywhere.** No `required_signatures` rule on any of the eleven | Direct read |
+
+`CODEOWNERS` files exist fleet-wide but are advisory: with
+`require_code_owner_review: false` they assign a reviewer and do not gate the
+merge. That is a deliberate single-operator posture, not an oversight, but it
+should be stated rather than assumed from the file's presence.
+
+#### Per-repository
+
+Every ruleset is `enforcement: active`, targets `branch`, and carries
+`deletion` + `non_fast_forward` (so branch deletion and force-push to `main`
+are blocked server-side) plus a `pull_request` rule. All except
+`renovate-config` also carry `required_linear_history`.
+
+| Repository | Ruleset | Required status checks | `allow_auto_merge` |
+|---|---|---|---|
+| `infra` | `main-protection` (15857150), strict | 16: `Format Check`, `Lint`, `Pre-commit (hygiene + EditorConfig)`, `Secret Scan (gitleaks)`, `Security Scan (Trivy)`, `Trivy`, `CodeQL`, `Analyze (actions)`, `Module Tests (modules/{libvirt-vm,talos-cluster})`, `Validate (environments/{lab,production,talos-lab})`, `Validate (modules/{libvirt-vm,talos-cluster})`, `Validate renovate preset` | true |
+| `agents` | `main-protection` (17307994) | `lint`, `type-check`, `ci-success` | true |
+| `relay-shell` | `main-protection` (17307996) | `check (py3.12)`, `check (py3.13)`, `check (py3.14)`, `gitleaks (secret scan)` | true |
+| `runbooks` | `main-protection` (15857152) | `pre-commit (shellcheck + shfmt + hygiene)`, `bats (script behaviour tests)`, `secret scan (gitleaks)` | true |
+| `automation` | `main-protection` (15857151) | `Lint`, `Syntax Check`, `Pre-commit (hygiene + EditorConfig)`, `Secret Scan (gitleaks)`, `Molecule (common)`, `Molecule (users)`, `Molecule (ssh_hardening)`, `Molecule (auditd)` | true |
+| `ai-stack` | `main-protection` (15857143) | **none** | true |
+| `6dof-ascent-sim` | `main-protection` (15857138) | `lint`, `typecheck`, `test (3.11)`, `test (3.12)`, `test (3.13)` | true |
+| `rmednitzer.github.io` | `main-protection` (15857146) | `validate` | true |
+| `core-graph` | `main-protection` (15857142) | `python-lint`, `typecheck`, `python-test`, `schema-and-rls-test`, `policy-test`, `secret-scan`, `lockfile-check`, `actionlint` | true |
+| `aiops-mcp` | `main-protection` (17385194) | `ci-success` | true |
+| `renovate-config` | `protect-default-branch` (20737544), strict | `Validate re-export` | **false** |
+
+`infra` and `renovate-config` set
+`strict_required_status_checks_policy: true` (branch must be current with
+`main` before merge); the other nine set it false.
+
+Two of `infra`'s sixteen contexts are not job names and are worth recording so
+a future reader does not delete them as stale: `Trivy` is the code-scanning
+check produced by the `upload-sarif` step in `ci.yml` (category
+`trivy-config`), and `CodeQL` / `Analyze (actions)` come from CodeQL **default
+setup**, which has no workflow file in the repository. All sixteen reported on
+PR #62, which merged under the strict policy with an empty bypass list, so none
+of them is a permanently-blocking phantom context.
+
+**Matrix contexts are correctly expanded.** A required check named for an
+unexpanded matrix expression (`Molecule (${{ matrix.role }})`) would never
+match a reported check and would block merges forever. `automation`,
+`relay-shell` and `6dof-ascent-sim` all name the expanded values. No action
+needed; noted because the failure mode is silent and the fix is invisible once
+correct.
+
+#### The one gap: `ai-stack`
+
+`ai-stack` is the single repository where the preset's "automerge low-risk
+updates once required checks pass" property is **not** backed by a required
+check, which is exactly the case the 2026-08-12 evidence above predicted would
+matter. It is also the one repository where that is a deliberate design:
+
+- Every PR-triggered workflow (`docs.yaml`, `lint.yaml`,
+  `sync-image-artifacts.yml`) carries a `paths` filter, so no check is
+  guaranteed to run and any required check would permanently block a PR that
+  touches none of those paths.
+- The live mitigation is in `ai-stack/renovate.json5`, which overrides
+  `platformAutomerge: false` for minor, patch, digest, pin and pinDigest with a
+  comment naming this exact hazard. Renovate therefore falls back to evaluating
+  the checks that did report, rather than handing the merge to GitHub.
+
+So the Renovate path is covered. **The residual is the non-Renovate path**: with
+`allow_auto_merge: true` at the repository level and no required check, anyone
+enabling GitHub auto-merge on an ordinary `ai-stack` PR lands it with no CI
+gate at all, subject only to `required_review_thread_resolution`. That is
+tracked as **F13** below rather than held inside F12.
+
+One trap worth recording, because it is the obvious fix and it does not work:
+adding a trivial unconditional job that always exits 0 and requiring it gives
+native auto-merge something to wait on, but that check goes green in seconds
+regardless of the diff, so auto-merge still lands the PR without any chart
+validation having run. It converts the gap into the appearance of a gate. The
+effective shape is an **aggregate** check that is itself conditional on the
+real jobs, which is what `agents` and `aiops-mcp` already require as
+`ci-success`, and it means restructuring `lint.yaml` rather than adding a
+file beside it.
+
+#### Other observations, recorded not actioned
+
+- **Signed commits are not required on any repository.** F12 asked about this
+  conditionally ("if intended"). Recorded as a decision, not a finding: adopting
+  it fleet-wide is a separate change with key-management consequences.
+- **`renovate-config` lacks `required_linear_history`** while the other ten
+  carry it, and it is the only repository with `allow_auto_merge: false` and
+  `delete_branch_on_merge: false`. The auto-merge setting is consistent with its
+  deliberate no-automerge posture; the linear-history difference looks like
+  drift from it having been created later (2026-08-12) than the others.
+- **`allow_auto_merge: true` on ten repositories** confirms `platformAutomerge`
+  is not a no-op there, which the 2026-08-12 evidence listed as unverified.
+
 ## Resolved
 
 | Id | Item | Origin | Resolved by |
 |----|------|--------|-------------|
+| F12 | Verify the *contents* of `main` branch protection (which checks are required, required review, no admin bypass, signed commits if intended) | [audit/2026-05-27-engagement.md](audit/2026-05-27-engagement.md) §8.1 (F12) | "F12 evidence (2026-08-13)" above. All four questions answered by direct read of the eleven rulesets: bypass lists empty, no required approvals, required checks present on ten of eleven, signed commits not required. The `ai-stack` exception is carried forward as F13 |
 | BL-1 | Execute the libvirt 0.9.x migration evaluation gates against a real lab host, then author the successor pin-bump ADR | [ADR-0009](docs/adr/0009-begin-libvirt-0.9-migration-evaluation.md) gates 2–5; [ADR-0012](docs/adr/0012-libvirt-0.9-schema-diff-inventory.md) | [ADR-0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md) (PR #29, merged 2026-06-04): gates 2–5 host-verified by the maintainer, pin bumped to `~> 0.9.0`, ADR-0002/0009/0012 superseded |
 | BL-2 | Evaluate `siderolabs/talos` write-only secret arguments (`client_configuration_wo`, `machine_configuration_input_wo`) to keep rendered machine config out of state | audit 2026-05-31 | [ADR-0017](docs/adr/0017-adopt-talos-write-only-secret-arguments.md) (PR #38, 2026-06-09): adopted on `talos_machine_configuration_apply` + `talos_machine_bootstrap`; outcome noted in [ADR-0014](docs/adr/0014-pin-siderolabs-talos-provider.md) |
