@@ -12,4 +12,4 @@
 #     pip install -r requirements-dev.txt
 #     pre-commit install
 #
-pre-commit==4.6.1
+pre-commit==4.6.2
