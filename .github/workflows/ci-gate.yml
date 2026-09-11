@@ -17,7 +17,7 @@ jobs:
       TARGET_SHA: ${{ github.event.pull_request.head.sha }}
       REQUIRED_CHECKS: |-
         Analyze (actions)
-        CodeQL
+        Analyze (python)
         Format Check
         Lint
         Module Tests (modules/libvirt-vm)
@@ -25,7 +25,6 @@ jobs:
         Pre-commit (hygiene + EditorConfig)
         Secret Scan (gitleaks)
         Security Scan (Trivy)
-        Trivy
         Validate (environments/lab)
         Validate (environments/production)
         Validate (environments/talos-lab)
