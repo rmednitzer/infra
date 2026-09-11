@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "owner": "rmednitzer",
+  "defaults": {
+    "default_branch": "main",
+    "visibility": "public",
+    "require_active_ruleset": true,
+    "require_pull_request": true,
+    "require_no_bypass": true,
+    "require_non_fast_forward": true,
+    "require_deletion_protection": true,
+    "require_status_checks": true
+  },
+  "repositories": [
+    {
+      "name": "infra",
+      "ruleset": "main-protection",
+      "preferred_aggregate_context": "ci-success",
+      "aggregate_gate_state": "planned"
+    },
+    {
+      "name": "agents",
+      "ruleset": "main-protection",
+      "preferred_aggregate_context": "ci-success",
+      "aggregate_gate_state": "migration-pending"
+    },
+    {
+      "name": "ai-stack",
+      "ruleset": "main-protection",
+      "preferred_aggregate_context": "ci-success",
+      "aggregate_gate_state": "enforced"
+    },
+    {
+      "name": "aiops-mcp",
+      "ruleset": "main-protection",
+      "preferred_aggregate_context": "ci-success",
+      "aggregate_gate_state": "enforced"
+    },
+    {
+      "name": "core-graph",
+      "ruleset": "main-protection",
+      "preferred_aggregate_context": "ci-success",
+      "aggregate_gate_state": "migration-pending"
+    },
+    {
+      "name": "relay-shell",
+      "ruleset": "main-protection",
+      "preferred_aggregate_context": "ci-success",
+      "aggregate_gate_state": "migration-pending"
+    },
+    {
+      "name": "6dof-ascent-sim",
+      "ruleset": "main-protection",
+      "preferred_aggregate_context": "ci-success",
+      "aggregate_gate_state": "migration-pending"
+    },
+    {
+      "name": "automation",
+      "ruleset": "main-protection",
+      "preferred_aggregate_context": "ci-success",
+      "aggregate_gate_state": "migration-pending"
+    },
+    {
+      "name": "runbooks",
+      "ruleset": "main-protection",
+      "preferred_aggregate_context": "ci-success",
+      "aggregate_gate_state": "migration-pending"
+    },
+    {
+      "name": "rmednitzer.github.io",
+      "ruleset": "main-protection",
+      "preferred_aggregate_context": "validate",
+      "aggregate_gate_state": "enforced"
+    },
+    {
+      "name": "renovate-config",
+      "ruleset": "protect-default-branch",
+      "preferred_aggregate_context": "Validate re-export",
+      "aggregate_gate_state": "enforced",
+      "lifecycle": "archive-candidate",
+      "superseded_by": "infra/renovate-preset.json"
+    }
+  ]
+}
