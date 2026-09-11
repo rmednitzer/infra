@@ -1,0 +1,46 @@
+---
+name: Fleet Contract
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "fleet/repositories.json"
+      - "scripts/check-github-fleet.py"
+      - ".github/workflows/fleet-contract.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-manifest:
+    name: Validate fleet manifest
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate schema and repository uniqueness
+        run: python scripts/check-github-fleet.py --manifest-only
+
+  validate-live:
+    name: Validate live GitHub controls
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Check repository and ruleset invariants
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/check-github-fleet.py
