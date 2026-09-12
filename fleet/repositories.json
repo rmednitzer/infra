@@ -16,13 +16,13 @@
       "name": "infra",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "planned"
+      "aggregate_gate_state": "enforced"
     },
     {
       "name": "agents",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "migration-pending"
+      "aggregate_gate_state": "enforced"
     },
     {
       "name": "ai-stack",
@@ -40,19 +40,19 @@
       "name": "core-graph",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "migration-pending"
+      "aggregate_gate_state": "enforced"
     },
     {
       "name": "relay-shell",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "migration-pending"
+      "aggregate_gate_state": "enforced"
     },
     {
       "name": "6dof-ascent-sim",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "migration-pending"
+      "aggregate_gate_state": "enforced"
     },
     {
       "name": "automation",
@@ -64,7 +64,7 @@
       "name": "runbooks",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "migration-pending"
+      "aggregate_gate_state": "enforced"
     },
     {
       "name": "rmednitzer.github.io",
