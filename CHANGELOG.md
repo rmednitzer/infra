@@ -5,6 +5,15 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### README ADR index audit fix (2026-09-12)
+
+- **`README.md`: fixed the ADR index table drift from `docs/adr/`.** The
+  table was missing [ADR-0017](docs/adr/0017-adopt-talos-write-only-secret-arguments.md)
+  entirely (already linked elsewhere in this same file and present in
+  `docs/adr/README.md` and `CLAUDE.md`), and carried a stale `(Proposed)`
+  annotation on ADR-0012, which has read **Superseded by ADR-0016** since
+  2026-06-04. Added the missing row and dropped the stale annotation.
+
 ### F12 branch-protection evidence (2026-08-12)
 
 - **Recorded the first observed branch-protection state** under BACKLOG F12,
