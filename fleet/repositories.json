@@ -25,18 +25,6 @@
       "aggregate_gate_state": "enforced"
     },
     {
-      "name": "ai-stack",
-      "ruleset": "main-protection",
-      "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "enforced"
-    },
-    {
-      "name": "aiops-mcp",
-      "ruleset": "main-protection",
-      "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "enforced"
-    },
-    {
       "name": "core-graph",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
@@ -71,14 +59,6 @@
       "ruleset": "main-protection",
       "preferred_aggregate_context": "validate",
       "aggregate_gate_state": "enforced"
-    },
-    {
-      "name": "renovate-config",
-      "ruleset": "protect-default-branch",
-      "preferred_aggregate_context": "Validate re-export",
-      "aggregate_gate_state": "enforced",
-      "lifecycle": "archive-candidate",
-      "superseded_by": "infra/renovate-preset.json"
     }
   ]
 }
