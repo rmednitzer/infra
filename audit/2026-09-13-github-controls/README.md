@@ -54,11 +54,11 @@ requirements-dev.txt. This preserves hook execution without its unpinned action.
 
 ## Outstanding evidence and blockers
 
-The unchanged fleet manifest contains 11 repositories. ai-stack, aiops-mcp
-and renovate-config return HTTP 404 using the existing Vertex credential and do
-not appear in the connected inventory. A 404 does not establish deletion versus
-restricted visibility or migration. Their intended disposition needs confirmation;
-the checker continues to fail rather than silently removing these requirements.
+The owner confirmed on 2026-09-13 that ai-stack, aiops-mcp and
+renovate-config were deleted. They have been removed from the active fleet
+manifest, which now contains eight repositories. The original failed check
+remains in live-contract.txt as historical evidence; live-contract-after.txt
+records validation after reconciliation.
 
 Automation's ruleset still requires its existing individual checks. Migrate it
 to ci-success only after the repaired PR passes and lands. Do not weaken existing
