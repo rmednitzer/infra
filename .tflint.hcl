@@ -5,8 +5,9 @@ config {
 # Pin the terraform ruleset explicitly rather than relying on the version
 # bundled with the tflint binary, so lint results do not silently shift when
 # the tflint binary is upgraded. `tflint --init` downloads the pinned
-# release. 0.14.1 matches the version bundled with tflint 0.62.1, so this is
-# a pin, not a behaviour change.
+# release below (Renovate bumps this version independently of the tflint
+# binary itself; see .github/workflows/ci.yml for the current tflint_version
+# pin and its rationale).
 #
 # Note: there is no official TFLint ruleset for dmacvicar/libvirt OR for
 # siderolabs/talos, so provider-specific issues in those resources are

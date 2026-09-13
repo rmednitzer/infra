@@ -22,8 +22,8 @@ pre-commit run --all-files
 ```
 
 CI mirrors the hook set — `tofu fmt`, `tofu validate`, `tflint`, Trivy
-IaC, hygiene — plus `tofu test` for the `libvirt-vm` module. PRs cannot
-merge with failing CI.
+IaC, hygiene — plus `tofu test` for each module (`libvirt-vm`,
+`talos-cluster`). PRs cannot merge with failing CI.
 
 ## Provider bumps
 
@@ -33,7 +33,7 @@ last ran `tofu init`. **On every provider version change**, re-record
 all common platforms in each root and commit the result:
 
 ```bash
-for d in modules/libvirt-vm environments/lab environments/production; do
+for d in modules/libvirt-vm modules/talos-cluster environments/lab environments/production environments/talos-lab; do
   ( cd "$d" && tofu providers lock \
       -platform=linux_amd64 \
       -platform=darwin_amd64 \
