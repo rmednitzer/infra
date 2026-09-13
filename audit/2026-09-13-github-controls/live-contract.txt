@@ -1,0 +1,12 @@
+OK rmednitzer/infra
+OK rmednitzer/agents
+ERROR rmednitzer/ai-stack: GET /repos/rmednitzer/ai-stack -> HTTP 404: {"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/repos#get-a-repository","status":"404"}
+ERROR rmednitzer/aiops-mcp: GET /repos/rmednitzer/aiops-mcp -> HTTP 404: {"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/repos#get-a-repository","status":"404"}
+OK rmednitzer/core-graph
+OK rmednitzer/relay-shell
+OK rmednitzer/6dof-ascent-sim
+WARN rmednitzer/automation: aggregate migration pending: current=['Lint', 'Syntax Check', 'Pre-commit (hygiene + EditorConfig)', 'Secret Scan (gitleaks)', 'Molecule (common)', 'Molecule (users)', 'Molecule (ssh_hardening)', 'Molecule (auditd)'], target=['ci-success']
+OK rmednitzer/runbooks
+OK rmednitzer/rmednitzer.github.io
+ERROR rmednitzer/renovate-config: GET /repos/rmednitzer/renovate-config -> HTTP 404: {"message":"Not Found","documentation_url":"https://docs.github.com/rest/repos/repos#get-a-repository","status":"404"}
+SUMMARY repositories=11 errors=3 advisories=1

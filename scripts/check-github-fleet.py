@@ -10,6 +10,7 @@ as an advisory until each repository is migrated explicitly in the manifest.
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import json
 import os
 import sys
@@ -116,6 +117,21 @@ def validate_repo(
     ruleset_id = candidates[0].get("id")
     ruleset = api_get(f"/repos/{owner}/{name}/rulesets/{ruleset_id}", token)
     rules = ruleset.get("rules", [])
+
+    # A correctly named ruleset is insufficient if it targets another ref.
+    refs = ruleset.get("conditions", {}).get("ref_name", {})
+    default_ref = f"refs/heads/{expected_branch}"
+    includes = refs.get("include", [])
+    excludes = refs.get("exclude", [])
+    if ruleset.get("target") != "branch":
+        hard.append("ruleset does not target branches")
+    if not any(item in {"~DEFAULT_BRANCH", "~ALL", default_ref} for item in includes):
+        hard.append("ruleset must explicitly include the default branch or all branches")
+    if any(
+        item in {"~DEFAULT_BRANCH", "~ALL"} or fnmatch.fnmatchcase(default_ref, item)
+        for item in excludes
+    ):
+        hard.append("ruleset excludes the default branch")
 
     if defaults.get("require_active_ruleset", True) and ruleset.get("enforcement") != "active":
         hard.append(f"ruleset enforcement is {ruleset.get('enforcement')!r}, expected 'active'")
