@@ -22,7 +22,7 @@ class RulesetCoverage(unittest.TestCase):
                 "required_status_checks": [{"context": "ci-success"}]}}],
         }
 
-    def errors(self):
+    def errors(self, defaults=None):
         replies = [
             {"default_branch": "main", "visibility": "public"},
             [{"id": 1, "name": "main-protection"}], copy.deepcopy(self.ruleset),
@@ -31,7 +31,7 @@ class RulesetCoverage(unittest.TestCase):
             errors, _ = fleet.validate_repo(
                 "owner", {"name": "repo", "ruleset": "main-protection",
                           "preferred_aggregate_context": "ci-success",
-                          "aggregate_gate_state": "enforced"}, {}, None
+                          "aggregate_gate_state": "enforced"}, defaults or {}, None
             )
         return errors
 
@@ -57,6 +57,45 @@ class RulesetCoverage(unittest.TestCase):
             with self.subTest(included=included):
                 self.ruleset["conditions"]["ref_name"]["include"] = [included]
                 self.assertEqual(self.errors(), [])
+
+    def test_check_source_binding(self):
+        defaults = {"required_check_integration_id": 15368}
+        self.assertTrue(self.errors(defaults))
+        check = self.ruleset["rules"][-1]["parameters"]["required_status_checks"][0]
+        check["integration_id"] = 15368
+        self.assertEqual(self.errors(defaults), [])
+        check["integration_id"] = 1
+        self.assertTrue(self.errors(defaults))
+
+    def test_strict_policy(self):
+        defaults = {"require_up_to_date": True}
+        self.assertTrue(self.errors(defaults))
+        self.ruleset["rules"][-1]["parameters"]["strict_required_status_checks_policy"] = True
+        self.assertEqual(self.errors(defaults), [])
+
+
+class AdminControls(unittest.TestCase):
+    def test_matches_and_missing_values(self):
+        policy = {
+            "repository": {"allow_merge_commit": False},
+            "actions": {"sha_pinning_required": True},
+            "workflow": {"default_workflow_permissions": "read"},
+            "security": ["secret_scanning"],
+        }
+        metadata = {"allow_merge_commit": False,
+                    "security_and_analysis": {"secret_scanning": {"status": "enabled"}}}
+        with patch.object(fleet, "api_get", side_effect=[
+            {"sha_pinning_required": True}, {"default_workflow_permissions": "read"}
+        ]):
+            self.assertEqual(fleet.validate_admin_controls("o", "r", metadata, policy, None), [])
+        with patch.object(fleet, "api_get", side_effect=[{}, {}]):
+            errors = fleet.validate_admin_controls("o", "r", {}, policy, None)
+        self.assertEqual(len(errors), 4)
+
+    def test_api_denial_does_not_pass(self):
+        with patch.object(fleet, "api_get", side_effect=RuntimeError("HTTP 403")):
+            with self.assertRaises(RuntimeError):
+                fleet.validate_admin_controls("o", "r", {}, {}, None)
 
 
 if __name__ == "__main__":

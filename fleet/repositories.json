@@ -9,32 +9,58 @@
     "require_no_bypass": true,
     "require_non_fast_forward": true,
     "require_deletion_protection": true,
-    "require_status_checks": true
+    "require_status_checks": true,
+    "required_check_integration_id": 15368,
+    "require_up_to_date": false,
+    "admin_controls": {
+      "repository": {
+        "allow_merge_commit": false,
+        "allow_update_branch": true,
+        "delete_branch_on_merge": true
+      },
+      "actions": {
+        "enabled": true,
+        "sha_pinning_required": true
+      },
+      "workflow": {
+        "default_workflow_permissions": "read",
+        "can_approve_pull_request_reviews": false
+      },
+      "security": [
+        "secret_scanning",
+        "secret_scanning_push_protection",
+        "dependabot_security_updates"
+      ]
+    }
   },
   "repositories": [
     {
       "name": "infra",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "enforced"
+      "aggregate_gate_state": "enforced",
+      "require_up_to_date": true
     },
     {
       "name": "agents",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "enforced"
+      "aggregate_gate_state": "enforced",
+      "require_up_to_date": true
     },
     {
       "name": "core-graph",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "enforced"
+      "aggregate_gate_state": "enforced",
+      "require_up_to_date": true
     },
     {
       "name": "relay-shell",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "enforced"
+      "aggregate_gate_state": "enforced",
+      "require_up_to_date": true
     },
     {
       "name": "6dof-ascent-sim",
@@ -46,7 +72,8 @@
       "name": "automation",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "migration-pending"
+      "aggregate_gate_state": "enforced",
+      "require_up_to_date": true
     },
     {
       "name": "runbooks",

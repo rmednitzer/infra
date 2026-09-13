@@ -90,3 +90,30 @@ Revert the corresponding PR commits to roll back code changes.
 - [Protected branches and linear history](https://docs.github.com/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/about-protected-branches)
 - [Automation PR 76](https://github.com/rmednitzer/automation/pull/76)
 - [Core-graph alert 1](https://github.com/rmednitzer/core-graph/security/code-scanning/1)
+
+## Final policy update
+
+PRs #72 and automation #76 were merged after all checks passed. Required checks
+are bound to the observed GitHub Actions App ID 15368 on all eight repositories.
+SHA enforcement is now enabled on all eight. The PyPI publisher's generated local
+Docker action was inspected; it introduces no further external action references.
+Its image uses a commit-derived registry tag, not a digest; no release was
+published to test that path.
+
+Strict up-to-date checks are enabled on infra, agents, automation, core-graph and
+relay-shell. The three remaining repositories retain their previous loose policy.
+Automation now requires its native ci-success aggregate.
+
+The manifest records these choices. The default checker validates public rules;
+--admin-checks additionally validates merge settings, Actions defaults and SHA
+enforcement, and secret-scanning/security-update enablement. Administration API
+denials fail that mode. The weekly GitHub workflow runs public checks only: its
+repository token is deliberately not given fleet-wide administration access.
+The full check was run from Vertex's existing authenticated context:
+eight repositories, zero errors, zero advisories. Nine regression tests pass.
+
+Policy snapshots before this update are in policy-before/. To restore a ruleset,
+PUT its name, target, enforcement, conditions, rules and bypass_actors fields to
+the saved repository/ruleset ID. Restore sha_pinning_required from the matching
+actions snapshot without changing other Actions settings. These are rollback
+instructions, not an instruction to disable current protections.
