@@ -9,20 +9,36 @@ to read-only and cannot approve PRs. Secret scanning, push protection and
 Dependabot security updates are enabled. No open Dependabot or secret-scanning
 alerts were returned. No repository self-hosted runners or webhooks were returned.
 
-All eight repositories use the shared infra:renovate-preset. All workflow and
-composite-action references inspected are SHA-pinned. Actionlint passed for all
+All eight repositories use the shared infra:renovate-preset. Direct workflow and repository-local
+composite-action references inspected are SHA-pinned. Remote composite actions
+require separate recursive inspection; see transitive-actions.json. Core-graph's
+local actions were subsequently inspected and contain one pinned actions/cache
+reference and shell steps. Actionlint passed for all
 eight repositories; shellcheck and pyflakes integrations were disabled.
 
 ## Applied repository settings
 
 For each of the eight repositories, read-back verified:
 
-- sha_pinning_required: false → true.
+- sha_pinning_required: false → true on 6dof-ascent-sim, agents, core-graph,
+  rmednitzer.github.io and runbooks after transitive-action inspection.
+- SHA enforcement remains false on automation and infra until their direct
+  pre-commit CLI replacements land, and on relay-shell pending review of the
+  PyPI publisher's dynamically generated local action.
 - allow_merge_commit: true → false, matching enforced linear history.
 - allow_update_branch: false → true.
 
 Previous values are in settings-before/. These contain configuration only,
 without credentials. Existing squash and rebase merge options remain enabled.
+
+## Compatibility rollback
+
+Initial SHA enforcement on all eight repositories caused pre-commit jobs in
+automation and infra to fail during action resolution: the pinned pre-commit
+action internally uses actions/cache@v4. Enforcement was rolled back on all eight,
+read-back verified, and restored only for the five compatible repositories above.
+The two PRs replace the wrapper with the pinned pre-commit CLI from existing
+requirements-dev.txt. This preserves hook execution without its unpinned action.
 
 ## Prepared fixes
 

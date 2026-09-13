@@ -1,0 +1,19 @@
+{
+  "6dof-ascent-sim": [],
+  "agents": [],
+  "automation": [
+    "pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd -> unpinned actions/cache@v4"
+  ],
+  "core-graph": [
+    "unresolved local action ./.github/actions/setup-anchore-cli",
+    "unresolved local action ./.github/actions/setup-pg-age"
+  ],
+  "infra": [
+    "pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd -> unpinned actions/cache@v4"
+  ],
+  "relay-shell": [
+    "pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 -> unresolved local action ./.github/.tmp/.generated-actions/run-pypi-publish-in-docker-container"
+  ],
+  "rmednitzer.github.io": [],
+  "runbooks": []
+}
