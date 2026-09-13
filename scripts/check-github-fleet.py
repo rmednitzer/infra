@@ -127,8 +127,10 @@ def validate_repo(
         hard.append("ruleset does not target branches")
     if not any(item in {"~DEFAULT_BRANCH", "~ALL", default_ref} for item in includes):
         hard.append("ruleset must explicitly include the default branch or all branches")
-    if any(item in {"~DEFAULT_BRANCH", "~ALL"} or fnmatch.fnmatchcase(default_ref, item)
-           for item in excludes):
+    if any(
+        item in {"~DEFAULT_BRANCH", "~ALL"} or fnmatch.fnmatchcase(default_ref, item)
+        for item in excludes
+    ):
         hard.append("ruleset excludes the default branch")
 
     if defaults.get("require_active_ruleset", True) and ruleset.get("enforcement") != "active":
