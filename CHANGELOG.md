@@ -5,6 +5,28 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Stale-docs audit fix (2026-09-13)
+
+- **`.tflint.hcl`: fixed a stale pin comment.** The comment justifying the
+  pinned `terraform` ruleset version still read "0.14.1 matches the version
+  bundled with tflint 0.62.1" after Renovate bumped the pinned ruleset to
+  `0.15.0` (#36) without updating the prose, and separately the CI job pins
+  `tflint_version: v0.59.1` (not 0.62.1) for the sigstore-go panic reason
+  documented in `.github/workflows/ci.yml`. The comment no longer names a
+  version pair that could drift out of sync with the two version numbers
+  it was describing; it instead points at the CI workflow for the current
+  tflint pin.
+- **`CONTRIBUTING.md`: corrected two instructions that no longer matched
+  CI.** "CI mirrors the hook set ... plus `tofu test` for the `libvirt-vm`
+  module" undercounted — the `test` job in `ci.yml` matrixes over both
+  `modules/libvirt-vm` and `modules/talos-cluster` (has since the Talos
+  subsystem landed). The provider-bump relock loop only iterated
+  `modules/libvirt-vm`, `environments/lab`, and `environments/production`,
+  omitting `modules/talos-cluster` and `environments/talos-lab` — a
+  contributor following the documented command on the next libvirt/talos
+  provider bump would leave two of the five `.terraform.lock.hcl` files
+  unrefreshed. Both fixed to cover all five roots/modules.
+
 ### README ADR index audit fix (2026-09-12)
 
 - **`README.md`: fixed the ADR index table drift from `docs/adr/`.** The
