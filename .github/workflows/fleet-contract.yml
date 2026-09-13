@@ -8,11 +8,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - "fleet/repositories.json"
-      - "scripts/check-github-fleet.py"
-      - ".github/workflows/fleet-contract.yml"
-      - ".github/workflows/ci-gate.yml"
 
 permissions:
   contents: read
