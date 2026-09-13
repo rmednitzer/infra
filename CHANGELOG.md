@@ -5,6 +5,30 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### README ADR index audit fix (2026-09-12)
+
+- **`README.md`: fixed the ADR index table drift from `docs/adr/`.** The
+  table was missing [ADR-0017](docs/adr/0017-adopt-talos-write-only-secret-arguments.md)
+  entirely (already linked elsewhere in this same file and present in
+  `docs/adr/README.md` and `CLAUDE.md`), and carried a stale `(Proposed)`
+  annotation on ADR-0012, which has read **Superseded by ADR-0016** since
+  2026-06-04. Added the missing row and dropped the stale annotation.
+
+### Fleet manifest aggregate-gate audit fix (2026-09-12)
+
+- **`fleet/repositories.json`: corrected stale `aggregate_gate_state` values.**
+  A live read of every fleet repository's `main-protection` ruleset (via
+  `scripts/check-github-fleet.py`, `GITHUB_TOKEN`-authenticated) showed
+  `infra`, `agents`, `core-graph`, `relay-shell`, `6dof-ascent-sim`, and
+  `runbooks` already require exactly `ci-success` (the
+  `preferred_aggregate_context`), even though the manifest still recorded
+  them as `"planned"` or `"migration-pending"`. Only `automation` is
+  genuinely still on its pre-migration check list, so its
+  `"migration-pending"` state is unchanged. Corrected the six stale entries
+  to `"enforced"`; `python scripts/check-github-fleet.py` (live) still
+  reports `errors=0` before and after, since the checker only raises on a
+  context mismatch, not on the manifest's own state label being out of date.
+
 ### F12 branch-protection evidence (2026-08-12)
 
 - **Recorded the first observed branch-protection state** under BACKLOG F12,
