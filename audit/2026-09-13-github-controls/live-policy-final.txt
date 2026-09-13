@@ -1,0 +1,10 @@
+SCOPE: public rules plus admin settings
+OK rmednitzer/infra
+OK rmednitzer/agents
+OK rmednitzer/core-graph
+OK rmednitzer/relay-shell
+OK rmednitzer/6dof-ascent-sim
+OK rmednitzer/automation
+OK rmednitzer/runbooks
+OK rmednitzer/rmednitzer.github.io
+SUMMARY repositories=8 errors=0 advisories=0

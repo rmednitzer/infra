@@ -89,11 +89,36 @@ def validate_manifest_only(manifest: dict[str, Any]) -> list[str]:
     return errors
 
 
+def validate_admin_controls(
+    owner: str, name: str, metadata: dict[str, Any],
+    policy: dict[str, Any], token: str | None,
+) -> list[str]:
+    """Validate privileged settings; absent fields fail instead of passing."""
+    errors: list[str] = []
+    base = f"/repos/{owner}/{name}"
+    observed = {
+        "repository": metadata,
+        "actions": api_get(f"{base}/actions/permissions", token),
+        "workflow": api_get(f"{base}/actions/permissions/workflow", token),
+    }
+    for group in ("repository", "actions", "workflow"):
+        for key, expected in policy.get(group, {}).items():
+            actual = observed[group].get(key)
+            if actual != expected:
+                errors.append(f"{group}.{key} is {actual!r}, expected {expected!r}")
+    security = metadata.get("security_and_analysis", {})
+    for feature in policy.get("security", []):
+        if security.get(feature, {}).get("status") != "enabled":
+            errors.append(f"security.{feature} is not confirmed enabled")
+    return errors
+
+
 def validate_repo(
     owner: str,
     repo_cfg: dict[str, Any],
     defaults: dict[str, Any],
     token: str | None,
+    admin_checks: bool = False,
 ) -> tuple[list[str], list[str]]:
     name = repo_cfg["name"]
     hard: list[str] = []
@@ -144,6 +169,18 @@ def validate_repo(
     if defaults.get("require_deletion_protection", True) and not rule_by_type(rules, "deletion"):
         hard.append("missing deletion protection rule")
 
+    status_rule = rule_by_type(rules, "required_status_checks")
+    parameters = status_rule.get("parameters", {}) if status_rule else {}
+    expected_source = defaults.get("required_check_integration_id")
+    if expected_source is not None:
+        for check in parameters.get("required_status_checks", []):
+            if check.get("integration_id") != expected_source:
+                hard.append(f"check {check.get('context')!r} is not bound to integration {expected_source}")
+    require_up_to_date = repo_cfg.get("require_up_to_date", defaults.get("require_up_to_date"))
+    if require_up_to_date is not None:
+        if parameters.get("strict_required_status_checks_policy") != require_up_to_date:
+            hard.append(f"strict status-check policy must be {require_up_to_date!r}")
+
     contexts = required_contexts(rules)
     if defaults.get("require_status_checks", True) and not contexts:
         hard.append("required_status_checks is absent or empty")
@@ -161,6 +198,11 @@ def validate_repo(
     if repo_cfg.get("lifecycle") == "archive-candidate" and not metadata.get("archived"):
         advisory.append(f"lifecycle={repo_cfg['lifecycle']}; superseded by {repo_cfg.get('superseded_by', 'unspecified')}")
 
+    if admin_checks:
+        hard.extend(validate_admin_controls(
+            owner, name, metadata, defaults.get("admin_controls", {}), token
+        ))
+
     return hard, advisory
 
 
@@ -169,6 +211,8 @@ def main() -> int:
     parser.add_argument("--manifest", default="fleet/repositories.json")
     parser.add_argument("--manifest-only", action="store_true")
     parser.add_argument("--strict-advisories", action="store_true")
+    parser.add_argument("--admin-checks", action="store_true",
+                        help="Also check settings requiring repository administration read access")
     args = parser.parse_args()
 
     manifest = load_json(Path(args.manifest))
@@ -184,13 +228,15 @@ def main() -> int:
     owner = manifest["owner"]
     defaults = manifest.get("defaults", {})
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+    print("SCOPE: public rules plus admin settings" if args.admin_checks
+          else "SCOPE: public rules only; admin settings not checked (use --admin-checks)")
     hard_count = 0
     advisory_count = 0
 
     for repo_cfg in manifest["repositories"]:
         name = repo_cfg["name"]
         try:
-            hard, advisory = validate_repo(owner, repo_cfg, defaults, token)
+            hard, advisory = validate_repo(owner, repo_cfg, defaults, token, args.admin_checks)
         except RuntimeError as exc:
             hard = [str(exc)]
             advisory = []
