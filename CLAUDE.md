@@ -62,6 +62,7 @@ underlying code.
 | [0015](docs/adr/0015-talos-machineconfig-as-code-and-secrets.md) | Talos machine-config-as-code and secret handling |
 | [0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md) | Migrate `dmacvicar/libvirt` to `~> 0.9.0` |
 | [0017](docs/adr/0017-adopt-talos-write-only-secret-arguments.md) | Adopt `siderolabs/talos` write-only secret arguments |
+| [0018](docs/adr/0018-review-talos-provider-0.12.md) | Review Talos provider 0.12; retain live acceptance |
 
 ## Naming
 
@@ -179,7 +180,7 @@ required_providers {
   }
   talos = {
     source  = "siderolabs/talos"
-    version = "~> 0.11.0" # pre-1.0, patch-pinned (ADR-0014)
+    version = "~> 0.12.0" # pre-1.0, patch-pinned after review (ADR-0018)
   }
 }
 ```

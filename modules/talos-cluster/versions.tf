@@ -17,11 +17,11 @@ terraform {
     # siderolabs/talos generates the machine secrets and configuration,
     # applies it over the Talos API, bootstraps etcd, and exports the
     # kubeconfig/talosconfig. Pre-1.0 provider, so pinned at the patch level
-    # per ADR-0002's reasoning (ADR-0014). 0.11.0 is the current stable
-    # release on the Terraform registry as of 2026-05.
+    # per ADR-0002's reasoning. ADR-0018 reviews the 0.12.x pin;
+    # live-cluster acceptance remains required before deployment.
     talos = {
       source  = "siderolabs/talos"
-      version = "~> 0.11.0"
+      version = "~> 0.12.0"
     }
   }
 }

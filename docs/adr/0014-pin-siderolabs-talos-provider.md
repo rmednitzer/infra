@@ -3,6 +3,10 @@
 - **Status**: Accepted
 - **Date**: 2026-05-30
 
+> **Update (2026-10-04):** the repository pin moved to `~> 0.12.0` after
+> the explicit review in [ADR-0018](0018-review-talos-provider-0.12.md).
+> The historical decision and its live-acceptance requirement are retained.
+
 > **Note (2026-06-09, BACKLOG BL-2 outcome):** the provider's write-only
 > secret arguments (`client_configuration_wo`,
 > `machine_configuration_input_wo`) were evaluated and **adopted** within the

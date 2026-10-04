@@ -25,6 +25,7 @@ context, decision, consequences. Format follows
 | [0015](0015-talos-machineconfig-as-code-and-secrets.md) | Talos machine-config-as-code and secret handling | Accepted | 2026-05 |
 | [0016](0016-migrate-libvirt-provider-to-0.9.md) | Migrate `dmacvicar/libvirt` to `~> 0.9.0` | Accepted | 2026-06 |
 | [0017](0017-adopt-talos-write-only-secret-arguments.md) | Adopt `siderolabs/talos` write-only secret arguments | Accepted | 2026-06 |
+| [0018](0018-review-talos-provider-0.12.md) | Review Talos provider 0.12; retain live acceptance |
 
 ## Status values
 

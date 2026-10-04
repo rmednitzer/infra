@@ -384,7 +384,7 @@ resource "talos_machine_bootstrap" "this" {
 # Retrieve the cluster kubeconfig once bootstrap has completed. This is the
 # resource form (talos provider >= 0.7); the data source of the same name is
 # deprecated and slated for removal in a later minor. client_configuration is
-# required and has NO write-only variant on this resource at provider 0.11.x
+# required and has NO write-only variant on this resource at provider 0.12.0
 # (ADR-0017) -- this is the one remaining per-resource copy of the client
 # credentials in state, alongside the kubeconfig the resource exists to export.
 resource "talos_cluster_kubeconfig" "this" {

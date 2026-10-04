@@ -20,7 +20,7 @@ cloud-init + downstream Ansible). See
 Provider pins: libvirt `~> 0.9.0`
 ([ADR-0002](../../docs/adr/0002-pin-libvirt-provider-to-0.8.md) pin rule; bumped
 0.8→0.9 in [ADR-0016](../../docs/adr/0016-migrate-libvirt-provider-to-0.9.md)),
-talos `~> 0.11.0` ([ADR-0014](../../docs/adr/0014-pin-siderolabs-talos-provider.md)).
+talos `~> 0.12.0` ([ADR-0018](../../docs/adr/0018-review-talos-provider-0.12.md)).
 Hardening baseline + secret handling:
 [ADR-0015](../../docs/adr/0015-talos-machineconfig-as-code-and-secrets.md).
 CIS Kubernetes mapping: [`docs/talos-cis-kubernetes.md`](../../docs/talos-cis-kubernetes.md).
