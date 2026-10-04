@@ -32,7 +32,7 @@ Current providers:
   pin rule; bumped 0.8→0.9 in
   [ADR-0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md))
 - **Talos Linux** via [`siderolabs/talos`](https://registry.terraform.io/providers/siderolabs/talos),
-  pinned `~> 0.11.0` ([ADR-0014](docs/adr/0014-pin-siderolabs-talos-provider.md))
+  pinned `~> 0.12.0` ([ADR-0018](docs/adr/0018-review-talos-provider-0.12.md))
 
 Planned: Hetzner Cloud (`hetznercloud/hcloud`) and additional providers
 as required.
@@ -177,6 +177,7 @@ README section.
 | [0015](docs/adr/0015-talos-machineconfig-as-code-and-secrets.md) | Talos machine-config-as-code and secret handling |
 | [0016](docs/adr/0016-migrate-libvirt-provider-to-0.9.md) | Migrate `dmacvicar/libvirt` to `~> 0.9.0` |
 | [0017](docs/adr/0017-adopt-talos-write-only-secret-arguments.md) | Adopt `siderolabs/talos` write-only secret arguments |
+| [0018](docs/adr/0018-review-talos-provider-0.12.md) | Review Talos provider 0.12; retain live acceptance |
 
 ## State safety
 
