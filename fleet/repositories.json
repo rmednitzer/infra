@@ -31,7 +31,8 @@
         "secret_scanning_push_protection",
         "dependabot_security_updates"
       ]
-    }
+    },
+    "require_linear_history": true
   },
   "repositories": [
     {

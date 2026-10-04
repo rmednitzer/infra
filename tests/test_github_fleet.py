@@ -17,7 +17,7 @@ class RulesetCoverage(unittest.TestCase):
         self.ruleset = {
             "target": "branch", "enforcement": "active", "bypass_actors": [],
             "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
-            "rules": [{"type": t} for t in ("pull_request", "non_fast_forward", "deletion")]
+            "rules": [{"type": t} for t in ("pull_request", "non_fast_forward", "deletion", "required_linear_history")]
             + [{"type": "required_status_checks", "parameters": {
                 "required_status_checks": [{"context": "ci-success"}]}}],
         }
@@ -37,6 +37,13 @@ class RulesetCoverage(unittest.TestCase):
 
     def test_default_branch_is_protected(self):
         self.assertEqual(self.errors(), [])
+
+    def test_missing_linear_history_is_rejected(self):
+        self.ruleset["rules"] = [
+            rule for rule in self.ruleset["rules"]
+            if rule["type"] != "required_linear_history"
+        ]
+        self.assertIn("missing required_linear_history rule", self.errors())
 
     def test_wrong_ref_is_rejected(self):
         self.ruleset["conditions"]["ref_name"]["include"] = ["refs/heads/develop"]
