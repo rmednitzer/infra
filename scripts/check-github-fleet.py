@@ -169,6 +169,9 @@ def validate_repo(
     if defaults.get("require_deletion_protection", True) and not rule_by_type(rules, "deletion"):
         hard.append("missing deletion protection rule")
 
+    if defaults.get("require_linear_history", True) and not rule_by_type(rules, "required_linear_history"):
+        hard.append("missing required_linear_history rule")
+
     status_rule = rule_by_type(rules, "required_status_checks")
     parameters = status_rule.get("parameters", {}) if status_rule else {}
     expected_source = defaults.get("required_check_integration_id")
