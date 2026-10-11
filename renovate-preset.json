@@ -104,5 +104,7 @@
       "datasourceTemplate": "npm",
       "versioningTemplate": "semver"
     }
-  ]
+  ],
+  "pruneStaleBranches": true,
+  "pruneBranchAfterAutomerge": true
 }
