@@ -48,6 +48,8 @@ class WorkflowPinDiscovery(unittest.TestCase):
         self.assertTrue(any(rule.get("matchUpdateTypes") == ["major"]
                             and rule.get("automerge") is False for rule in rules))
         self.assertFalse(PRESET["lockFileMaintenance"]["automerge"])
+        self.assertTrue(PRESET["pruneStaleBranches"])
+        self.assertTrue(PRESET["pruneBranchAfterAutomerge"])
 
 
 if __name__ == "__main__":
