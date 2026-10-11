@@ -1,5 +1,6 @@
 """Regression tests for default-branch ruleset coverage."""
 import copy
+import json
 import importlib.util
 import pathlib
 import unittest
@@ -79,6 +80,15 @@ class RulesetCoverage(unittest.TestCase):
         self.assertTrue(self.errors(defaults))
         self.ruleset["rules"][-1]["parameters"]["strict_required_status_checks_policy"] = True
         self.assertEqual(self.errors(defaults), [])
+
+
+class FleetStrictPolicy(unittest.TestCase):
+    def test_all_repositories_require_up_to_date_checks(self):
+        manifest = json.loads((pathlib.Path(__file__).parents[1] / "fleet/repositories.json").read_text())
+        self.assertIs(manifest["defaults"]["require_up_to_date"], True)
+        for repo in manifest["repositories"]:
+            with self.subTest(repo=repo["name"]):
+                self.assertIsNot(repo.get("require_up_to_date", True), False)
 
 
 class AdminControls(unittest.TestCase):

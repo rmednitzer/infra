@@ -11,7 +11,7 @@
     "require_deletion_protection": true,
     "require_status_checks": true,
     "required_check_integration_id": 15368,
-    "require_up_to_date": false,
+    "require_up_to_date": true,
     "admin_controls": {
       "repository": {
         "allow_merge_commit": false,
