@@ -190,6 +190,19 @@ class AdminControls(unittest.TestCase):
             errors = fleet.validate_admin_controls("o", "r", {}, policy, None)
         self.assertEqual(len(errors), 4)
 
+    def test_dependabot_pause_is_rejected(self):
+        policy = {"dependabot_unpaused": True}
+        metadata = {}
+        for state, expected in [({"enabled": True, "paused": False}, []),
+                                ({"enabled": True, "paused": True},
+                                 ["Dependabot security updates disabled or paused"])]:
+            with self.subTest(state=state):
+                with patch.object(fleet, "api_get", side_effect=[{}, {}, state]):
+                    self.assertEqual(
+                        fleet.validate_admin_controls("o", "r", metadata, policy, None),
+                        expected,
+                    )
+
     def test_api_denial_does_not_pass(self):
         with patch.object(fleet, "api_get", side_effect=RuntimeError("HTTP 403")):
             with self.assertRaises(RuntimeError):

@@ -30,7 +30,8 @@
         "secret_scanning",
         "secret_scanning_push_protection",
         "dependabot_security_updates"
-      ]
+      ],
+      "dependabot_unpaused": true
     },
     "require_linear_history": true
   },

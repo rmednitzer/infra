@@ -110,6 +110,10 @@ def validate_admin_controls(
     for feature in policy.get("security", []):
         if security.get(feature, {}).get("status") != "enabled":
             errors.append(f"security.{feature} is not confirmed enabled")
+    if policy.get("dependabot_unpaused"):
+        state = api_get(f"{base}/automated-security-fixes", token)
+        if state.get("enabled") is not True or state.get("paused") is not False:
+            errors.append("Dependabot security updates disabled or paused")
     return errors
 
 
