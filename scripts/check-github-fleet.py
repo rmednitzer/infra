@@ -195,6 +195,56 @@ def validate_repo(
     elif preferred and gate_state in {"planned", "migration-pending"} and contexts != [preferred]:
         advisory.append(f"aggregate migration pending: current={contexts!r}, target=[{preferred!r}]")
 
+    # Release-tag protections apply independently of branch rules.
+    tag_name = repo_cfg.get("release_tag_ruleset")
+    if tag_name:
+        tag_summary = next(
+            (item for item in rulesets if item.get("name") == tag_name),
+            None,
+        )
+        if tag_summary is None:
+            hard.append(f"release tag ruleset {tag_name!r} not found")
+        else:
+            tag_policy = api_get(
+                f"/repos/{owner}/{name}/rulesets/{tag_summary['id']}", token
+            )
+            if tag_policy.get("target") != "tag":
+                hard.append("release ruleset must target tags")
+            if tag_policy.get("enforcement") != "active":
+                hard.append("release tag ruleset not active")
+            if tag_policy.get("bypass_actors"):
+                hard.append("release tag ruleset must not allow bypass")
+            tag_refs = tag_policy.get("conditions", {}).get("ref_name", {})
+            if "refs/tags/v*" not in tag_refs.get("include", []):
+                hard.append("release tag ruleset does not target refs/tags/v*")
+            if tag_refs.get("exclude"):
+                hard.append("release tag ruleset has exclusions")
+            tag_rules = tag_policy.get("rules", [])
+            for required in ("update", "deletion"):
+                if not rule_by_type(tag_rules, required):
+                    hard.append(f"release tag ruleset missing {required} protection")
+
+    if admin_checks and repo_cfg.get("require_immutable_releases"):
+        immutable = api_get(f"/repos/{owner}/{name}/immutable-releases", token)
+        if immutable.get("enabled") is not True:
+            hard.append("immutable releases must be enabled")
+    if admin_checks and repo_cfg.get("release_environment"):
+        environment = api_get(
+            f"/repos/{owner}/{name}/environments/{repo_cfg['release_environment']}", token
+        )
+        required = set(repo_cfg.get("release_reviewers", []))
+        reviewer_policies = [
+            rule for rule in environment.get("protection_rules", [])
+            if rule.get("type") == "required_reviewers"
+        ]
+        configured = {
+            person.get("reviewer", {}).get("login")
+            for rule in reviewer_policies for person in rule.get("reviewers", [])
+            if person.get("type") == "User"
+        }
+        if not reviewer_policies or not required.issubset(configured):
+            hard.append("release environment required reviewers missing")
+
     if rule_by_type(rules, "required_linear_history") and metadata.get("allow_merge_commit"):
         advisory.append("merge commits are enabled although required_linear_history is enforced")
 

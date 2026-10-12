@@ -44,3 +44,7 @@ Thumbs.db
 *.tmp
 *.bak
 *.log
+
+# Local Python bytecode (do not publish CI-generated files).
+__pycache__/
+*.py[cod]
