@@ -193,9 +193,11 @@ class AdminControls(unittest.TestCase):
     def test_dependabot_pause_is_rejected(self):
         policy = {"dependabot_unpaused": True}
         metadata = {}
-        for state, expected in [({"enabled": True, "paused": False}, []),
-                                ({"enabled": True, "paused": True},
-                                 ["Dependabot security updates disabled or paused"])]:
+        cases = [
+            ({"enabled": True, "paused": False}, []),
+            ({"enabled": True, "paused": True}, ["Dependabot security updates disabled or paused"]),
+        ]
+        for state, expected in cases:
             with self.subTest(state=state):
                 with patch.object(fleet, "api_get", side_effect=[{}, {}, state]):
                     self.assertEqual(
