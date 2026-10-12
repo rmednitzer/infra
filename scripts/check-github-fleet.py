@@ -110,6 +110,10 @@ def validate_admin_controls(
     for feature in policy.get("security", []):
         if security.get(feature, {}).get("status") != "enabled":
             errors.append(f"security.{feature} is not confirmed enabled")
+    if policy.get("dependabot_unpaused"):
+        state = api_get(f"{base}/automated-security-fixes", token)
+        if state.get("enabled") is not True or state.get("paused") is not False:
+            errors.append("Dependabot security updates disabled or paused")
     return errors
 
 
@@ -224,6 +228,35 @@ def validate_repo(
                 if not rule_by_type(tag_rules, required):
                     hard.append(f"release tag ruleset missing {required} protection")
 
+    creator_name = repo_cfg.get("release_creator_ruleset")
+    if creator_name:
+        creator_summary = next(
+            (item for item in rulesets if item.get("name") == creator_name), None
+        )
+        if creator_summary is None:
+            hard.append(f"release creator ruleset {creator_name!r} not found")
+        else:
+            creator = api_get(
+                f"/repos/{owner}/{name}/rulesets/{creator_summary['id']}", token
+            )
+            if creator.get("target") != "tag" or creator.get("enforcement") != "active":
+                hard.append("release creator ruleset must actively target tags")
+            refs = creator.get("conditions", {}).get("ref_name", {})
+            if "refs/tags/v*" not in refs.get("include", []) or refs.get("exclude"):
+                hard.append("release creator ruleset has incorrect tag scope")
+            if not rule_by_type(creator.get("rules", []), "creation"):
+                hard.append("release creator ruleset does not restrict tag creation")
+            # Public read tokens can omit bypass actors entirely. Verify the
+            # creator's identity separately when administrative access exists.
+            if admin_checks:
+                owner_id = api_get(f"/users/{owner}", token)["id"]
+                actors = creator.get("bypass_actors")
+                expected = [
+                    {"actor_id": owner_id, "actor_type": "User", "bypass_mode": "always"}
+                ]
+                if actors != expected:
+                    hard.append("release tag creation must be owner-only")
+
     if admin_checks and repo_cfg.get("require_immutable_releases"):
         immutable = api_get(f"/repos/{owner}/{name}/immutable-releases", token)
         if immutable.get("enabled") is not True:
@@ -232,6 +265,8 @@ def validate_repo(
         environment = api_get(
             f"/repos/{owner}/{name}/environments/{repo_cfg['release_environment']}", token
         )
+        if environment.get("can_admins_bypass") is not False:
+            hard.append("release environment administrator bypass must be disabled")
         required = set(repo_cfg.get("release_reviewers", []))
         reviewer_policies = [
             rule for rule in environment.get("protection_rules", [])

@@ -30,7 +30,8 @@
         "secret_scanning",
         "secret_scanning_push_protection",
         "dependabot_security_updates"
-      ]
+      ],
+      "dependabot_unpaused": true
     },
     "require_linear_history": true
   },
@@ -49,7 +50,8 @@
       "aggregate_gate_state": "enforced",
       "require_up_to_date": true,
       "release_tag_ruleset": "release-tag-integrity",
-      "require_immutable_releases": true
+      "require_immutable_releases": true,
+      "release_creator_ruleset": "release-tag-creators"
     },
     {
       "name": "core-graph",
@@ -58,7 +60,8 @@
       "aggregate_gate_state": "enforced",
       "require_up_to_date": true,
       "release_tag_ruleset": "release-tag-integrity",
-      "require_immutable_releases": true
+      "require_immutable_releases": true,
+      "release_creator_ruleset": "release-tag-creators"
     },
     {
       "name": "relay-shell",
@@ -70,7 +73,9 @@
       "release_environment": "pypi",
       "release_reviewers": [
         "rmednitzer"
-      ]
+      ],
+      "release_creator_ruleset": "release-tag-creators",
+      "require_immutable_releases": true
     },
     {
       "name": "6dof-ascent-sim",
