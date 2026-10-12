@@ -1,0 +1,1 @@
+23 * * * * root /usr/local/sbin/platform-backup-health forgejo >> /var/log/forgejo-backup-health.log 2>&1

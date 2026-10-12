@@ -1,0 +1,27 @@
+groups:
+  - name: independent_backup_assurance
+    rules:
+      - alert: GitHubRecoverySnapshotInvalid
+        expr: (github_recovery_valid == 0) or (github_recovery_stale == 1) or absent(github_recovery_valid)
+        for: 15m
+        labels: {severity: critical}
+        annotations:
+          summary: "Independent GitHub recovery snapshot missing, stale or invalid"
+      - alert: ForgejoSourceBackupInvalid
+        expr: (forgejo_backup_valid == 0) or (forgejo_backup_stale == 1) or absent(forgejo_backup_valid)
+        for: 15m
+        labels: {severity: critical}
+        annotations:
+          summary: "Forgejo source backup missing, stale or invalid"
+      - alert: ForgejoReplicaInvalid
+        expr: (forgejo_replica_valid == 0) or (forgejo_replica_stale == 1) or absent(forgejo_replica_valid)
+        for: 15m
+        labels: {severity: critical}
+        annotations:
+          summary: "Independent Forgejo replica missing, stale or invalid"
+      - alert: ForgejoRestoreDrillOverdue
+        expr: forgejo_restore_drill_stale == 1
+        for: 2h
+        labels: {severity: warning}
+        annotations:
+          summary: "Forgejo restore drill exceeds 45-day policy"
