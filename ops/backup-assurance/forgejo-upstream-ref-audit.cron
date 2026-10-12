@@ -1,0 +1,1 @@
+13 0,6,12,18 * * * root /usr/local/sbin/forgejo-upstream-ref-audit >> /var/log/forgejo-upstream-ref-audit.log 2>&1
