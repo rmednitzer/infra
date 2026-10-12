@@ -257,6 +257,15 @@ def validate_repo(
                 if actors != expected:
                     hard.append("release tag creation must be owner-only")
 
+    if admin_checks and repo_cfg.get("require_immutable_oidc_subject"):
+        oidc = api_get(
+            f"/repos/{owner}/{name}/actions/oidc/customization/sub", token
+        )
+        if oidc.get("use_default") is not True:
+            hard.append("OIDC default subject claim must remain enabled")
+        if oidc.get("use_immutable_subject") is not True:
+            hard.append("OIDC immutable subject claim must be enabled")
+
     if admin_checks and repo_cfg.get("require_immutable_releases"):
         immutable = api_get(f"/repos/{owner}/{name}/immutable-releases", token)
         if immutable.get("enabled") is not True:

@@ -41,7 +41,8 @@
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
       "aggregate_gate_state": "enforced",
-      "require_up_to_date": true
+      "require_up_to_date": true,
+      "require_immutable_oidc_subject": true
     },
     {
       "name": "agents",
@@ -81,26 +82,30 @@
       "name": "6dof-ascent-sim",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "enforced"
+      "aggregate_gate_state": "enforced",
+      "require_immutable_oidc_subject": true
     },
     {
       "name": "automation",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
       "aggregate_gate_state": "enforced",
-      "require_up_to_date": true
+      "require_up_to_date": true,
+      "require_immutable_oidc_subject": true
     },
     {
       "name": "runbooks",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "enforced"
+      "aggregate_gate_state": "enforced",
+      "require_immutable_oidc_subject": true
     },
     {
       "name": "rmednitzer.github.io",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "validate",
-      "aggregate_gate_state": "enforced"
+      "aggregate_gate_state": "enforced",
+      "require_immutable_oidc_subject": true
     }
   ]
 }

@@ -128,6 +128,16 @@ class ReleaseTagPolicy(unittest.TestCase):
         self.assertIn("release tag ruleset missing deletion protection", check())
 
 
+class ImmutableOidcPolicy(unittest.TestCase):
+    def test_immutable_oidc_expected_in_manifest(self):
+        import json
+        manifest = json.loads((pathlib.Path(__file__).parents[1] / "fleet/repositories.json").read_text())
+        protected = {"automation", "infra", "runbooks", "6dof-ascent-sim", "rmednitzer.github.io"}
+        for repo in manifest["repositories"]:
+            if repo["name"] in protected:
+                self.assertIs(repo.get("require_immutable_oidc_subject"), True)
+
+
 class ReleaseCreators(unittest.TestCase):
     def test_creation_rule_and_scope(self):
         branch = {
