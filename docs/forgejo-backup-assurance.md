@@ -86,3 +86,23 @@ Forgejo pull mirroring cannot be activated on already-existing repositories
 without migration to new repository identities. Any change to establish
 continuous mirroring must preserve independent Forgejo work and branch
 histories through a reviewed migration plan.
+
+## Cross-host Forgejo startup drill (2026-10-12)
+
+An isolated Forgejo 15.0.9 application was started successfully on the
+independent backup recipient using a verified replicated archive. The
+restored SQLite database passed integrity checking, the UI login endpoint
+returned HTTP 200, API authentication restrictions held, and 23 repository
+records were present. The service bound only to loopback and its temporary
+files and process were cleaned up afterward. No production services or
+repository references were changed.
+
+The recipient now runs the same restore drill monthly at 03:10 UTC on the
+first day of the month. It refuses to run if the isolated service is already
+active, or if the installed recovery binary version does not match the
+archive metadata. A newer production Forgejo version therefore requires
+an explicit recovery-binary update before the next drill.
+
+The replica-health exporter reports the age and stale state of successful
+cross-host drill receipts; the stale threshold is 45 days. This is not an
+end-to-end test of DNS, TLS, external authentication or production failover.

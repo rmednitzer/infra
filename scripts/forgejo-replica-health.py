@@ -48,6 +48,11 @@ metrics = [
     "# TYPE forgejo_replica_check_timestamp_seconds gauge",
     f"forgejo_replica_check_timestamp_seconds {int(now)}",
 ]
+drills = sorted(Path("/var/backups/forgejo-replica/restore-drills").glob("20*.txt"))
+drill_age = max(0, now - drills[-1].stat().st_mtime) if drills else -1
+passed = bool(drills and "result=PASS" in drills[-1].read_text())
+drill_stale = int(not passed or drill_age < 0 or drill_age > 45 * 86400)
+metrics.extend(["# TYPE forgejo_crosshost_restore_age_seconds gauge", f"forgejo_crosshost_restore_age_seconds {drill_age:.0f}", "# TYPE forgejo_crosshost_restore_stale gauge", f"forgejo_crosshost_restore_stale {drill_stale}"])
 out.parent.mkdir(parents=True, exist_ok=True)
 fd, temp = tempfile.mkstemp(prefix=".forgejo_replica.", dir=out.parent)
 try:
