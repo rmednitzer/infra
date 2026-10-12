@@ -145,8 +145,10 @@ class ReleaseCreators(unittest.TestCase):
         }
         rulesets = [{"id": 1, "name": "main-protection"},
                     {"id": 2, "name": "release-tag-creators"}]
-        cfg = {"name": "repo", "ruleset": "main-protection",
-               "release_creator_ruleset": "release-tag-creators"}
+        cfg = {
+            "name": "repo", "ruleset": "main-protection",
+            "release_creator_ruleset": "release-tag-creators",
+        }
         def check():
             with patch.object(fleet, "api_get", side_effect=[
                 {"default_branch": "main", "visibility": "public"},

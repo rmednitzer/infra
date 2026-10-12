@@ -247,8 +247,9 @@ def validate_repo(
             if admin_checks:
                 owner_id = api_get(f"/users/{owner}", token)["id"]
                 actors = creator.get("bypass_actors")
-                expected = [{"actor_id": owner_id, "actor_type": "User",
-                             "bypass_mode": "always"}]
+                expected = [
+                    {"actor_id": owner_id, "actor_type": "User", "bypass_mode": "always"}
+                ]
                 if actors != expected:
                     hard.append("release tag creation must be owner-only")
 
