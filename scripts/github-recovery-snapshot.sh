@@ -38,4 +38,11 @@ assert len(rows)==8
 PY
 mv -T -- "$STAGE" "$BASE/$STAMP"
 trap - EXIT
+# Retain at most 90 complete daily snapshots. Pruning is permitted only
+# after the new snapshot was verified and atomically promoted.
+find "$BASE" -mindepth 1 -maxdepth 1 -type d -name '20??????T??????Z' -printf '%f\n' |
+  LC_ALL=C sort -r | tail -n +91 | while read -r old; do
+    [[ "$old" =~ ^20[0-9]{6}T[0-9]{6}Z$ ]] || exit 16
+    rm -rf -- "$BASE/$old"
+  done
 printf 'VERIFIED GitHub recovery snapshot %s (8 bundles)\n' "$BASE/$STAMP"

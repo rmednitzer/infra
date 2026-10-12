@@ -44,8 +44,9 @@ A recovery drill must run without GitHub network access:
 
 Cron output is appended to /var/log/github-recovery-snapshot.log. A script
 failure returns nonzero but the cron configuration itself does not notify an
-operator; monitor its successful snapshot freshness independently. No automatic
-pruning is configured. Review free space and retention before introducing one.
+operator; monitor its successful snapshot freshness independently. Keep at most 90 complete daily snapshots. The script prunes older generations
+only after an entire new capture was verified and atomically promoted.
+Monitor available disk capacity independently.
 
 ## Current verification boundary
 

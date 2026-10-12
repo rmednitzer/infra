@@ -1,0 +1,1 @@
+23 * * * * root /usr/local/sbin/platform-backup-health github >> /var/log/github-recovery-health.log 2>&1
