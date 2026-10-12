@@ -70,3 +70,19 @@ archive. Do not modify or deliberately corrupt production backup sets.
 Cross-host copies increase independence, but the copied archives contain
 sensitive data and SSH does not encrypt them at rest. Add an independently
 controlled encrypted or cross-site copy for full site-failure resilience.
+
+## Independent GitHub main-ref drift auditing
+
+The existing private lab repositories in Forgejo are independent, not
+configured pull mirrors. Their branch refs are never force-updated by backup
+jobs. A scheduled, read-only comparison fetches GitHub main refs with
+Git ls-remote and compares them with local Forgejo main refs. Node Exporter
+exposes one match gauge per public repository, a total match count, and a
+probe-success gauge. Transient mismatch does not page an operator because
+these repositories are not promised synchronous mirrors; failed remote probes
+indicate that the audit itself was not completed.
+
+Forgejo pull mirroring cannot be activated on already-existing repositories
+without migration to new repository identities. Any change to establish
+continuous mirroring must preserve independent Forgejo work and branch
+histories through a reviewed migration plan.
