@@ -128,6 +128,39 @@ class ReleaseTagPolicy(unittest.TestCase):
         self.assertIn("release tag ruleset missing deletion protection", check())
 
 
+class ReleaseCreators(unittest.TestCase):
+    def test_creation_rule_and_scope(self):
+        branch = {
+            "target": "branch", "enforcement": "active", "bypass_actors": [],
+            "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+            "rules": [{"type": t} for t in
+                      ("pull_request", "non_fast_forward", "deletion", "required_linear_history")]
+            + [{"type": "required_status_checks", "parameters": {
+                "required_status_checks": [{"context": "ci-success"}]}}],
+        }
+        creator = {
+            "target": "tag", "enforcement": "active",
+            "conditions": {"ref_name": {"include": ["refs/tags/v*"], "exclude": []}},
+            "rules": [{"type": "creation"}],
+        }
+        rulesets = [{"id": 1, "name": "main-protection"},
+                    {"id": 2, "name": "release-tag-creators"}]
+        cfg = {"name": "repo", "ruleset": "main-protection",
+               "release_creator_ruleset": "release-tag-creators"}
+        def check():
+            with patch.object(fleet, "api_get", side_effect=[
+                {"default_branch": "main", "visibility": "public"},
+                rulesets, copy.deepcopy(branch), copy.deepcopy(creator),
+            ]):
+                return fleet.validate_repo("owner", cfg, {}, None)[0]
+        self.assertEqual(check(), [])
+        creator["rules"] = []
+        self.assertIn("release creator ruleset does not restrict tag creation", check())
+        creator["rules"] = [{"type": "creation"}]
+        creator["conditions"]["ref_name"]["include"] = ["refs/tags/other*"]
+        self.assertIn("release creator ruleset has incorrect tag scope", check())
+
+
 class FleetStrictPolicy(unittest.TestCase):
     def test_all_repositories_require_up_to_date_checks(self):
         manifest = json.loads((pathlib.Path(__file__).parents[1] / "fleet/repositories.json").read_text())

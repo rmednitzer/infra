@@ -49,7 +49,8 @@
       "aggregate_gate_state": "enforced",
       "require_up_to_date": true,
       "release_tag_ruleset": "release-tag-integrity",
-      "require_immutable_releases": true
+      "require_immutable_releases": true,
+      "release_creator_ruleset": "release-tag-creators"
     },
     {
       "name": "core-graph",
@@ -58,7 +59,8 @@
       "aggregate_gate_state": "enforced",
       "require_up_to_date": true,
       "release_tag_ruleset": "release-tag-integrity",
-      "require_immutable_releases": true
+      "require_immutable_releases": true,
+      "release_creator_ruleset": "release-tag-creators"
     },
     {
       "name": "relay-shell",
@@ -70,7 +72,8 @@
       "release_environment": "pypi",
       "release_reviewers": [
         "rmednitzer"
-      ]
+      ],
+      "release_creator_ruleset": "release-tag-creators"
     },
     {
       "name": "6dof-ascent-sim",
