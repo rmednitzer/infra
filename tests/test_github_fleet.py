@@ -82,6 +82,52 @@ class RulesetCoverage(unittest.TestCase):
         self.assertEqual(self.errors(defaults), [])
 
 
+class ReleaseTagPolicy(unittest.TestCase):
+    def test_active_protection_and_negative_cases(self):
+        branch = {
+            "target": "branch", "enforcement": "active", "bypass_actors": [],
+            "conditions": {"ref_name": {"include": ["~DEFAULT_BRANCH"], "exclude": []}},
+            "rules": [{"type": name} for name in
+                      ("pull_request", "non_fast_forward", "deletion", "required_linear_history")]
+            + [{"type": "required_status_checks", "parameters": {
+                "required_status_checks": [{"context": "ci-success"}]}}],
+        }
+        tag = {
+            "target": "tag", "enforcement": "active", "bypass_actors": [],
+            "conditions": {"ref_name": {"include": ["refs/tags/v*"], "exclude": []}},
+            "rules": [{"type": "update"}, {"type": "deletion"}],
+        }
+        summary = [
+            {"id": 1, "name": "main-protection"},
+            {"id": 2, "name": "release-tag-integrity"},
+        ]
+        repo = {"name": "repo", "ruleset": "main-protection",
+                "release_tag_ruleset": "release-tag-integrity",
+                "preferred_aggregate_context": "ci-success",
+                "aggregate_gate_state": "enforced"}
+        def check():
+            with patch.object(fleet, "api_get", side_effect=[
+                {"default_branch": "main", "visibility": "public"},
+                summary, copy.deepcopy(branch), copy.deepcopy(tag),
+            ]):
+                errors, _ = fleet.validate_repo("owner", repo, {}, None)
+            return errors
+        self.assertEqual(check(), [])
+        for field, replacement in [
+            ("enforcement", "disabled"), ("target", "branch"),
+            ("bypass_actors", [{"actor_id": 1}]),
+        ]:
+            with self.subTest(field=field):
+                original = tag[field]
+                tag[field] = replacement
+                self.assertTrue(check())
+                tag[field] = original
+        tag["rules"] = [{"type": "deletion"}]
+        self.assertIn("release tag ruleset missing update protection", check())
+        tag["rules"] = [{"type": "update"}]
+        self.assertIn("release tag ruleset missing deletion protection", check())
+
+
 class FleetStrictPolicy(unittest.TestCase):
     def test_all_repositories_require_up_to_date_checks(self):
         manifest = json.loads((pathlib.Path(__file__).parents[1] / "fleet/repositories.json").read_text())

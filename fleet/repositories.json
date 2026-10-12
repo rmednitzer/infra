@@ -47,21 +47,30 @@
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
       "aggregate_gate_state": "enforced",
-      "require_up_to_date": true
+      "require_up_to_date": true,
+      "release_tag_ruleset": "release-tag-integrity",
+      "require_immutable_releases": true
     },
     {
       "name": "core-graph",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
       "aggregate_gate_state": "enforced",
-      "require_up_to_date": true
+      "require_up_to_date": true,
+      "release_tag_ruleset": "release-tag-integrity",
+      "require_immutable_releases": true
     },
     {
       "name": "relay-shell",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
       "aggregate_gate_state": "enforced",
-      "require_up_to_date": true
+      "require_up_to_date": true,
+      "release_tag_ruleset": "release-tag-integrity",
+      "release_environment": "pypi",
+      "release_reviewers": [
+        "rmednitzer"
+      ]
     },
     {
       "name": "6dof-ascent-sim",
