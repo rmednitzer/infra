@@ -8,7 +8,7 @@ import tempfile
 import time
 
 repos = ("automation","core-graph","relay-shell","infra","agents",
-         "6dof-ascent-sim","rmednitzer.github.io","runbooks")
+        "6dof-ascent-sim","rmednitzer.github.io","runbooks")
 root = Path("/var/lib/forgejo/data/forgejo-repositories/lab")
 out = Path("/var/lib/node-exporter/textfile/forgejo_upstream_refs.prom")
 environment = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_CONFIG_GLOBAL="/dev/null")
@@ -21,9 +21,9 @@ matching = 0
 for repo in repos:
     location = root / (repo+".git")
     local = subprocess.run(["git","--git-dir="+str(location),"rev-parse","refs/heads/main"],
-                           text=True,capture_output=True,timeout=10,env=environment)
+                            text=True,capture_output=True,timeout=10,env=environment)
     remote = subprocess.run(["git","ls-remote",f"https://github.com/rmednitzer/{repo}.git",
-                             "refs/heads/main"],
+                            "refs/heads/main"],
                             text=True,capture_output=True,timeout=20,env=environment)
     valid = local.returncode==0 and remote.returncode==0 and len(remote.stdout.split())==2
     equal = int(valid and local.stdout.strip() == remote.stdout.split()[0])
