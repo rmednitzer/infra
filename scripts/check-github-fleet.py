@@ -261,6 +261,8 @@ def validate_repo(
         environment = api_get(
             f"/repos/{owner}/{name}/environments/{repo_cfg['release_environment']}", token
         )
+        if environment.get("can_admins_bypass") is not False:
+            hard.append("release environment administrator bypass must be disabled")
         required = set(repo_cfg.get("release_reviewers", []))
         reviewer_policies = [
             rule for rule in environment.get("protection_rules", [])
