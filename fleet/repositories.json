@@ -73,7 +73,8 @@
       "release_reviewers": [
         "rmednitzer"
       ],
-      "release_creator_ruleset": "release-tag-creators"
+      "release_creator_ruleset": "release-tag-creators",
+      "require_immutable_releases": true
     },
     {
       "name": "6dof-ascent-sim",
