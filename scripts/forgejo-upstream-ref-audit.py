@@ -13,7 +13,7 @@ root = Path("/var/lib/forgejo/data/forgejo-repositories/lab")
 out = Path("/var/lib/node-exporter/textfile/forgejo_upstream_refs.prom")
 environment = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_CONFIG_GLOBAL="/dev/null")
 lines = [
-    "# HELP forgejo_upstream_main_match Whether independent Forgejo and GitHub main SHAs match.",
+    "# HELP forgejo_upstream_main_match Whether Forgejo replica and GitHub main SHAs match.",
     "# TYPE forgejo_upstream_main_match gauge",
 ]
 probes = 0
@@ -49,6 +49,6 @@ try:
 finally:
     if os.path.exists(name):
         os.unlink(name)
-print(f"Independent Forgejo refs matching GitHub: {matching}/{len(repos)}; probes={probes}")
+print(f"Forgejo replica main refs matching GitHub: {matching}/{len(repos)}; probes={probes}")
 if probes != len(repos):
     sys.exit(1)

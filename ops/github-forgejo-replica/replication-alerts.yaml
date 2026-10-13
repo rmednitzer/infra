@@ -1,0 +1,35 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMRule
+metadata:
+  name: github-forgejo-replication
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: fleet-monitoring
+spec:
+  groups:
+    - name: github-forgejo-replication
+      rules:
+        - alert: GitHubForgejoReplicationFailed
+          expr: github_forgejo_replica_sync_success == 0
+          for: 15m
+          labels:
+            severity: warning
+            service: github-forgejo-replication
+          annotations:
+            summary: "GitHub to Forgejo replication failed its verification"
+        - alert: GitHubForgejoReplicationStale
+          expr: (time() - github_forgejo_replica_last_success_timestamp_seconds > 28800) or absent(github_forgejo_replica_last_success_timestamp_seconds)
+          for: 15m
+          labels:
+            severity: warning
+            service: github-forgejo-replication
+          annotations:
+            summary: "GitHub to Forgejo replication has no successful run within eight hours"
+        - alert: GitHubForgejoRepositoryReplicationFailed
+          expr: github_forgejo_replica_repository_success == 0
+          for: 15m
+          labels:
+            severity: warning
+            service: github-forgejo-replication
+          annotations:
+            summary: "A configured GitHub to Forgejo repository failed replication"

@@ -71,18 +71,19 @@ Cross-host copies increase independence, but the copied archives contain
 sensitive data and SSH does not encrypt them at rest. Add an independently
 controlled encrypted or cross-site copy for full site-failure resilience.
 
-## Independent GitHub main-ref drift auditing
+## GitHub-authoritative replica auditing
 
-The existing private lab repositories in Forgejo are independent, not
-configured pull mirrors. Their branch refs are never force-updated by backup
-jobs. A scheduled, read-only comparison fetches GitHub main refs with
-Git ls-remote and compares them with local Forgejo main refs. Node Exporter
-exposes one match gauge per public repository, a total match count, and a
-probe-success gauge. Transient mismatch does not page an operator because
-these repositories are not promised synchronous mirrors; failed remote probes
-indicate that the audit itself was not completed.
+The eight private lab repositories are GitHub-authoritative replicas maintained
+by a separate scheduled job. They are ordinary Forgejo repositories receiving
+pushes, rather than native Forgejo pull mirrors. Replication does not inherit
+GitHub's access policies or copy issues, PRs, release assets or Actions state.
 
-Forgejo pull mirroring cannot be activated on already-existing repositories
-without migration to new repository identities. Any change to establish
-continuous mirroring must preserve independent Forgejo work and branch
-histories through a reviewed migration plan.
+The replication job uses repository-specific deploy keys and captures a verified
+recovery bundle before updating existing refs. Atomic pushes are leased to the
+captured destination SHAs, and resulting branches/tags must match the captured
+source set. The backup and recovery jobs themselves never update live refs.
+
+See [GitHub-to-Forgejo replication](github-forgejo-replication.md) for the
+credential boundary, update contract, monitoring, failure paths and rollback.
+The scheduled source-host ref comparison remains a supplementary lag signal;
+the verified replication receipt and success timestamp are the completion signal.
