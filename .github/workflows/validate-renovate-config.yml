@@ -18,6 +18,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false
+
+      - name: Test dependency pin discovery and update policy
+        run: python -m unittest discover -s tests -p "test_renovate_preset.py"
 
       - name: Check whether renovate config changed
         id: check
@@ -26,7 +30,7 @@ jobs:
           if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
             echo "No usable diff base, validating to be safe."
             echo "relevant=true" >> "$GITHUB_OUTPUT"
-          elif git diff --name-only "$BASE" "${{ github.sha }}" -- renovate-preset.json renovate.json5 | grep -q .; then
+          elif git diff --name-only "$BASE" "${{ github.sha }}" -- renovate-preset.json renovate.json5 .github/workflows/validate-renovate-config.yml tests/test_renovate_preset.py | grep -q .; then
             echo "relevant=true" >> "$GITHUB_OUTPUT"
           else
             echo "relevant=false" >> "$GITHUB_OUTPUT"
@@ -39,14 +43,14 @@ jobs:
 
       - name: Schema and syntax check (renovate-preset.json)
         if: steps.check.outputs.relevant == 'true'
-        run: npx --yes --package renovate -- renovate-config-validator --no-global --strict renovate-preset.json
+        run: npx --yes --package renovate@44.149.0 -- renovate-config-validator --no-global --strict renovate-preset.json
 
       - name: Schema and syntax check (renovate.json5)
         if: steps.check.outputs.relevant == 'true'
-        run: npx --yes --package renovate -- renovate-config-validator --no-global --strict renovate.json5
+        run: npx --yes --package renovate@44.149.0 -- renovate-config-validator --no-global --strict renovate.json5
 
       - name: Full preset resolution check (renovate-preset.json)
         if: steps.check.outputs.relevant == 'true'
         env:
           RENOVATE_CONFIG_FILE: renovate-preset.json
-        run: npx --yes --package renovate -- renovate --platform=local --dry-run=extract
+        run: npx --yes --package renovate@44.149.0 -- renovate --platform=local --dry-run=extract

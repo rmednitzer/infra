@@ -29,6 +29,20 @@ class WorkflowPinDiscovery(unittest.TestCase):
             {"depName": "html-validate", "currentValue": "11.16.1"},
         ])
 
+    def test_npm_package_invocation(self):
+        self.assertEqual(self.matches(
+            "npm", "npx --yes --package renovate@44.149.0 -- renovate-config-validator"
+        ), [{"depName": "renovate", "currentValue": "44.149.0"}])
+
+    def test_validator_pin_is_discovered(self):
+        workflow = (Path(__file__).parents[1] /
+                    ".github/workflows/validate-renovate-config.yml").read_text()
+        matches = self.matches("npm", workflow)
+        self.assertEqual(len(matches), 3)
+        self.assertEqual({item["depName"] for item in matches}, {"renovate"})
+        self.assertEqual(len({item["currentValue"] for item in matches}), 1)
+        self.assertNotIn("--package renovate --", workflow)
+
     def test_does_not_update_binary_tags_or_digests(self):
         text = "bats_version=v1.13.0\nghcr.io/gitleaks/gitleaks@sha256:abc\ntflint_version: v0.64.0"
         self.assertEqual(self.matches("pypi", text), [])
