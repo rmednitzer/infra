@@ -19,10 +19,12 @@ Do not represent a snapshot as a complete GitHub platform backup. Forgejo's
 separate application-consistent six-hourly backup covers its own application
 state, not GitHub-hosted metadata.
 
-The eight lab repositories in Forgejo are ordinary independent repositories,
-not pull mirrors. Synchronization into those live repositories is deliberately
-not performed by this script: it would bypass repository-level change controls
-and could overwrite independently maintained references.
+The eight lab repositories in Forgejo are GitHub-authoritative replicas.
+A separate scoped replication job maintains their branches and tags using
+verified preservation bundles and leased atomic updates. This recovery snapshot
+script never updates live repositories. See
+[the replication contract](github-forgejo-replication.md); its Git-only scope
+and destination access policies remain distinct from GitHub's.
 
 ## Deployment and verification
 

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "authoritative": true,
+  "state_dir": "/var/lib/github-forgejo-replica",
+  "known_hosts": "/etc/github-forgejo-replica/known_hosts",
+  "metrics_file": "/var/lib/node_exporter/textfile_collector/github_forgejo_replica.prom",
+  "ssh_port": 22,
+  "min_free_bytes": 1073741824,
+  "repositories": [
+    {
+      "name": "example",
+      "source": "https://github.com/example/example.git",
+      "destination": "git@forgejo.example:lab/example.git",
+      "ssh_key": "/etc/github-forgejo-replica/keys/example"
+    }
+  ]
+}
