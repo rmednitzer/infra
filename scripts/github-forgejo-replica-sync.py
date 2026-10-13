@@ -78,11 +78,11 @@ def remote_refs(url: str, env: dict[str, str]) -> dict[str, str]:
 def ssh_environment(repo: dict, config: dict) -> dict[str, str]:
     # Ignore inherited SSH identities and agents: never fall back to an admin key.
     ssh = ["ssh", "-F", "/dev/null", "-i", repo["ssh_key"],
-           "-p", str(config.get("ssh_port", 22)), "-o", "IdentitiesOnly=yes",
-           "-o", "IdentityAgent=none", "-o", "BatchMode=yes",
-           "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=15",
-           "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=2",
-           "-o", "UserKnownHostsFile=" + config["known_hosts"]]
+            "-p", str(config.get("ssh_port", 22)), "-o", "IdentitiesOnly=yes",
+            "-o", "IdentityAgent=none", "-o", "BatchMode=yes",
+            "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=15",
+            "-o", "ServerAliveInterval=15", "-o", "ServerAliveCountMax=2",
+            "-o", "UserKnownHostsFile=" + config["known_hosts"]]
     return dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_CONFIG_GLOBAL="/dev/null",
                 GIT_CONFIG_NOSYSTEM="1", GIT_SSH_COMMAND=shlex.join(ssh))
 
@@ -119,7 +119,7 @@ def validate_config(config: dict) -> None:
 
 
 def preserve(destination: str, observed: dict[str, str], env: dict[str, str],
-             work: Path, bundle: Path) -> dict:
+              work: Path, bundle: Path) -> dict:
     snapshot = work / "before.git"
     git(["clone", "--mirror", destination, str(snapshot)], env)
     captured = local_refs(snapshot, env)
@@ -152,13 +152,13 @@ def sync_repo(repo: dict, config: dict, run_id: str, env: dict[str, str] | None 
     if not stage.exists():
         git(["init", "--bare", str(stage)], env)
     git(["fetch", "--prune", "--no-tags", repo["source"],
-         "+refs/heads/*:refs/heads/*", "+refs/tags/*:refs/tags/*"], env, stage)
+          "+refs/heads/*:refs/heads/*", "+refs/tags/*:refs/tags/*"], env, stage)
     desired = local_refs(stage, env)
     if "refs/heads/main" not in desired:
         raise SyncError("Source main is absent; refusing destination changes")
     observed = remote_refs(repo["destination"], env)
     changed = sorted(ref for ref in desired.keys() | observed.keys()
-                     if desired.get(ref) != observed.get(ref))
+                      if desired.get(ref) != observed.get(ref))
     if not changed:
         return {"success": True, "changed_refs": [], "main_sha": desired["refs/heads/main"]}
     if shutil.disk_usage(state).free < config.get("min_free_bytes", 1024 ** 3):
@@ -169,7 +169,7 @@ def sync_repo(repo: dict, config: dict, run_id: str, env: dict[str, str] | None 
         bundle = state / "recovery" / run_id / (repo["name"] + ".bundle")
         preserved = preserve(repo["destination"], observed, env, Path(directory), bundle)
         receipt = {"repository": repo["name"], "before": observed, "desired": desired,
-                   "preservation": preserved, "changed_refs": changed, "push_submitted": False}
+                    "preservation": preserved, "changed_refs": changed, "push_submitted": False}
         receipt_path = state / "recovery" / run_id / (repo["name"] + ".json")
         atomic_json(receipt_path, receipt)
         # Every update and deletion is leased to the captured destination SHA.
@@ -206,12 +206,12 @@ def write_metrics(config: dict, status: dict) -> None:
     ):
         raise SyncError("Invalid metric result")
     lines = ["# TYPE github_forgejo_replica_sync_success gauge",
-             f"github_forgejo_replica_sync_success {int(status['success'])}",
-             "# TYPE github_forgejo_replica_sync_timestamp_seconds gauge",
-             f"github_forgejo_replica_sync_timestamp_seconds {status['attempt_timestamp']}",
-             "# TYPE github_forgejo_replica_last_success_timestamp_seconds gauge",
-             f"github_forgejo_replica_last_success_timestamp_seconds {status['last_success_timestamp']}",
-             "# TYPE github_forgejo_replica_repository_success gauge"]
+              f"github_forgejo_replica_sync_success {int(status['success'])}",
+              "# TYPE github_forgejo_replica_sync_timestamp_seconds gauge",
+              f"github_forgejo_replica_sync_timestamp_seconds {status['attempt_timestamp']}",
+              "# TYPE github_forgejo_replica_last_success_timestamp_seconds gauge",
+              f"github_forgejo_replica_last_success_timestamp_seconds {status['last_success_timestamp']}",
+              "# TYPE github_forgejo_replica_repository_success gauge"]
     for name, result in status["repositories"].items():
         lines.append(f'github_forgejo_replica_repository_success{{repo="{name}"}} {int(result["success"])}')
     path = Path(config["metrics_file"])

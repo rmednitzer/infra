@@ -181,7 +181,7 @@ class ConfigurationBoundary(unittest.TestCase):
     def test_rejects_shared_key_between_repositories(self):
         config = self.config()
         config["repositories"].append({"name": "second", "source": "https://github.com/example/second.git",
-                                       "destination": "git@forgejo:lab/second.git", "ssh_key": "/etc/replica/example"})
+                                        "destination": "git@forgejo:lab/second.git", "ssh_key": "/etc/replica/example"})
         with self.assertRaises(replica.SyncError):
             replica.validate_config(config)
 
