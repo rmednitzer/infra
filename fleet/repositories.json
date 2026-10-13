@@ -20,7 +20,8 @@
       },
       "actions": {
         "enabled": true,
-        "sha_pinning_required": true
+        "sha_pinning_required": true,
+        "allowed_actions": "selected"
       },
       "workflow": {
         "default_workflow_permissions": "read",

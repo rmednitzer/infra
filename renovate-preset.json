@@ -99,7 +99,7 @@
         "/^\\.github/workflows/[^/]+\\.ya?ml$/"
       ],
       "matchStrings": [
-        "npx\\s+(?:-y|--yes)\\s+(?<depName>[A-Za-z0-9_.-]+)@(?<currentValue>\\d+\\.\\d+\\.\\d+)"
+        "npx\\s+(?:-y|--yes)\\s+(?:--package\\s+)?(?<depName>[A-Za-z0-9_.-]+)@(?<currentValue>\\d+\\.\\d+\\.\\d+)"
       ],
       "datasourceTemplate": "npm",
       "versioningTemplate": "semver"
