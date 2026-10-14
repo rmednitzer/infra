@@ -5,6 +5,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Agent guidance (2026-10-14)
+
+- Consolidate Codex, Claude Code and Copilot guidance with repository-specific secure development, STPA traceability and private vulnerability reporting.
+
+
 ### Stale-docs audit fix (2026-09-13)
 
 - **`.tflint.hcl`: fixed a stale pin comment.** The comment justifying the
