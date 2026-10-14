@@ -3,6 +3,7 @@
 ## Repository-specific workflow
 
 OpenTofu provisioning for libvirt VMs and Talos clusters. Read relevant `docs/adr/`, module READMEs, environment backend configuration, and `docs/talos-cis-kubernetes.md`.
+
 - Use `tofu` as the active tool. Shared ecosystem syntax such as the `terraform {}` block and `.terraform.lock.hcl` is valid. Ubuntu configuration belongs in automation; Talos is API-only, not SSH/Ansible managed.
 - Modules include main, variables, outputs, versions, README, and supporting templates/tests when needed. Modules do not configure providers or hardcode environment identity. Inputs need type, description and suitable validation; outputs need descriptions.
 - HCL uses two spaces and snake_case; computed values use locals. Preserve per-environment provider lockfiles. Review source and schema changes before upgrades; pre-1.0 provider constraints use patch-bounded `~> 0.minor.0`.
@@ -128,6 +129,7 @@ product, edition, profile and justified exceptions. Preserve existing CTL-/POL- 
 Do not infer legal applicability, ISO conformance or certification from a mapping.
 
 Primary references:
+
 - [NIST SSDF](https://csrc.nist.gov/pubs/sp/800/218/final)
 - [OWASP ASVS](https://owasp.org/www-project-application-security-verification-standard/)
 - [MIT STPA handbook](https://psas.scripts.mit.edu/home/books-and-handbooks/)
