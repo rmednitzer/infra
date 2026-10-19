@@ -5,6 +5,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fleet inventory (2026-10-19)
+
+- Remove the retired `agents` and `core-graph` repositories from the active GitHub
+  fleet contract. Historical audit and recovery records remain unchanged.
+
 ### Agent guidance (2026-10-14)
 
 - Consolidate Codex, Claude Code and Copilot guidance with repository-specific secure development, STPA traceability and private vulnerability reporting.
