@@ -43,14 +43,14 @@ jobs:
 
       - name: Schema and syntax check (renovate-preset.json)
         if: steps.check.outputs.relevant == 'true'
-        run: npx --yes --package renovate@44.149.0 -- renovate-config-validator --no-global --strict renovate-preset.json
+        run: npx --yes --package renovate@44.164.7 -- renovate-config-validator --no-global --strict renovate-preset.json
 
       - name: Schema and syntax check (renovate.json5)
         if: steps.check.outputs.relevant == 'true'
-        run: npx --yes --package renovate@44.149.0 -- renovate-config-validator --no-global --strict renovate.json5
+        run: npx --yes --package renovate@44.164.7 -- renovate-config-validator --no-global --strict renovate.json5
 
       - name: Full preset resolution check (renovate-preset.json)
         if: steps.check.outputs.relevant == 'true'
         env:
           RENOVATE_CONFIG_FILE: renovate-preset.json
-        run: npx --yes --package renovate@44.149.0 -- renovate --platform=local --dry-run=extract
+        run: npx --yes --package renovate@44.164.7 -- renovate --platform=local --dry-run=extract
