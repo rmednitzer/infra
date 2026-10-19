@@ -46,26 +46,6 @@
       "require_immutable_oidc_subject": true
     },
     {
-      "name": "agents",
-      "ruleset": "main-protection",
-      "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "enforced",
-      "require_up_to_date": true,
-      "release_tag_ruleset": "release-tag-integrity",
-      "require_immutable_releases": true,
-      "release_creator_ruleset": "release-tag-creators"
-    },
-    {
-      "name": "core-graph",
-      "ruleset": "main-protection",
-      "preferred_aggregate_context": "ci-success",
-      "aggregate_gate_state": "enforced",
-      "require_up_to_date": true,
-      "release_tag_ruleset": "release-tag-integrity",
-      "require_immutable_releases": true,
-      "release_creator_ruleset": "release-tag-creators"
-    },
-    {
       "name": "relay-shell",
       "ruleset": "main-protection",
       "preferred_aggregate_context": "ci-success",
