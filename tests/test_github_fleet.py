@@ -221,8 +221,7 @@ class AdminControls(unittest.TestCase):
                 fleet.validate_admin_controls("o", "r", {}, {}, None)
 
 
-if __name__ == "__main__":
-    unittest.main()
+
 
 
 class ExplicitCheckContracts(unittest.TestCase):
@@ -230,8 +229,8 @@ class ExplicitCheckContracts(unittest.TestCase):
         fixture = RulesetCoverage()
         fixture.setUp()
         cfg = {"name": "repo", "ruleset": "main-protection",
-               "preferred_aggregate_context": "ci-success", "aggregate_gate_state": "enforced",
-               "required_contexts": ["ci-success", "security"]}
+                "preferred_aggregate_context": "ci-success", "aggregate_gate_state": "enforced",
+                "required_contexts": ["ci-success", "security"]}
         for contexts, accepted in [
             (["security", "ci-success"], True),
             (["ci-success"], False),
@@ -264,3 +263,7 @@ class ExplicitCheckContracts(unittest.TestCase):
                 with patch.object(fleet, "api_get", side_effect=[{}, {}, {"enabled": enabled}]):
                     errors = fleet.validate_admin_controls("owner", "repo", {}, policy, None)
                 self.assertEqual(not errors, accepted)
+
+
+if __name__ == "__main__":
+    unittest.main()
