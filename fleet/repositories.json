@@ -29,10 +29,9 @@
       },
       "security": [
         "secret_scanning",
-        "secret_scanning_push_protection",
-        "dependabot_security_updates"
+        "secret_scanning_push_protection"
       ],
-      "dependabot_unpaused": true
+      "dependabot_enabled": false
     },
     "require_linear_history": true
   },
@@ -57,7 +56,19 @@
         "rmednitzer"
       ],
       "release_creator_ruleset": "release-tag-creators",
-      "require_immutable_releases": true
+      "require_immutable_releases": true,
+      "required_contexts": [
+        "ci-success",
+        "check (py3.12)",
+        "check (py3.13)",
+        "check (py3.14)",
+        "gitleaks (secret scan)",
+        "pip-audit (CVE scan)",
+        "dependency-review",
+        "Analyze (python) (python)",
+        "Analyze (actions)",
+        "release-rehearsal"
+      ]
     },
     {
       "name": "6dof-ascent-sim",

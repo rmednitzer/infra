@@ -92,3 +92,11 @@ app, selects the newest check attempt, and refuses failures, malformed data and
 unapproved skips. Missing or queued checks remain pending. API failures fail the gate.
 Run its synthetic regressions with
 `python3 -m unittest discover -s tests -p test_ci_checks.py`.
+
+The fleet settings ledger records relay-shell's explicit direct required-check
+set alongside its aggregate. The validator rejects missing, extra or duplicate
+contexts and retains producer/freshness checks. Its optional admin inspection
+requires Dependabot update PRs to remain disabled under Renovate ownership;
+secret scanning and push protection remain required. This changes expected update
+PR ownership, not vulnerability-alert availability. Public CI still reports the
+limits of its read-only credential instead of claiming admin-setting verification.

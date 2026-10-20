@@ -223,3 +223,44 @@ class AdminControls(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ExplicitCheckContracts(unittest.TestCase):
+    def test_exact_context_set_rejects_missing_extra_or_duplicate_checks(self):
+        fixture = RulesetCoverage()
+        fixture.setUp()
+        cfg = {"name": "repo", "ruleset": "main-protection",
+               "preferred_aggregate_context": "ci-success", "aggregate_gate_state": "enforced",
+               "required_contexts": ["ci-success", "security"]}
+        for contexts, accepted in [
+            (["security", "ci-success"], True),
+            (["ci-success"], False),
+            (["ci-success", "security", "extra"], False),
+            (["ci-success", "security", "security"], False),
+        ]:
+            with self.subTest(contexts=contexts):
+                rules = copy.deepcopy(fixture.ruleset)
+                rules["rules"][-1]["parameters"]["required_status_checks"] = [
+                    {"context": name} for name in contexts]
+                with patch.object(fleet, "api_get", side_effect=[
+                    {"default_branch": "main", "visibility": "public"},
+                    [{"id": 1, "name": "main-protection"}], rules,
+                ]):
+                    errors, _ = fleet.validate_repo("owner", cfg, {}, None)
+                self.assertEqual(not errors, accepted)
+
+    def test_manifest_refuses_empty_duplicate_or_aggregate_omitting_contract(self):
+        for checks in [[], ["ci-success", "ci-success"], ["security"], "ci-success"]:
+            with self.subTest(checks=checks):
+                manifest = {"schema_version": 1, "owner": "owner", "repositories": [{
+                    "name": "repo", "ruleset": "main-protection", "aggregate_gate_state": "enforced",
+                    "preferred_aggregate_context": "ci-success", "required_contexts": checks}]}
+                self.assertTrue(fleet.validate_manifest_only(manifest))
+
+    def test_disabled_dependabot_pr_policy_is_enforced_not_ignored(self):
+        policy = {"dependabot_enabled": False}
+        for enabled, accepted in [(False, True), (True, False), (None, False)]:
+            with self.subTest(enabled=enabled):
+                with patch.object(fleet, "api_get", side_effect=[{}, {}, {"enabled": enabled}]):
+                    errors = fleet.validate_admin_controls("owner", "repo", {}, policy, None)
+                self.assertEqual(not errors, accepted)

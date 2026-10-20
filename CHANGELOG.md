@@ -6,6 +6,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ## [Unreleased]
 
 - Cancel superseded PR validation only, preserving separate verification runs for every non-PR invocation.
+- Record relay-shell’s exact direct-check contract and the disabled Dependabot update-PR policy owned by Renovate; reject drift instead of requiring the superseded aggregate-only settings.
+
 - Poll one paginated check snapshot per gate iteration, binding acceptance to the requested head, GitHub Actions and the newest attempt.
 
 - Make Renovate policy self-contained in this repository, preserving local update rules and removing cross-repository policy inheritance.
