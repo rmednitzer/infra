@@ -292,7 +292,7 @@ class VulnerabilityAlerts(unittest.TestCase):
         for code in [401, 403, 404, 429, 500]:
             with self.subTest(code=code):
                 error = fleet.urllib.error.HTTPError("https://api.github.com/alerts", code,
-                                                   "unavailable", {}, io.BytesIO(b""))
+                                                    "unavailable", {}, io.BytesIO(b""))
                 with patch.object(fleet.urllib.request, "urlopen", side_effect=error):
                     with self.assertRaises(RuntimeError):
                         fleet.api_get("/alerts", None, expected_status=204)
