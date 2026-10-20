@@ -71,3 +71,36 @@ inherit another project’s policy. Keep update grouping, release-age delays,
 major-version review and lock-maintenance behavior explicit here. Built-in
 Renovate presets supply standard defaults; repository-specific decisions remain
 local. Review policy changes and actual dependency extraction before merging.
+
+
+## CI run ownership
+
+The PR-validation workflows updated here coalesce first attempts for the same PR.
+Manual reruns use separate run-ID/attempt groups, so rerunning an old revision
+cannot cancel or replace current-head validation. Non-PR invocations also use
+unique run-ID/attempt groups to preserve each revision's evidence.
+GitHub does not guarantee chronological ordering of initial attempts: a late event
+can still interrupt another initial attempt. Required checks bind to the current
+head; a cancelled current-head check needs a successful rerun before merge.
+Explicit diagnostic/publication serialization in other workflows remains separate. Reusable
+workflows have distinct file prefixes to avoid cancelling a caller or sibling.
+Cancelling an obsolete PR run is not a successful check; the current head still
+needs all required results. Revision identity and signing gates remain separate.
+Publication workflows retain their existing serialization and cache isolation.
+Revert this repository's workflow change to restore the earlier scheduling;
+no service deployment or application-data migration is involved.
+
+The aggregate polls one paginated check snapshot per iteration. Its repository-owned
+Python standard-library helper accepts only the requested revision and GitHub Actions
+app, selects the newest check attempt, and refuses failures, malformed data and
+unapproved skips. Missing or queued checks remain pending. API failures fail the gate.
+Run its synthetic regressions with
+`python3 -m unittest discover -s tests -p test_ci_checks.py`.
+
+The fleet settings ledger records relay-shell's explicit direct required-check
+set alongside its aggregate. The validator rejects missing, extra or duplicate
+contexts and retains producer/freshness checks. Its optional admin inspection
+requires Dependabot update PRs to remain disabled under Renovate ownership;
+secret scanning and push protection remain required. This changes expected update
+PR ownership, not vulnerability-alert availability. Public CI still reports the
+limits of its read-only credential instead of claiming admin-setting verification.

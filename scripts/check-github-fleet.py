@@ -86,6 +86,15 @@ def validate_manifest_only(manifest: dict[str, Any]) -> list[str]:
         state = repo.get("aggregate_gate_state")
         if state not in {"enforced", "migration-pending", "planned"}:
             errors.append(f"{name}: invalid aggregate_gate_state {state!r}")
+        expected = repo.get("required_contexts")
+        if expected is not None:
+            if (not isinstance(expected, list) or not expected
+                    or any(not isinstance(item, str) or not item for item in expected)):
+                errors.append(f"{name}: required_contexts must be a non-empty string list")
+            elif len(set(expected)) != len(expected):
+                errors.append(f"{name}: required_contexts contains duplicates")
+            elif state == "enforced" and repo.get("preferred_aggregate_context") not in expected:
+                errors.append(f"{name}: required_contexts omits the enforced aggregate")
     return errors
 
 
@@ -110,7 +119,14 @@ def validate_admin_controls(
     for feature in policy.get("security", []):
         if security.get(feature, {}).get("status") != "enabled":
             errors.append(f"security.{feature} is not confirmed enabled")
-    if policy.get("dependabot_unpaused"):
+    if "dependabot_enabled" in policy:
+        state = api_get(f"{base}/automated-security-fixes", token)
+        expected_enabled = policy.get("dependabot_enabled", True)
+        if state.get("enabled") is not expected_enabled:
+            errors.append(f"Dependabot update PR enabled state must be {expected_enabled!r}")
+        if expected_enabled and policy.get("dependabot_unpaused") and state.get("paused") is not False:
+            errors.append("Dependabot security updates paused or state unavailable")
+    elif policy.get("dependabot_unpaused"):
         state = api_get(f"{base}/automated-security-fixes", token)
         if state.get("enabled") is not True or state.get("paused") is not False:
             errors.append("Dependabot security updates disabled or paused")
@@ -194,7 +210,11 @@ def validate_repo(
 
     preferred = repo_cfg.get("preferred_aggregate_context")
     gate_state = repo_cfg.get("aggregate_gate_state")
-    if preferred and gate_state == "enforced" and contexts != [preferred]:
+    expected_contexts = repo_cfg.get("required_contexts")
+    if expected_contexts is not None:
+        if set(contexts) != set(expected_contexts) or len(contexts) != len(expected_contexts):
+            hard.append(f"required contexts are {contexts!r}; explicit contract requires {expected_contexts!r}")
+    elif preferred and gate_state == "enforced" and contexts != [preferred]:
         hard.append(f"required contexts are {contexts!r}; enforced aggregate contract requires [{preferred!r}]")
     elif preferred and gate_state in {"planned", "migration-pending"} and contexts != [preferred]:
         advisory.append(f"aggregate migration pending: current={contexts!r}, target=[{preferred!r}]")
