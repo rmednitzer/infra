@@ -4,7 +4,7 @@ from pathlib import Path
 import re
 import unittest
 
-PRESET = json.loads((Path(__file__).parents[1] / "renovate-preset.json").read_text())
+PRESET = json.loads((Path(__file__).parents[1] / "renovate.json5").read_text())
 
 
 class WorkflowPinDiscovery(unittest.TestCase):
@@ -38,7 +38,7 @@ class WorkflowPinDiscovery(unittest.TestCase):
         workflow = (Path(__file__).parents[1] /
                     ".github/workflows/validate-renovate-config.yml").read_text()
         matches = self.matches("npm", workflow)
-        self.assertEqual(len(matches), 3)
+        self.assertEqual(len(matches), 2)
         self.assertEqual({item["depName"] for item in matches}, {"renovate"})
         self.assertEqual(len({item["currentValue"] for item in matches}), 1)
         self.assertNotIn("--package renovate --", workflow)
@@ -55,6 +55,12 @@ class WorkflowPinDiscovery(unittest.TestCase):
             self.assertRegex(".github/workflows/ci.yaml", pattern)
             self.assertIsNone(re.search(pattern, "docs/example.yml"))
             self.assertIsNone(re.search(pattern, ".github/workflows/nested/ci.yml"))
+
+    def test_policy_is_repository_owned(self):
+        self.assertTrue(all(
+            item.startswith(("config:", "schedule:", ":")) for item in PRESET["extends"]
+        ))
+        self.assertFalse((Path(__file__).parents[1] / "renovate-preset.json").exists())
 
     def test_age_and_major_review_policy_is_preserved(self):
         rules = PRESET["packageRules"]

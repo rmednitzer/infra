@@ -6,6 +6,12 @@ silently rotting (the 2026-05-27 engagement flagged that there was no such
 tracker). Close an item by linking the PR/commit (or issue) that resolves it and
 moving it to **Resolved**.
 
+## Current dependency policy (2026-10-20)
+
+Renovate policy now belongs to each repository. The central preset is retired
+after its consumers migrate. Historical fleet findings below describe their
+recorded dates; they do not define the current dependency-policy architecture.
+
 ## Open
 
 *(none)*

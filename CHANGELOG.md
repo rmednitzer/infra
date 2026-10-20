@@ -5,6 +5,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Make Renovate policy self-contained in this repository, preserving local update rules and removing cross-repository policy inheritance.
+
 ### Fleet inventory (2026-10-19)
 
 - Remove the retired `agents` and `core-graph` repositories from the active GitHub
