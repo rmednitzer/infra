@@ -31,6 +31,7 @@
         "secret_scanning",
         "secret_scanning_push_protection"
       ],
+      "require_vulnerability_alerts": true,
       "dependabot_enabled": false
     },
     "require_linear_history": true

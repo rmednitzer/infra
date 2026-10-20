@@ -27,7 +27,7 @@ def load_json(path: Path) -> dict[str, Any]:
         return json.load(handle)
 
 
-def api_get(path: str, token: str | None) -> Any:
+def api_get(path: str, token: str | None, *, expected_status: int = 200) -> Any:
     headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
@@ -38,9 +38,16 @@ def api_get(path: str, token: str | None) -> Any:
     request = urllib.request.Request(f"{API}{path}", headers=headers)
     try:
         with urllib.request.urlopen(request, timeout=20) as response:
+            if response.status != expected_status:
+                raise RuntimeError(
+                    f"GET {path} -> HTTP {response.status}, expected {expected_status}"
+                )
+            if expected_status == 204:
+                return None
             return json.load(response)
     except urllib.error.HTTPError as exc:
-        body = exc.read().decode("utf-8", errors="replace")
+        with exc:
+            body = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"GET {path} -> HTTP {exc.code}: {body[:300]}") from exc
     except urllib.error.URLError as exc:
         raise RuntimeError(f"GET {path} failed: {exc.reason}") from exc
@@ -119,6 +126,10 @@ def validate_admin_controls(
     for feature in policy.get("security", []):
         if security.get(feature, {}).get("status") != "enabled":
             errors.append(f"security.{feature} is not confirmed enabled")
+    if policy.get("require_vulnerability_alerts"):
+        # This endpoint returns no JSON; only HTTP 204 confirms enabled alerts.
+        # A 404 may also hide insufficient access, so never treat it as success.
+        api_get(f"{base}/vulnerability-alerts", token, expected_status=204)
     if "dependabot_enabled" in policy:
         state = api_get(f"{base}/automated-security-fixes", token)
         expected_enabled = policy.get("dependabot_enabled", True)
