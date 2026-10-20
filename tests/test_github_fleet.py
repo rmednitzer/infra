@@ -4,7 +4,7 @@ import json
 import importlib.util
 import pathlib
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 SPEC = importlib.util.spec_from_file_location(
     "fleet", pathlib.Path(__file__).parents[1] / "scripts/check-github-fleet.py"
@@ -263,6 +263,47 @@ class ExplicitCheckContracts(unittest.TestCase):
                 with patch.object(fleet, "api_get", side_effect=[{}, {}, {"enabled": enabled}]):
                     errors = fleet.validate_admin_controls("owner", "repo", {}, policy, None)
                 self.assertEqual(not errors, accepted)
+
+
+class VulnerabilityAlerts(unittest.TestCase):
+    def test_admin_policy_checks_alerts_separately_from_update_prs(self):
+        policy = {"require_vulnerability_alerts": True, "dependabot_enabled": False}
+        with patch.object(fleet, "api_get", side_effect=[{}, {}, None, {"enabled": False}]) as api:
+            self.assertEqual(fleet.validate_admin_controls("o", "r", {}, policy, None), [])
+        self.assertEqual(api.call_args_list[2].args, ("/repos/o/r/vulnerability-alerts", None))
+        self.assertEqual(api.call_args_list[2].kwargs, {"expected_status": 204})
+
+    def test_only_empty_204_is_accepted(self):
+        for status in [204, 200, 202]:
+            with self.subTest(status=status):
+                response = MagicMock()
+                response.status = status
+                response.read.side_effect = AssertionError("204 must not be parsed as JSON")
+                response.__enter__.return_value = response
+                with patch.object(fleet.urllib.request, "urlopen", return_value=response):
+                    if status == 204:
+                        self.assertIsNone(fleet.api_get("/alerts", None, expected_status=204))
+                    else:
+                        with self.assertRaises(RuntimeError):
+                            fleet.api_get("/alerts", None, expected_status=204)
+
+    def test_disabled_denied_and_unavailable_do_not_pass(self):
+        import io
+        for code in [401, 403, 404, 429, 500]:
+            with self.subTest(code=code):
+                error = fleet.urllib.error.HTTPError("https://api.github.com/alerts", code,
+                                                   "unavailable", {}, io.BytesIO(b""))
+                with patch.object(fleet.urllib.request, "urlopen", side_effect=error):
+                    with self.assertRaises(RuntimeError):
+                        fleet.api_get("/alerts", None, expected_status=204)
+        with patch.object(fleet.urllib.request, "urlopen",
+                          side_effect=fleet.urllib.error.URLError("offline")):
+            with self.assertRaises(RuntimeError):
+                fleet.api_get("/alerts", None, expected_status=204)
+
+    def test_fleet_requires_alerts(self):
+        manifest = json.loads((pathlib.Path(__file__).parents[1] / "fleet/repositories.json").read_text())
+        self.assertIs(manifest["defaults"]["admin_controls"]["require_vulnerability_alerts"], True)
 
 
 if __name__ == "__main__":

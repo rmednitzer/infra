@@ -104,3 +104,10 @@ requires Dependabot update PRs to remain disabled under Renovate ownership;
 secret scanning and push protection remain required. This changes expected update
 PR ownership, not vulnerability-alert availability. Public CI still reports the
 limits of its read-only credential instead of claiming admin-setting verification.
+
+Admin inspection also requires vulnerability alerts independently of disabled
+Dependabot update PRs. The read-only endpoint must return HTTP 204; disabled,
+denied, unavailable or unexpected responses fail verification. This remains an
+explicit `--admin-checks` operation: public CI gains no privileged credential.
+The fleet ledger covers its six listed repositories; OSINT retains its separate
+protection model. No Renovate policy is inherited from this ledger.

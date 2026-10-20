@@ -5,6 +5,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Require vulnerability alerts in the read-only admin audit independently of Renovate-owned update PRs; accept only the documented HTTP 204 response.
+
 - Coalesce initial PR validation, isolate manual reruns, and preserve non-PR verification evidence.
 - Record relay-shell’s exact direct-check contract and the disabled Dependabot update-PR policy owned by Renovate; reject drift instead of requiring the superseded aggregate-only settings.
 
