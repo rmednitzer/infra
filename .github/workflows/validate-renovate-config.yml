@@ -52,10 +52,10 @@ jobs:
 
       - name: Schema and syntax check (renovate.json5)
         if: steps.check.outputs.relevant == 'true'
-        run: npx --yes --package renovate@44.167.6 -- renovate-config-validator --no-global --strict renovate.json5
+        run: npx --yes --package renovate@44.174.0 -- renovate-config-validator --no-global --strict renovate.json5
 
       - name: Full local policy resolution and extraction check
         if: steps.check.outputs.relevant == 'true'
         env:
           RENOVATE_CONFIG_FILE: renovate.json5
-        run: npx --yes --package renovate@44.167.6 -- renovate --platform=local --dry-run=extract --exit-code-for-errors
+        run: npx --yes --package renovate@44.174.0 -- renovate --platform=local --dry-run=extract --exit-code-for-errors
